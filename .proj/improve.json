@@ -15,7 +15,7 @@
       "status": "improving",
       "follow_ups": [
         "Glossary sweep (.proj/glossary.csv) for ambiguous machine terms.",
-        "Fix fictional `the machine:N-run` command refs in foundation-cc/reference/ (3 files: claude-code-memory-official.md, sub-agent-examples.md, sub-agent-formatting-guide.md) + stale MoAI sub-agent names where they appear.",
+        "Sweep stale MoAI sub-agent/skill names (code-backend, domain-backend, lang-python, frontend-developer, api-designer, foundation-trust, etc.) still used as EXAMPLES in foundation-cc/reference/ — lower priority (illustrative, not wired).",
         "Terseness pass on remaining verbose skill bodies if any (foundation-cc reference set, default.md).",
         "Verify kern memory wiring: ingest/query when mcp__kern__* is connected (per-session availability varies)."
       ]
