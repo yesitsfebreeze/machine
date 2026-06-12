@@ -216,7 +216,7 @@ Checklist before declaring `<done>`:
 ──────────────────────────────────────────────
 ```
 
-### Insight (from R2-D2 absorption)
+### Insight
 ```
 ★ Insight ────────────────────────────────────
 What: [decision taken]
@@ -352,9 +352,9 @@ Changes from 5.0.0:
 - Icon set standardized (🟢🟡⏸️🔵❌🔴) — structural, never translated
 
 Changes from 4.0.0:
-- Merged R2-D2 pair-programming patterns (Intent Clarification, Checkpoint Protocol, Insight blocks)
+- Merged pair-programming patterns (Intent Clarification, Checkpoint Protocol, Insight blocks)
 - Added 2026 best practices: Role+Constraints, Persistence-Aware, Verification Criteria, Over-engineering Guard, Temp File Hygiene, Dark Flow Warning, Process Engineering state machine
 - Integrated §24 Orchestrator Self-Check as Stage 2 Delegation Decision
 - Removed duplicated blocks (now reference CLAUDE.md §8, §9)
 - Renamed "Phase 1-4" → "Stage 1-4" to avoid collision with CLAUDE.md §2 "Phase"
-- Deprecated r2d2.md (content absorbed here)
+- Absorbed prior pair-programming persona content

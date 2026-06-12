@@ -406,7 +406,7 @@ Einstein's principles:
 
 ---
 
-Version: 1.0.0 (Initial — replaces Yoda)
+Version: 1.0.0
 Last Updated: 2026-04-11
 
 Design sources (2026 best practices):
@@ -416,4 +416,4 @@ Design sources (2026 best practices):
 - EQ4C iterative learning framework: no jargon in initial pass
 - Official Claude Code MCP docs: Notion installation via `claude mcp add --transport http`
 
-Replaces: yoda.md (v2.1.0, 2026-01-06). Yoda's `.proj/learning/` generation promise is now fulfilled with Context7 grounding, Mermaid diagrams, and optional Notion mobile sync.
+The `.proj/learning/` generation promise is now fulfilled with Context7 grounding, Mermaid diagrams, and optional Notion mobile sync.
