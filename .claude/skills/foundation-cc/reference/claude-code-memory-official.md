@@ -119,14 +119,14 @@ Agent Catalog (`memory/agents.md`):
 
 ## Planning & Specification
 
-- spec-builder: SPEC generation in EARS format
-- plan: Decompose complex tasks step-by-step
+- manager-spec: SPEC generation in EARS format
+- manager-strategy: Decompose complex tasks step-by-step
 
 ## Implementation
 
-- ddd-implementer: Execute DDD cycle (ANALYZE-PRESERVE-IMPROVE)
-- backend-expert: Backend architecture and API development
-- frontend-expert: Frontend UI component development
+- manager-ddd: Execute DDD cycle (ANALYZE-PRESERVE-IMPROVE)
+- expert-backend: Backend architecture and API development
+- expert-frontend: Frontend UI component development
 
 ## Usage Patterns
 
@@ -181,17 +181,16 @@ Command References (`memory/commands.md`):
 
 ## Core Machine Commands
 
-- the machine:0-project: Initialize project structure
-- the machine:1-plan: Generate SPEC document
-- the machine:2-run: Execute DDD implementation
-- the machine:3-sync: Generate documentation
-- the machine:9-feedback: Collect improvement feedback
+- /bootstrap: Re-index /.proj from the current project
+- /gate: Pre-commit quality gate (fmt + lint + tests + build)
+- /code-review: Review the current diff
+- /improve: Rate and improve files worst-first
+- /personas: Run the project review panel
 
 ## Command Execution Rules
 
-- After the machine:1-plan: Execute /clear (mandatory)
 - Token threshold: Execute /clear at >150K tokens
-- Error handling: Use the machine:9-feedback for all issues
+- Capture durable knowledge to kern (mcp__kern__ingest) as you go
 ```
 
 ## Memory Management Strategies
@@ -201,30 +200,17 @@ Command References (`memory/commands.md`):
 Project Bootstrap:
 
 ```bash
-# Initialize project memory structure
-the machine:0-project
+# Initialize the project layer from the current repo
+/bootstrap
 
-# Creates:
-# - .proj/config/config.yaml
-# - .proj/state/ directory
-# - CLAUDE.md template
-# - Memory structure files
+# Creates under /.proj/:
+# - project.md (facts), agent.md (project law)
+# - glossary.csv, personas/ + personas.md
+# - plans/, skills/
 ```
 
-Manual Memory Setup:
-
-```bash
-# Create memory directory structure
-mkdir -p .claude/memory
-mkdir -p .proj/config
-mkdir -p .proj/cache
-
-# Create initial memory files
-touch .claude/memory/agents.md
-touch .claude/memory/commands.md
-touch .claude/memory/execution-rules.md
-touch CLAUDE.md
-```
+Durable memory lives in kern (the per-cwd daemon), not flat files:
+recall via mcp__kern__query, ingest via mcp__kern__ingest.
 
 ### Memory Synchronization
 
@@ -306,9 +292,8 @@ class AgentMemory:
  def load_base_memory(self):
  """Load essential memory for agent operation"""
  essential_files = [
- ".claude/memory/execution-rules.md",
- ".claude/memory/agents.md",
- ".proj/config/config.yaml"
+ ".proj/agent.md",
+ ".proj/project.md"
  ]
 
  for file_path in essential_files:
