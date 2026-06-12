@@ -31,7 +31,17 @@ guessing.
   term; update it immediately on any correction, definition, or rename.
 - **Memory lives in kern**, the per-cwd daemon. Never use file-memory or
   context-mode for *durable* memory. Capture is automatic; recall is the
-  SessionStart digest plus `mcp__kern__query`.
+  SessionStart digest plus `mcp__kern__query`. **When kern is available
+  (`mcp__kern__health` responds), ingesting durable knowledge is REQUIRED:**
+  batch-ingest useful excerpts via `mcp__kern__ingest` — decisions, facts,
+  constraints, glossary terms, design rationale — each call a coherent excerpt
+  with `title`, `descriptor`, and stable `object_id` for update semantics. Prefer
+  many small well-titled excerpts over one dump. Skip silently if kern is down.
+- **Adopt orphan bugs.** A bug you find that predates your changes is still your
+  problem. Investigate and fix it — unless another agent is plausibly already on
+  it soon (an open task/PR/branch, an in-flight loop, an explicit owner). When
+  unsure whether someone's on it, check; if no one is, fix it or file it loudly,
+  don't step over it.
 - **Project law lives in `/.proj/agent.md`** — domain-specific hard rules (e.g.
   real-time/safety constraints, platform limits). Treat its rules as binding as
   these.

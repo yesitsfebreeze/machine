@@ -32,15 +32,17 @@ After every file is rated, aggregate **bottom-up**: a folder's per-category scor
 # Workflow
 
 1. Resolve scope → file set.
-2. Rate each file 1-10 per category (measure where it helps). Write `rating`, `score`, `measured`, `status:"pending"`, top-3 `todos`.
+2. Rate each file 1-10 per category (measure where it helps). Write `rating`, `score`, `measured`, top-3 `todos`.
 3. Build the folder `tree` + `ranking`.
 4. Set `"indexed": true`.
-5. Improve worst→best (worst folder, its worst file first): fix, re-rate, update `status`+`score`, propagate up the tree.
+5. Improve worst→best (worst folder, its worst file first): fix, then **delete that file's entry from `files`** (drop it from `tree`/`ranking` too). Re-rate only if you leave it unfinished — otherwise it's gone.
 6. Small commit per file improved. Repeat until budget exhausted.
+
+**The json only holds outstanding work.** A finished file is deleted, not marked done — so the file shrinks over time and a clean codebase converges to an empty `files` list. Never accumulate `status:"done"` records or completed-work logs.
 
 Set a goal via `/goal`, or hand the user this:
 ```
-/loop 10m Go over <TARGET>. Rate each code file 1-10 per category, measuring LOC/complexity/coverage/duplication/security/style with tools where it sharpens the rating (skip on trivial files). Write rating, score, and top-3 todos to the json. Roll up into a folder tree with per-category aggregates; rank folders+files worst→best. Once everything is indexed, set "indexed":true and improve from worst folder to best, worst file first. After improving a file, re-rate it, update status+score, propagate up the tree, then move on. Commit after each iteration.
+/loop 10m Go over <TARGET>. Rate each code file 1-10 per category, measuring LOC/complexity/coverage/duplication/security/style with tools where it sharpens the rating (skip on trivial files). Write rating, score, and top-3 todos to the json. Roll up into a folder tree with per-category aggregates; rank folders+files worst→best. Once everything is indexed, set "indexed":true and improve from worst folder to best, worst file first. After improving a file, delete its entry from the json (and from tree+ranking) so the file shrinks toward empty, then move on. Commit after each iteration.
 ```
 
 ## The json
@@ -54,12 +56,11 @@ Set a goal via `/goal`, or hand the user this:
   "categories": ["loc", "complexity", "..."],
   "weights": { "security": 2 }   // optional per-category; default 1
  },
- "files": [{
+ "files": [{                // outstanding work ONLY; delete an entry once its file is improved
   "path": "src/gnn/fusion.ts",
   "rating": [0.5, 1, "..."],     // one per category, SAME ORDER as categories
   "score": 3.2,                  // weighted mean; lower = more work
   "measured": ["loc", "complexity"], // computed vs. judged
-  "status": "pending",           // pending | improving | done
   "todos": ["...", "..."]        // max 3, by impact
  }],
  "tree": {                  // aggregated bottom-up
