@@ -79,6 +79,5 @@ Every specialist file follows:
 No code, no constants, no syntax. If a file accumulates implementation details, refactor — that content belongs in the relevant library doc (use context7) or the source itself.
 
 ## Maintenance
-- Each specialist has a corresponding vicky pending research entry for future enrichment.
 - When the user gives feedback that contradicts a specialist, update the file (not memory).
-- Adding a new specialist: drop a file here, add a table row, add to vicky queue.
+- Adding a new specialist: drop a file here, add a table row.
