@@ -7,16 +7,16 @@
     "real_proj_layout": "agent.md, project.md (SINGLE file), glossary.csv, personas/ + personas.md, plans/, skills/. NO .proj/config/, NO .proj/project/ dir. Canonical initializer = /bootstrap.",
     "sole_driver_rule": "Run this /improve loop from ONE session only. improve.json has no lock; concurrent cron drivers caused lost writes (incident e193515d). One cron = one writer.",
     "terseness_pattern": "Cut dup-frontmatter prose (Primary-Mission/Core-Capabilities/Scope-Boundaries = SSOT violation), Phase/Step narrative, time estimates, false-precision metrics, and FICTION (nonexistent configs/agents/commands/paths). KEEP all real facts + [HARD] rules + delegation + done-when. Verify frontmatter + skills refs intact after each edit. Prefer root-cause reconciliation over blind trimming when content describes things that do not exist.",
-    "done": "External naming eliminated (moai/spool/mo.ai/Yoda/R2-D2 = 0). 3 fictional framework skill-trees de-fictionalized to single truthful files (foundation-core, foundation-quality, workflow-testing; 68 dead files pruned). Slices 1-5,7,8 complete. Self-install = README Agent Install Protocol. Terse so far: builder-agent/-plugin, manager-strategy/-docs/-spec/-git/-ddd/-project, expert-backend/-refactoring/-security."
+    "done": "External naming eliminated (moai/spool/mo.ai/Yoda/R2-D2 = 0). 3 fictional framework skill-trees de-fictionalized to single truthful files (foundation-core, foundation-quality, workflow-testing; 68 dead files pruned). Slices 1-5,7,8 complete. Self-install = README Agent Install Protocol. AGENT TERSENESS SWEEP COMPLETE: all 23 agents are terse directive-only; grep for Primary-Mission|Core-Capabilities|Scope-Boundaries|Phase|TRUST-5 across agents/ = 0."
   },
   "files": [
     {
       "path": "6-docs-consistency",
       "status": "improving",
-      "remaining_boilerplate_agents": ["expert-debug"],
       "follow_ups": [
         "Glossary sweep (.proj/glossary.csv) for ambiguous machine terms.",
-        "Sweep residual TRUST-5/MX/TAG-chain jargon machine-wide (manager-quality done: aligned to foundation-quality's five dimensions, no TRUST-5 label).",
+        "Sweep residual TRUST-5/MX/TAG-chain jargon in skills/ + rules/ + output-styles/ (agents/ done = 0).",
+        "Terseness pass on remaining verbose skill bodies if any (foundation-cc reference set, default.md).",
         "Verify kern memory wiring: ingest/query when mcp__kern__* is connected (per-session availability varies)."
       ]
     }
