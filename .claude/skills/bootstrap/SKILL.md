@@ -1,5 +1,6 @@
 ---
-description: Clear /.proj and re-index it from the CURRENT project — scans the repo and seeds the project layer (agent identity, facts, glossary, persona panel) that specializes the portable .claude machine for this codebase.
+name: bootstrap
+description: Clear /.proj and re-index it from the CURRENT project — scans the repo and seeds the project layer (agent identity, facts, glossary, persona panel) that specializes the portable .claude machine for this codebase. Run after copying the machine into a new repo or after the project changes shape.
 ---
 
 # /bootstrap — re-index `/.proj` from the current project
@@ -8,9 +9,6 @@ description: Clear /.proj and re-index it from the CURRENT project — scans the
 in every repo). `/.proj/` is the **project layer** — everything that diverges per
 codebase. Bootstrap wipes `/.proj/` and regenerates it by reading the project, so a
 freshly-copied machine specializes itself to *this* repo.
-
-Run this after copying the machine into a new repo, or to re-index after the project
-has changed shape.
 
 ## Step 1 — Clear `/.proj/` (keep structure, wipe instance state)
 
@@ -24,8 +22,8 @@ printf 'category,term,definition\n' > .proj/glossary.csv
 echo "cleared .proj — ready to re-index"
 ```
 
-Keep `/.proj/.gitignore` and `/.proj/glossary.md` (the vocabulary doc). Everything
-else in `/.proj/` is regenerated below.
+Keep `/.proj/.gitignore` and `/.proj/glossary.md` (the vocabulary doc) if present.
+Everything else in `/.proj/` is regenerated below.
 
 ## Step 2 — Scan the project
 
@@ -71,4 +69,4 @@ Confirm the machine is now specialized to this repo and `/personas`, `/gate`,
 glossary discipline, and the dispatch table are live.
 
 **Never touch the machine** (`skills/`, `agents/`, `hooks/`, `settings.json`,
-`commands/`, `rules/`) — bootstrap only writes under `/.proj/`.
+`rules/`) — bootstrap only writes under `/.proj/`.

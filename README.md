@@ -46,11 +46,11 @@ target repo has a live `.claude/` machine, specialized to itself.
    No `rsync` (e.g. Windows)? Copy the same contents with your file tools — every
    top-level entry from the clone *except* `.git/`, `README.md`, `.claude/`, `.kern/`,
    and `*.lock*`. (The machine source is the agent/skill tree — `agents/`, `skills/`,
-   `commands/`, `hooks/`, `rules/`, `output-styles/`, `settings.json`; nothing else.)
+   `hooks/`, `rules/`, `output-styles/`, `settings.json`; nothing else.)
 
 5. **Clean up:** `rm -rf "$tmp"`.
 
-6. **Bootstrap.** `/bootstrap` now resolves from `$target/.claude/commands/bootstrap.md`.
+6. **Bootstrap.** `/bootstrap` now resolves from `$target/.claude/skills/bootstrap/`.
    Run it. It scans README / CLAUDE.md / docs / manifests and writes `/.proj/`:
    - `agent.md` — this repo's identity, domain law, idioms (read by `agents/default.md`)
    - `project.md` — facts: stack, key paths, build/test/gate commands
@@ -98,6 +98,6 @@ rebuilds it from the current state. (Ephemeral bits — locks, `improve.json`,
 | `agents/*` | dispatch agents (expert-*, manager-*, builder-*) |
 | `skills/` | workflow + integration skills (`/gate`, `/personas`, `/improve`, …) |
 | `hooks/personas.mjs` | the Stop hook that auto-runs the persona panel |
-| `commands/bootstrap.md` | the one command that thinks per project |
+| `skills/bootstrap/` | `/bootstrap` — re-indexes `/.proj` per project |
 | `settings.json` | hook wiring, env, `agent: default` |
 | `rules/` | shared rules loaded as instructions |

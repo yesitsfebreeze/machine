@@ -13,7 +13,7 @@
 - `.claude/skills/` — 21 skill dirs; `name:` frontmatter must match dir name
 - `.claude/rules/coding-standards.md` + `.claude/rules/languages/*` (16 language rules)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
-- `.claude/commands/bootstrap.md` — the one per-project command
+- `.claude/skills/bootstrap/` — `/bootstrap`, re-indexes `/.proj` from the current repo
 - `.claude/settings.json` — hook wiring, env, `agent: default`
 - `.proj/improve.json` — **live worklist** for the ongoing `/improve` loop (tracked in git; outstanding work only)
 

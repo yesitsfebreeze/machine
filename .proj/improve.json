@@ -13,14 +13,12 @@
     "note": "superpowers:* and plugin-namespaced skills are REAL (plugin registry) — do not flag them as fiction."
   },
   "files": [
-    {"path": ".claude/commands/bootstrap.md", "rating": [9,8,7,8,9,3], "score": 7.3, "measured": ["loc"], "todos": ["Thin-command law violation: 70 LOC body > 20", "Move workflow into skills/bootstrap, command becomes Skill-tool router"]},
     {"path": ".claude/skills/personas/SKILL.md", "rating": [8,7,9,3,9,8], "score": 7.3, "measured": ["loc"], "todos": ["Remove hardcoded kern-project persona examples (Bjorn, Priya) — load panel from /.proj/personas/", "Make .proj-missing behavior explicit (tell user to run /bootstrap)"]},
     {"path": ".claude/skills/foundation-cc/SKILL.md", "rating": [6,8,8,8,8,8], "score": 7.7, "measured": ["loc"], "todos": ["Dedupe Quick Reference vs reference/ files", "Drop version-history narrative"]}
   ],
   "tree": {
     "path": ".", "score": 7.9, "weakest": "truthfulness", "fileCount": 170,
     "children": [
-      {"path": ".claude/commands", "score": 7.3, "weakest": "standards", "fileCount": 1},
       {"path": ".claude/skills/personas", "score": 7.3, "weakest": "truthfulness", "fileCount": 1},
       {"path": ".claude/skills/foundation-cc", "score": 7.7, "weakest": "loc", "fileCount": 17},
       {"path": ".proj", "score": 7.8, "weakest": "truthfulness", "fileCount": 10},
@@ -28,7 +26,7 @@
     ]
   },
   "ranking": {
-    "folders": [".claude/commands", ".claude/skills/personas", ".claude/skills/foundation-cc", ".proj"],
-    "files": [".claude/commands/bootstrap.md", ".claude/skills/personas/SKILL.md", ".claude/skills/foundation-cc/SKILL.md"]
+    "folders": [".claude/skills/personas", ".claude/skills/foundation-cc"],
+    "files": [".claude/skills/personas/SKILL.md", ".claude/skills/foundation-cc/SKILL.md"]
   }
 }
