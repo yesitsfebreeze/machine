@@ -403,28 +403,9 @@ Settings File Locations:
 
 ### Hook Lifecycle Management
 
-Installation:
-```bash
-# Add hook to configuration
-claude config set hooks.PreToolUse[0].matcher "Bash"
-claude config set hooks.PreToolUse[0].hooks[0].type "command"
-claude config set hooks.PreToolUse[0].hooks[0].command "echo 'Bash executed' >> hooks.log"
-
-# Validate configuration
-claude config validate
-```
-
-Testing and Debugging:
-```bash
-# Test individual hook
-claude hooks test --event PreToolUse --tool Bash
-
-# Debug hook execution
-claude hooks debug --verbose
-
-# View hook logs
-claude hooks logs
-```
+- Add/edit hooks via the `/hooks` REPL command or by editing the `hooks` block in settings.json directly; validate the JSON after every edit.
+- Debug hook execution with `claude --debug` (shows hook matching, execution, and output).
+- A hook script must exist on disk before registering it in settings.json.
 
 ## Common Hook Patterns
 

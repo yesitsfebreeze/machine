@@ -47,6 +47,8 @@ Core Features:
 - reference/claude-code-skills-official.md - Agent Skills creation and management
 - reference/claude-code-sub-agents-official.md - Sub-agent development and delegation
 - reference/claude-code-plugins-official.md - Plugin architecture and distribution
+- reference/claude-code-discover-plugins-official.md - Finding and installing plugins
+- reference/claude-code-plugin-marketplaces-official.md - Marketplace setup and distribution
 - reference/claude-code-custom-slash-commands-official.md - Command creation and orchestration
 
 Configuration:
