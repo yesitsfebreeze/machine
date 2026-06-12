@@ -10,6 +10,9 @@
     "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1"
   },
   "includeGitInstructions": true,
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
   "enableAllProjectMcpServers": false,
   "skillOverrides": {
     "trello": "off"
