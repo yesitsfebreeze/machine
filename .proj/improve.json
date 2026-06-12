@@ -14,7 +14,7 @@
       "path": "6-docs-consistency",
       "status": "improving",
       "follow_ups": [
-        "Terseness/truth pass on foundation-cc reference set (large official-doc mirrors; check for remaining fiction beyond names, e.g. nonexistent settings keys or commands)."
+        "Truth pass on claude-code-iam-official.md (635 lines; invented roles/enterprise JSON framework around line 251+) and claude-code-memory-official.md (check team/workflow example near line 516). Pattern: keep real content, excise invented schema/CLI, terse rewrite like settings doc (commit 5247020)."
       ]
     }
   ]
