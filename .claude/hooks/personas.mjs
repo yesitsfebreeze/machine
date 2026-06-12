@@ -55,6 +55,8 @@ if (assistantTexts.length === 0) process.exit(0);
 
 const lastMessage = assistantTexts[assistantTexts.length - 1];
 
+// Short replies are conversational turns, not completed work — skip the
+// completion-pattern scan below. 400 chars ≈ the floor of a real wrap-up summary.
 if (lastMessage.length < 400) process.exit(0);
 
 const patterns = [

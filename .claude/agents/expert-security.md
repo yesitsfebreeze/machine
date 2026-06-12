@@ -6,6 +6,7 @@ description: |
   --deepthink flag: Activate Sequential Thinking MCP for deep analysis of security threats, vulnerability patterns, and OWASP compliance.
   EN: security, vulnerability, OWASP, injection, XSS, CSRF, penetration, audit, threat
   NOT for: general backend development, frontend UI, performance optimization, database design, DevOps deployment
+tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: opus
 effort: high
 permissionMode: bypassPermissions
@@ -13,7 +14,6 @@ memory: project
 skills:
   - foundation-core
   - foundation-quality
-tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---
 
 # Security Expert
