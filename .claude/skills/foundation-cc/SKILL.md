@@ -38,7 +38,7 @@ triggers:
 
 # Claude Code Authoring Kit
 
-Comprehensive reference for Claude Code Skills, sub-agents, plugins, slash commands, hooks, memory, settings, sandboxing, headless mode, and advanced agent patterns.
+Reference set for authoring Claude Code Skills, sub-agents, plugins, slash commands, hooks, memory, settings, sandboxing, and headless usage. The detail lives in reference/ — this file is the index plus the facts needed for routing.
 
 ## Documentation Index
 
@@ -56,199 +56,34 @@ Configuration:
 - reference/claude-code-settings-official.md - Configuration hierarchy and management
 - reference/claude-code-memory-official.md - Context and knowledge persistence
 - reference/claude-code-hooks-official.md - Event-driven automation
-- reference/claude-code-iam-official.md - Access control and security
+- reference/claude-code-iam-official.md - Permissions and access control
 
-Advanced Features:
+Advanced:
 
 - reference/claude-code-sandboxing-official.md - Security isolation
 - reference/claude-code-headless-official.md - Programmatic and CI/CD usage
 - reference/claude-code-devcontainers-official.md - Containerized environments
 - reference/claude-code-cli-reference-official.md - Command-line interface
 - reference/claude-code-statusline-official.md - Custom status display
-- reference/advanced-agent-patterns.md - Engineering best practices
+- reference/advanced-agent-patterns.md - Orchestration and context engineering
 
 ## Quick Reference
 
-Skills: Model-invoked extensions in ~/.claude/skills/ (personal) or .claude/skills/ (project). Three-level progressive disclosure. Max 500 lines.
-
-Sub-agents: Specialized assistants via Agent(subagent_type="..."). Own 200K context. Cannot spawn sub-agents. Use /agents command.
-
-Plugins: Reusable bundles in .claude-plugin/plugin.json. Include commands, agents, skills, hooks, MCP servers.
-
-Commands: User-invoked via /command. Parameters: $ARGUMENTS, $1, $2. File refs: @file.
-
-Hooks: Events in settings.json. PreToolUse, PostToolUse, SessionStart, SessionEnd, PreCompact, Notification.
-
-Memory: CLAUDE.md files + .claude/rules/*.md. Enterprise to Project to User hierarchy. @import syntax.
-
-Settings: 6-level hierarchy. Managed to file-managed to CLI to local to shared to user.
-
-Sandboxing: OS-level isolation. Filesystem and network restrictions. Auto-allow safe operations.
-
-Headless: -p flag for non-interactive. --allowedTools, --json-schema, --agents for automation.
-
-## Skill Creation
-
-### Progressive Disclosure Architecture
-
-Level 1 (Metadata): Name and description loaded at startup, approximately 100 tokens per Skill
-
-Level 2 (Instructions): SKILL.md body loaded when triggered, under 5K tokens recommended
-
-Level 3 (Resources): Additional files loaded on demand, effectively unlimited
-
-### Required Format
-
-Create a SKILL.md file with YAML frontmatter containing name in kebab-case and description explaining what it does and when to use it in third person. Maximum 1024 characters for description. After the frontmatter, include a heading with the skill name, a Quick Start section with brief instructions, and a Details section referencing REFERENCE.md for more information.
-
-### Best Practices
-
-- Third person descriptions (does not I do)
-- Include trigger terms users mention
-- Keep under 500 lines
-- One level deep references
-- Test with Haiku, Sonnet, Opus
-
-## Sub-agent Creation
-
-### Using /agents Command
-
-Type /agents, select Create New Agent, define purpose and tools, press e to edit prompt.
-
-### File Format
-
-Create a markdown file with YAML frontmatter containing name, description explaining when to invoke (use PROACTIVELY for auto-delegation), tools as comma-separated list (Read, Write, Bash), and model specification (sonnet). After frontmatter, include the system prompt.
-
-### Critical Rules
-
-- Cannot spawn other sub-agents
-- Cannot use AskUserQuestion effectively
-- All user interaction before delegation
-- Each gets own 200K context
-
-## Plugin Creation
-
-### Directory Structure
-
-Create my-plugin directory with .claude-plugin/plugin.json, commands directory, agents directory, skills directory, hooks/hooks.json, and .mcp.json file.
-
-### Manifest (plugin.json)
-
-Create a JSON object with name, description explaining plugin purpose, version as 1.0.0, and author object containing name field.
-
-### Commands
-
-Use /plugin install owner/repo to install from GitHub.
-Use /plugin validate . to validate current directory.
-Use /plugin enable plugin-name to enable a plugin.
-
-## Advanced Agent Patterns
-
-### Two-Agent Pattern for Long Tasks
-
-Initializer agent: Sets up environment, feature registry, progress docs
-
-Executor agent: Works single features, updates registry, maintains progress
-
-See reference/advanced-agent-patterns.md for details.
-
-### Orchestrator-Worker Architecture
-
-Lead agent: Decomposes tasks, spawns workers, synthesizes results
-
-Worker agents: Execute focused tasks, return condensed summaries
-
-### Context Engineering Principles
-
-- Smallest set of high-signal tokens
-- Just-in-time retrieval over upfront loading
-- Context compaction for long sessions
-- External memory files persist outside window
-
-### Tool Design Best Practices
-
-- Consolidate related functions into single tools
-- Return high-signal context-aware responses
-- Clear parameter names (user_id not user)
-- Instructive error messages with examples
-
-### Explore/Search Performance Optimization
-
-When using the Explore agent or direct exploration tools (Grep, Glob, Read), apply these optimizations to prevent performance bottlenecks:
-
-**AST-Grep Priority**
-- Use structural search (ast-grep) before text-based search (Grep)
-- Load tool-ast-grep skill for complex pattern matching
-- Example: `sg -p 'class $X extends Service' --lang python` is faster than `grep -r "class.*extends.*Service"`
-
-**Search Scope Limitation**
-- Always use `path` parameter to limit search scope
-- Example: `Grep(pattern="func ", path="internal/core/")` instead of `Grep(pattern="async def")`
-
-**File Pattern Specificity**
-- Use specific Glob patterns instead of wildcards
-- Example: `Glob(pattern="internal/core/*.go")` instead of `Glob(pattern="src/**/*.py")`
-
-**Parallel Processing**
-- Execute independent searches in parallel (single message, multiple tool calls)
-- Maximum 5 parallel searches to prevent context fragmentation
-
-## Workflow: Explore-Plan-Code-Commit
-
-Phase 1 Explore: Read files, understand structure, map dependencies
-
-Phase 2 Plan: Use think prompts, outline approach, define criteria
-
-Phase 3 Code: Implement iteratively, verify each step, handle edges
-
-Phase 4 Commit: Descriptive messages, logical groupings, clean history
-
-## the machine Integration
-
-### Core Skills
-
-- foundation-cc: This authoring kit
-- foundation-core: Delegation, quality gate, progressive disclosure principles
-- foundation-quality: Five-dimension quality gate and verification checklist
-
-### Essential Sub-agents
-
-- manager-spec: EARS specifications
-- manager-ddd: DDD execution
-- expert-security: Security analysis
-- expert-backend: API development
-- expert-frontend: UI implementation
-
-## Security Features
-
-### Sandboxing
-
-- Filesystem: Write restricted to cwd
-- Network: Domain allowlists via proxy
-- OS-level: bubblewrap (Linux), Seatbelt (macOS)
-
-### Dev Containers
-
-- Security-hardened with firewall
-- Whitelisted outbound only
-- --dangerously-skip-permissions for trusted only
-
-### Headless Safety
-
-- Always use --allowedTools in CI/CD
-- Validate inputs before passing to Claude
-- Handle errors with exit codes
-
-## Resources
-
-For detailed patterns and working examples, see the reference directory.
-
-Version History:
-
-- v5.0.0 (2026-01-11): Converted to narrative format per CLAUDE.md Documentation Standards
-- v4.0.0 (2026-01-06): Added plugins, sandboxing, headless, statusline, dev containers, CLI reference, advanced patterns
-- v3.0.0 (2025-12-06): Added progressive disclosure, sub-agent details, integration patterns
-- v2.0.0 (2025-11-26): Initial comprehensive release
+- Skills: model-invoked, `.claude/skills/<name>/SKILL.md` (project) or `~/.claude/skills/` (personal). Three-level progressive disclosure: metadata (~100 tokens) → body (<5K tokens) → on-demand resources. Keep under 500 lines; third-person description with trigger terms.
+- Sub-agents: markdown in `.claude/agents/`, invoked via `Agent(subagent_type=...)`. Own 200K context; cannot spawn sub-agents; do user interaction before delegation. Frontmatter: name, description (use PROACTIVELY for auto-delegation), tools CSV, model.
+- Plugins: bundles with `.claude-plugin/plugin.json`; can ship commands, agents, skills, hooks, MCP servers. Manage via `/plugin`.
+- Commands: user-invoked `/name`; `$ARGUMENTS`, `$1`, `$2`, `@file` refs. Thin routing wrappers per coding-standards.
+- Hooks: events in settings.json (see hooks doc for the full event list and handler types).
+- Memory: CLAUDE.md hierarchy + `.claude/rules/*.md` + @imports (see memory doc).
+- Settings: precedence enterprise-managed > CLI > local > project > user (see settings doc).
+- Headless: `claude -p` with `--allowedTools`; always restrict tools in CI.
+
+## The Machine's Authoring Conventions
+
+- Agents resolve by `name:` frontmatter (must be unique); `skills:` refs must resolve to real skill dirs — verify after every rename.
+- Validate settings.json JSON after every edit; every registered hook needs an existing script file.
+- Use `$CLAUDE_PROJECT_DIR` in hook commands, never absolute paths.
+- Core builder agents: builder-skill (skills), builder-agent (sub-agents), builder-plugin (plugins). manager-spec / manager-ddd / manager-quality for spec-driven work.
 
 <!-- machine:evolvable-start id="rationalizations" -->
 ## Common Rationalizations
