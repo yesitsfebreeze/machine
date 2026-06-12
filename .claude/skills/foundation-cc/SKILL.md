@@ -172,7 +172,7 @@ Worker agents: Execute focused tasks, return condensed summaries
 
 ### Explore/Search Performance Optimization
 
-When using Explore agent or direct exploration tools (Grep, Glob, Read), apply these optimizations to prevent performance bottlenecks with GLM models:
+When using the Explore agent or direct exploration tools (Grep, Glob, Read), apply these optimizations to prevent performance bottlenecks:
 
 **AST-Grep Priority**
 - Use structural search (ast-grep) before text-based search (Grep)
@@ -206,12 +206,12 @@ Phase 4 Commit: Descriptive messages, logical groupings, clean history
 ### Core Skills
 
 - foundation-cc: This authoring kit
-- foundation-core: SPEC system and workflows
-- foundation-philosopher: Strategic thinking
+- foundation-core: Delegation, quality gate, progressive disclosure principles
+- foundation-quality: Five-dimension quality gate and verification checklist
 
 ### Essential Sub-agents
 
-- spec-builder: EARS specifications
+- manager-spec: EARS specifications
 - manager-ddd: DDD execution
 - expert-security: Security analysis
 - expert-backend: API development

@@ -20,7 +20,7 @@ skills:
 Modern frontend architecture + UI/UX. React/Next, Vue, Svelte. Verify current library versions via Context7/WebFetch, don't assume.
 
 ## Capabilities
-- Frameworks: React (Hooks, Server Components), Next.js (App Router, Server Actions), Vue 3 (Composition API), SvelteKit, Angular (Standalone, Signals). All load lang-typescript.
+- Frameworks: React (Hooks, Server Components), Next.js (App Router, Server Actions), Vue 3 (Composition API), SvelteKit, Angular (Standalone, Signals).
 - Component design: Atomic Design (Atoms→Molecules→Organisms→Templates→Pages), container/presentational split.
 - State: Context (small) / Zustand / Jotai / Redux Toolkit (large) / TanStack Query for React; Pinia for Vue.
 - Routing: file-based (Next/Nuxt/SvelteKit), client (React Router/Vue Router), hybrid (Remix).

@@ -39,11 +39,11 @@ Structured step-by-step reasoning via `mcp__sequential-thinking__sequentialthink
 
 Machine has THREE independent deep analysis modes. They are NOT the same thing:
 
-| Mode | Trigger | Mechanism | MCP Tool? | GLM Compatible? | Model |
-|------|---------|-----------|-----------|-----------------|-------|
-| `--deepthink` | Explicit `--deepthink` flag | Sequential Thinking MCP tool | YES — `mcp__sequential-thinking__sequentialthinking` | NO — generates server_tool_use content type | Any |
-| `ultrathink` | Keyword or auto-detection | Claude native extended reasoning (high effort) | NO — native to Claude | YES — no special content type | Any |
-| Adaptive Thinking | Automatic on Opus 4.7 | Opus 4.7's only supported thinking mode | NO — built-in | YES | Opus 4.7 only |
+| Mode | Trigger | Mechanism | MCP Tool? | Model |
+|------|---------|-----------|-----------|-------|
+| `--deepthink` | Explicit `--deepthink` flag | Sequential Thinking MCP tool | YES — `mcp__sequential-thinking__sequentialthinking` | Any |
+| `ultrathink` | Keyword or auto-detection | Claude native extended reasoning (high effort) | NO — native to Claude | Any |
+| Adaptive Thinking | Automatic on Opus 4.7 | Opus 4.7's only supported thinking mode | NO — built-in | Opus 4.7 only |
 
 **Rules:**
 - `--deepthink` → ALWAYS invoke Sequential Thinking MCP. NEVER use for native reasoning.

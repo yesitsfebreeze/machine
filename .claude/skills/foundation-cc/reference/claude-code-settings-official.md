@@ -224,11 +224,11 @@ Sub-agent Settings:
  "maxConcurrentTasks": 5,
  "taskTimeout": 300000,
  "allowedSubagents": [
- "spec-builder",
- "ddd-implementer",
- "security-expert",
- "backend-expert",
- "frontend-expert"
+ "manager-spec",
+ "manager-ddd",
+ "expert-security",
+ "expert-backend",
+ "expert-frontend"
  ],
  "customSubagents": {
  "custom-analyzer": {

@@ -15,7 +15,7 @@ metadata:
   status: "active"
   updated: "2026-01-11"
   tags: "ast, refactoring, code-search, lint, structural-search, security, codemod"
-  related-skills: "workflow-testing, foundation-quality, domain-backend, domain-frontend"
+  related-skills: "workflow-testing, foundation-quality, rust-best-practices"
   context: "fork"
   agent: "Explore"
 
@@ -225,10 +225,7 @@ For JSON output suitable for CI/CD, execute sg scan with config and json flag, r
 
 - workflow-testing: DDD integration and test pattern detection
 - foundation-quality: five-dimension quality gate and code quality
-- domain-backend: API pattern detection and security scanning
-- domain-frontend: React/Vue pattern optimization
-- lang-python: Python-specific security and style rules
-- lang-typescript: TypeScript type safety patterns
+- rust-best-practices: idiomatic Rust patterns for structural rules
 
 ### Related Agents
 

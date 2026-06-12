@@ -254,10 +254,7 @@ sg scan --config sgconfig.yml --json > results.json
 
 - **workflow-testing** - DDD integration, test pattern detection
 - **foundation-quality** - five-dimension quality gate, code quality
-- **domain-backend** - API pattern detection, security scanning
-- **domain-frontend** - React/Vue pattern optimization
-- **lang-python** - Python-specific security and style rules
-- **lang-typescript** - TypeScript type safety patterns
+- **rust-best-practices** - idiomatic Rust patterns for structural rules
 
 ### Related Agents
 

@@ -292,21 +292,21 @@ Key practices:
 
 Execute tasks in order, passing results between agents:
 
-Phase 1 Analysis: Invoke spec-builder subagent to analyze requirements
-Phase 2 Implementation: Invoke backend-expert subagent with analysis results
-Phase 3 Validation: Invoke quality-gate subagent to validate implementation
+Phase 1 Analysis: Invoke manager-spec subagent to analyze requirements
+Phase 2 Implementation: Invoke expert-backend subagent with analysis results
+Phase 3 Validation: Invoke manager-quality subagent to validate implementation
 
 ### Parallel Delegation
 
 Execute independent tasks simultaneously:
 
-Invoke backend-expert, frontend-expert, and test-engineer subagents in parallel for independent implementation tasks
+Invoke expert-backend, expert-frontend, and expert-testing subagents in parallel for independent implementation tasks
 
 ### Conditional Delegation
 
 Route based on analysis results:
 
-Based on analysis findings, route to database-expert for database issues or backend-expert for API issues
+Based on analysis findings, route to expert-backend for database or API issues, expert-debug for crashes
 
 ## Context Management
 

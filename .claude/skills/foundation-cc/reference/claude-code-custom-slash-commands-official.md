@@ -122,14 +122,14 @@ target="$2"
 case "$action" in
  "create")
  Agent(
- subagent_type="spec-builder",
+ subagent_type="manager-spec",
  prompt="Create specification for $target",
  context={"user_input": "$ARGUMENTS"}
  )
  ;;
  "validate")
  Agent(
- subagent_type="quality-gate",
+ subagent_type="manager-quality",
  prompt="Validate configuration in $target",
  context={"config_file": "$target"}
  )
@@ -278,21 +278,21 @@ Linear Execution Pattern:
 ```python
 # Phase 1: Analysis
 analysis = Agent(
- subagent_type="spec-builder",
+ subagent_type="manager-spec",
  prompt="Analyze requirements for $ARGUMENTS",
  context={"user_input": "$ARGUMENTS"}
 )
 
 # Phase 2: Implementation (passes analysis results)
 implementation = Agent(
- subagent_type="ddd-implementer",
+ subagent_type="manager-ddd",
  prompt="Implement based on analysis",
  context={"analysis": analysis, "spec_id": analysis.spec_id}
 )
 
 # Phase 3: Quality Validation
 validation = Agent(
- subagent_type="quality-gate",
+ subagent_type="manager-quality",
  prompt="Validate implementation",
  context={"implementation": implementation}
 )
@@ -306,11 +306,11 @@ Concurrent Execution Pattern:
 # Independent parallel execution
 results = await Promise.all([
  Agent(
- subagent_type="backend-expert",
+ subagent_type="expert-backend",
  prompt="Backend implementation for $1"
  ),
  Agent(
- subagent_type="frontend-expert",
+ subagent_type="expert-frontend",
  prompt="Frontend implementation for $1"
  ),
  Agent(
@@ -321,7 +321,7 @@ results = await Promise.all([
 
 # Integration phase
 integration = Agent(
- subagent_type="quality-gate",
+ subagent_type="manager-quality",
  prompt="Integrate all components",
  context={"components": results}
 )
@@ -335,19 +335,19 @@ Dynamic Agent Selection:
 # Route based on analysis results
 if analysis.has_database_issues:
  result = Agent(
- subagent_type="database-expert",
+ subagent_type="expert-backend",
  prompt="Optimize database",
  context={"issues": analysis.database_issues}
  )
 elif analysis.has_api_issues:
  result = Agent(
- subagent_type="backend-expert",
+ subagent_type="expert-backend",
  prompt="Fix API issues",
  context={"issues": analysis.api_issues}
  )
 else:
  result = Agent(
- subagent_type="quality-gate",
+ subagent_type="manager-quality",
  prompt="General quality check",
  context={"analysis": analysis}
  )
@@ -423,7 +423,7 @@ fi
 
 # Execute validation
 Agent(
- subagent_type="quality-gate",
+ subagent_type="manager-quality",
  prompt="Validate $config_file using $validator" +
  (" --strict" if strict_mode else ""),
  context={
@@ -477,7 +477,7 @@ Complete DDD-based feature implementation from specification to deployment.
 ```python
 # Generate comprehensive specification
 spec_result = Agent(
- subagent_type="spec-builder",
+ subagent_type="manager-spec",
  prompt="Create detailed specification for: $1",
  context={
  "feature_description": "$1",
@@ -509,7 +509,7 @@ plan_result = Agent(
 if [ "$2" != "--skip-tests" ]; then
  # RED phase: Write failing tests
  test_result = Agent(
- subagent_type="test-engineer",
+ subagent_type="expert-testing",
  prompt="Write comprehensive tests for $spec_id",
  context={"spec_id": spec_id}
  )
@@ -521,7 +521,7 @@ fi
 ```python
 # IMPROVE phase: Implement feature
 implementation_result = Agent(
- subagent_type="ddd-implementer",
+ subagent_type="manager-ddd",
  prompt="Implement feature for $spec_id",
  context={
  "spec_id": spec_id,
@@ -535,7 +535,7 @@ implementation_result = Agent(
 ```python
 # REFACTOR and validation
 quality_result = Agent(
- subagent_type="quality-gate",
+ subagent_type="manager-quality",
  prompt="Validate implementation for $spec_id",
  context={
  "implementation": implementation_result,
@@ -616,7 +616,7 @@ env_result = Agent(
 
 # Security validation
 security_result = Agent(
- subagent_type="security-expert",
+ subagent_type="expert-security",
  prompt="Perform security pre-deployment check",
  context={"environment": "$1"}
 )
@@ -628,7 +628,7 @@ security_result = Agent(
 if [ "$2" != "--skip-tests" ]; then
  # Run comprehensive test suite
  test_result = Agent(
- subagent_type="test-engineer",
+ subagent_type="expert-testing",
  prompt="Execute deployment test suite",
  context={"environment": "$1"}
  )
