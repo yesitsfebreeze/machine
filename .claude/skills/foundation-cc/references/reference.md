@@ -22,15 +22,15 @@ Task Invocation:
 - Returns structured result object for chaining
 
 Available Sub-agent Types:
-- `spec-builder`: EARS format specification generation
-- `ddd-implementer`: ANALYZE-PRESERVE-IMPROVE DDD execution
-- `backend-expert`: Backend architecture and API development
-- `frontend-expert`: Frontend UI implementation
-- `security-expert`: Security analysis and validation
-- `docs-manager`: Technical documentation generation
-- `quality-gate`: TRUST 5 validation
-- `agent-factory`: Create new sub-agents
-- `skill-factory`: Create compliant skills
+- `manager-spec`: EARS format specification generation
+- `manager-ddd`: ANALYZE-PRESERVE-IMPROVE DDD execution
+- `expert-backend`: Backend architecture and API development
+- `expert-frontend`: Frontend UI implementation
+- `expert-security`: Security analysis and validation
+- `manager-docs`: Technical documentation generation
+- `manager-quality`: five-dimension quality gate
+- `builder-agent`: Create new sub-agents
+- `builder-skill`: Create compliant skills
 
 ### Command Parameter API
 

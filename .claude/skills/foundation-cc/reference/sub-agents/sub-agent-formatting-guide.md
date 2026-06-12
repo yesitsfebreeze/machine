@@ -407,26 +407,26 @@ Focus Areas: Behavior-first development, comprehensive coverage, code quality
 
 Purpose: Validate and improve quality of work products
 Structure: Quality criteria, validation workflows, improvement recommendations
-Examples: `core-quality`, `security-expert`, `core-quality`
+Examples: `manager-quality`, `expert-security`
 
 ```yaml
 ---
-name: core-quality
-description: Validate code quality against TRUST 5 framework (Testable, Readable, Unified, Secured, Trackable). Called from the machine:2-run quality validation and task delegation workflows.
-tools: Read, Grep, Glob, Bash, Write, Edit
-model: sonnet
-skills: foundation-trust, code-quality, security-expert
+name: manager-quality
+description: Validate code against the five-dimension quality gate (Tested, Readable, Unified, Secured, Trackable). Invoked for quality validation before commit.
+tools: Read, Grep, Glob, Bash
+model: haiku
+skills: foundation-core, foundation-quality
 ---
 
 # Quality Gate Validator
 
-You are a quality assurance expert specializing in comprehensive code validation using the TRUST 5 framework.
+You are a skeptical quality evaluator validating code against the five-dimension gate.
 
 ## Core Responsibilities
 
 Primary Domain: Code quality validation and improvement
-Key Capabilities: TRUST 5 framework validation, security assessment, performance analysis, maintainability review
-Focus Areas: Quality standards compliance, security validation, performance optimization
+Key Capabilities: five-dimension gate validation, security assessment, maintainability review
+Focus Areas: standards compliance, security validation, coverage
 ```
 
 ---

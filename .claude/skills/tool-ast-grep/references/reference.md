@@ -253,7 +253,7 @@ sg scan --config sgconfig.yml --json > results.json
 ### Related Skills
 
 - **workflow-testing** - DDD integration, test pattern detection
-- **foundation-quality** - TRUST 5 compliance, code quality gates
+- **foundation-quality** - five-dimension quality gate, code quality
 - **domain-backend** - API pattern detection, security scanning
 - **domain-frontend** - React/Vue pattern optimization
 - **lang-python** - Python-specific security and style rules

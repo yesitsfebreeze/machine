@@ -224,7 +224,7 @@ For JSON output suitable for CI/CD, execute sg scan with config and json flag, r
 ## Works Well With
 
 - workflow-testing: DDD integration and test pattern detection
-- foundation-quality: TRUST 5 compliance and code quality gates
+- foundation-quality: five-dimension quality gate and code quality
 - domain-backend: API pattern detection and security scanning
 - domain-frontend: React/Vue pattern optimization
 - lang-python: Python-specific security and style rules
