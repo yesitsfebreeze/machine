@@ -12,7 +12,6 @@ Coding standards specific to this machine's instruction and configuration files.
 All instruction documents must be in English:
 - CLAUDE.md
 - Agent definitions (.claude/agents/**/*.md)
-- Slash commands (.claude/commands/**/*.md)
 - Skill definitions (.claude/skills/**/*.md)
 - Hook scripts (.claude/hooks/**/*.py, *.sh)
 - Project layer documents (/.proj/**/*.md, glossary.csv)
@@ -46,28 +45,11 @@ Single source of truth principle:
 - Use references (@file) instead of copying content
 - Update source file, not copies
 
-## Thin Command Pattern
+## No Slash Commands
 
-All slash command files MUST be thin routing wrappers (under 20 LOC body).
-
-Rules:
-- Commands route to a skill via the Skill tool -- they never contain workflow logic
-- All workflow logic belongs in the skill body under `.claude/skills/<name>/`
-- YAML frontmatter must include: description, argument-hint, allowed-tools (CSV string)
-- Root commands may contain router tables but no implementation logic
-
-Template:
-```
----
-description: [One-sentence action description]
-argument-hint: "[Optional arg]"
-allowed-tools: Skill
----
-
-Use the Skill tool to invoke the matching skill with: [subcommand] $ARGUMENTS
-```
-
-Enforcement: keep command bodies under 20 LOC; all logic lives in the skill.
+Slash commands are retired in this machine; the `.claude/commands/` directory
+must not exist. All workflow logic lives in skills under `.claude/skills/<name>/`,
+invoked directly via the Skill tool.
 
 ## Claude Code Version Compatibility
 
