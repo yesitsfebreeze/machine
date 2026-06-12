@@ -209,7 +209,7 @@ This skill contains 4 modules:
 #### Running Scans
 ```bash
 # Scan with the machine rules
-sg scan --config .claude/skillsthe machine-tool-ast-grep/rules/sgconfig.yml
+sg scan --config sgconfig.yml
 
 # Scan specific directory
 sg scan --config sgconfig.yml src/

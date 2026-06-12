@@ -213,7 +213,7 @@ AST-Grep is integrated into the machine through the Tool Registry as AST_ANALYZE
 
 ### Running Scans
 
-To scan with the machine rules, execute sg scan with config pointing to .claude/skillsthe machine-tool-ast-grep/rules/sgconfig.yml.
+To scan with project rules, run sg scan from the project root — it auto-discovers sgconfig.yml (or pass --config path/to/sgconfig.yml).
 
 To scan a specific directory, execute sg scan with config sgconfig.yml and the src/ directory.
 

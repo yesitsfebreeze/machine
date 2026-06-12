@@ -784,7 +784,7 @@ jobs:
         run: npm install -g @ast-grep/cli
 
       - name: Run Security Scan
-        run: sg scan --config .claude/skillsthe machine-tool-ast-grep/rules/sgconfig.yml --format github
+        run: sg scan --config sgconfig.yml --format github
 
       - name: Upload Results
         if: always()
@@ -801,7 +801,7 @@ jobs:
 #!/bin/bash
 echo "Running AST-Grep security scan..."
 
-sg scan --config .claude/skillsthe machine-tool-ast-grep/rules/sgconfig.yml --format compact
+sg scan --config sgconfig.yml --format compact
 
 if [ $? -ne 0 ]; then
     echo "AST-Grep found issues. Please fix before committing."
@@ -965,7 +965,7 @@ sg run --pattern 'oldFunc($$$ARGS)' --rewrite 'newFunc($$$ARGS)' --lang javascri
 
 ```bash
 # Scan for security issues
-sg scan --config .claude/skillsthe machine-tool-ast-grep/rules/sgconfig.yml --severity error
+sg scan --config sgconfig.yml --severity error
 
 # Generate SARIF report for GitHub Security
 sg scan --config sgconfig.yml --format sarif -o security-report.sarif

@@ -229,7 +229,7 @@ message: 'Use jwt.verify() instead of jwt.decode() for security.'
 Run security scan:
 
 ```bash
-sg scan --config .claude/skillsthe machine-tool-ast-grep/rules/sgconfig.yml --severity error
+sg scan --config sgconfig.yml --severity error
 ```
 
 JSON output for CI:

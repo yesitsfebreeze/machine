@@ -3,7 +3,7 @@
 - **Name:** the machine
 - **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/bootstrap`.
 - **Stack:** Markdown instruction documents (agents, skills, commands, rules, output-styles); Node ESM hooks (`*.mjs`); JSON config (`settings.json`); CSV/Markdown glossary.
-- **Platform:** Windows (`E:\dev\tempalte`), PowerShell 7+ shell, git-backed.
+- **Platform:** Windows, PowerShell 7+ shell, git-backed.
 - **Target:** install payload — the tree becomes `<project>/.claude/`. This repo root *is* the machine source; `/.proj/` is the project layer (never copied).
 - **Authoritative spec:** `README.md` (install protocol + layout) + `.claude/agents/default.md` (machine law) are the canonical truth.
 
@@ -15,7 +15,7 @@
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
 - `.claude/commands/bootstrap.md` — the one per-project command
 - `.claude/settings.json` — hook wiring, env, `agent: default`
-- `.proj/improve.json` — **live worklist** for the ongoing unification `/loop` (gitignored, ephemeral)
+- `.proj/improve.json` — **live worklist** for the ongoing `/improve` loop (tracked in git; outstanding work only)
 
 ## Build / test / quality gate
 There is no compile step. "Build" = configuration integrity:
