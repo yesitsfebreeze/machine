@@ -126,7 +126,7 @@ Required Components:
 3. "CRITICAL: This agent MUST be invoked via Agent(subagent_type='...')" clause
 
 Examples:
-- `Use PROACTIVELY for backend architecture, API design, server implementation, database integration, or microservices architecture. Called from the machine:1-plan and task delegation workflows. CRITICAL: This agent MUST be invoked via Agent(subagent_type='code-backend') - NEVER executed directly.`
+- `Use PROACTIVELY for backend architecture, API design, server implementation, database integration, or microservices architecture. CRITICAL: This agent MUST be invoked via Agent(subagent_type='code-backend') - NEVER executed directly.`
 - `Backend development agent` (too vague, missing required clauses)
 - `Helps with backend stuff` (unprofessional, missing trigger scenarios)
 
@@ -334,7 +334,7 @@ Examples: `code-backend`, `code-frontend`, `data-database`
 ```yaml
 ---
 name: code-backend
-description: Use PROACTIVELY for backend architecture, API design, server implementation, database integration, or microservices architecture. Called from the machine:1-plan and task delegation workflows.
+description: Use PROACTIVELY for backend architecture, API design, server implementation, database integration, or microservices architecture.
 tools: Read, Write, Edit, Bash, WebFetch, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: sonnet
 skills: domain-backend, essentials-perf, context7-integration
@@ -360,7 +360,7 @@ Examples: `format-expert`, `support-debug`, `workflow-docs`
 ```yaml
 ---
 name: format-expert
-description: Use PROACTIVELY for code formatting, style consistency, linting configuration, and automated code quality improvements. Called from the machine:2-run quality gates and task delegation workflows.
+description: Use PROACTIVELY for code formatting, style consistency, linting configuration, and automated code quality improvements.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: haiku
 skills: code-quality, cc-configuration
@@ -386,7 +386,7 @@ Examples: `workflow-ddd`, `agent-factory`, `skill-factory`
 ```yaml
 ---
 name: workflow-ddd
-description: Execute ANALYZE-PRESERVE-IMPROVE DDD cycle for implementing features with behavior preservation. Called from the machine:2-run SPEC implementation and task delegation workflows.
+description: Execute ANALYZE-PRESERVE-IMPROVE DDD cycle for implementing features with behavior preservation.
 tools: Read, Write, Edit, Bash, Grep, Glob, MultiEdit, TodoWrite
 model: sonnet
 skills: lang-python, domain-testing, foundation-quality
@@ -888,7 +888,7 @@ Multi-capability Design:
 ```yaml
 ---
 name: full-stack-developer
-description: Use PROACTIVELY for complete application development including frontend, backend, database, and deployment. Called from the machine:2-run comprehensive implementation and task delegation workflows.
+description: Use PROACTIVELY for complete application development including frontend, backend, database, and deployment.
 tools: Read, Write, Edit, Bash, Grep, Glob, WebFetch, MultiEdit, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: sonnet
 skills: domain-backend, domain-frontend, domain-database, devops-expert, security-expert

@@ -24,7 +24,7 @@ Examples Cover: Domain experts, tool specialists, process orchestrators, quality
 ```yaml
 ---
 name: code-backend
-description: Use PROACTIVELY for backend architecture, API design, server implementation, database integration, or microservices architecture. Called from the machine:1-plan architecture design and task delegation workflows.
+description: Use PROACTIVELY for backend architecture, API design, server implementation, database integration, or microservices architecture.
 tools: Read, Write, Edit, Bash, WebFetch, Grep, Glob, MultiEdit, TodoWrite, AskUserQuestion, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: sonnet
 skills: domain-backend, essentials-perf, context7-integration, lang-python
@@ -192,7 +192,7 @@ database_selection:
 ```yaml
 ---
 name: code-frontend
-description: Use PROACTIVELY for frontend UI development, React/Vue/Angular components, responsive design, user experience optimization, or web application architecture. Called from the machine:2-run implementation and task delegation workflows.
+description: Use PROACTIVELY for frontend UI development, React/Vue/Angular components, responsive design, user experience optimization, or web application architecture.
 tools: Read, Write, Edit, Grep, Glob, MultiEdit, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: sonnet
 skills: domain-frontend, cc-configuration, context7-integration, ui-ux-expert
@@ -433,7 +433,7 @@ module.exports = {
 ```yaml
 ---
 name: format-expert
-description: Use PROACTIVELY for code formatting, style consistency, linting configuration, and automated code quality improvements. Called from the machine:2-run quality gates and task delegation workflows.
+description: Use PROACTIVELY for code formatting, style consistency, linting configuration, and automated code quality improvements.
 tools: Read, Write, Edit, Bash, Grep, Glob, MultiEdit
 model: haiku
 skills: code-quality, cc-configuration, lang-python
@@ -930,7 +930,7 @@ class DebuggingKnowledgeBase:
 ```yaml
 ---
 name: workflow-ddd
-description: Execute ANALYZE-PRESERVE-IMPROVE DDD cycle for implementing features with behavior preservation and comprehensive test coverage. Called from the machine:2-run SPEC implementation and task delegation workflows.
+description: Execute ANALYZE-PRESERVE-IMPROVE DDD cycle for implementing features with behavior preservation and comprehensive test coverage.
 tools: Read, Write, Edit, Bash, Grep, Glob, MultiEdit, TodoWrite
 model: sonnet
 skills: lang-python, domain-testing, foundation-quality, core-spec-authoring
