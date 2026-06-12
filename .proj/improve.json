@@ -5,17 +5,8 @@
     "identity": "the machine",
     "law": "Machine law lives in agents/default.md; project layer in /.proj/.",
     "real_proj_layout": "agent.md, project.md (SINGLE file), glossary.csv, personas/ + personas.md, plans/, skills/. NO .proj/config/, NO .proj/project/ dir. Canonical initializer = /bootstrap.",
-    "sole_driver_rule": "Run this /improve loop from ONE session only. improve.json has no lock; concurrent cron drivers caused lost writes (incident e193515d). One cron = one writer.",
-    "terseness_pattern": "Cut dup-frontmatter prose (Primary-Mission/Core-Capabilities/Scope-Boundaries = SSOT violation), Phase/Step narrative, time estimates, false-precision metrics, and FICTION (nonexistent configs/agents/commands/paths). KEEP all real facts + [HARD] rules + delegation + done-when. Verify frontmatter + skills refs intact after each edit. Prefer root-cause reconciliation over blind trimming when content describes things that do not exist.",
-    "done": "External naming eliminated (moai/spool/mo.ai/Yoda/R2-D2 = 0). 3 fictional framework skill-trees de-fictionalized to single truthful files (foundation-core, foundation-quality, workflow-testing; 68 dead files pruned). Slices 1-5,7,8 complete. Self-install = README Agent Install Protocol. AGENT TERSENESS SWEEP COMPLETE: all 23 agents are terse directive-only; grep for Primary-Mission|Core-Capabilities|Scope-Boundaries|Phase|TRUST-5 across agents/ = 0. STALE-NAME SWEEP COMPLETE: 7 dead unreferenced MoAI-era example files deleted (foundation-cc references/ + reference/skill-examples,skill-formatting-guide,sub-agents/); all fictional agent names (spec-builder, backend-expert family, lang-*, domain-*) remapped to real registry; GLM column dropped; grep across .claude = 0."
+    "sole_driver_rule": "Run this /improve loop from ONE session only. improve.json has no lock; one cron = one writer (see glossary: sole driver).",
+    "terseness_pattern": "Cut dup-frontmatter prose, Phase/Step narrative, time estimates, false-precision metrics, and FICTION (nonexistent configs/agents/commands/paths/CLI/settings keys). KEEP all real facts + [HARD] rules + delegation + done-when. Verify frontmatter + refs intact after each edit. Root-cause reconciliation over blind trimming."
   },
-  "files": [
-    {
-      "path": "6-docs-consistency",
-      "status": "improving",
-      "follow_ups": [
-        "Truth pass on claude-code-iam-official.md (635 lines; invented roles/enterprise JSON framework around line 251+) and claude-code-memory-official.md (check team/workflow example near line 516). Pattern: keep real content, excise invented schema/CLI, terse rewrite like settings doc (commit 5247020)."
-      ]
-    }
-  ]
+  "files": []
 }
