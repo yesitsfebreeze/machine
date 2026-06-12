@@ -14,9 +14,7 @@
       "path": "6-docs-consistency",
       "status": "improving",
       "follow_ups": [
-        "Glossary sweep (.proj/glossary.csv) for ambiguous machine terms.",
-        "Terseness pass on remaining verbose skill bodies if any (foundation-cc reference set, default.md).",
-        "Verify kern memory wiring: ingest/query when mcp__kern__* is connected (per-session availability varies)."
+        "Terseness/truth pass on foundation-cc reference set (large official-doc mirrors; check for remaining fiction beyond names, e.g. nonexistent settings keys or commands)."
       ]
     }
   ]
