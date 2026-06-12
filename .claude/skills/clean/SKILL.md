@@ -1,6 +1,8 @@
 ---
 name: clean
-description: cleanup skill
+description: Source cleanup pass — drive code toward zero duplication, minimum file count, single responsibility per file. One atomic cleanup per commit, project gate green between steps. Use for "clean this up", dead-code sweeps, and dedupe/consolidate passes.
 ---
 
-/loop 5m /coder /vicky-first /goal execute ./references/clean.md
+# Clean — source cleanup
+
+Follow references/clean.md.
