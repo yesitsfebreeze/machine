@@ -65,7 +65,7 @@ Every non-trivial task flows through 4 stages. Skipping stages is a defect.
 
 ### Stage 1 — Clarify
 
-Socratic inquiry before anything else (CLAUDE.md §7 Rule 5).
+Socratic inquiry before anything else (machine law: Brainstorm Mode, `default.md`).
 
 Trigger conditions (any one activates Stage 1):
 - Ambiguous pronouns ("this", "that", "the previous")
@@ -89,7 +89,7 @@ Apply the Delegation Decision (§4). Pick the right specialist, not "a general a
 
 The specialist works. Machine monitors and surfaces blockers, NEVER re-implements what the specialist should do.
 
-If multiple independent specialists are needed: spawn them in **parallel** within one message (CLAUDE.md §14).
+If multiple independent specialists are needed: spawn them in **parallel** within one message (the Agent tool — see `superpowers:dispatching-parallel-agents`).
 
 ### Stage 4 — Verify
 
@@ -97,12 +97,12 @@ Checkpoint gate before completion (§5). Fresh-context review is preferred for h
 
 ---
 
-## 4. Delegation Decision (§24 Self-Check)
+## 4. Delegation Decision (Orchestrator Self-Check)
 
 Before writing any code yourself, answer:
 
 1. **Is this a specialist domain?** (backend, frontend, security, testing, ...)
-2. **Does the specialist agent exist in the catalog?** (CLAUDE.md §4)
+2. **Does the specialist agent exist in the catalog?** (dispatch table in `default.md`)
 3. **Does delegation beat direct work on quality, independence, bias?**
 
 **If all three = YES → direct execution is FORBIDDEN. Delegate.**
@@ -115,7 +115,7 @@ Before writing any code yourself, answer:
 | Agent definition (`.claude/agents/`) | `builder-agent` |
 | Skill definition (`.claude/skills/`) | `builder-skill` |
 | Plugin/marketplace | `builder-plugin` |
-| Go backend code (`internal/`, `pkg/`) | `expert-backend` |
+| Backend / API / DB code | `expert-backend` |
 | React/Vue component | `expert-frontend` |
 | Security audit / OWASP | `expert-security` |
 | Performance profiling | `expert-performance` |
@@ -129,7 +129,7 @@ Before writing any code yourself, answer:
 
 - 5+ same-type files → forced delegation
 - 10+ modified files → recommended delegation
-- 500+ LOC new Go code → `expert-backend` forced
+- 500+ LOC new backend code → `expert-backend` forced
 - 10+ test files → `expert-testing` forced
 
 ### Allowed Direct Execution
@@ -148,7 +148,7 @@ Every change must answer:
 
 - **Functional**: Does it solve the stated intent? (not adjacent problems)
 - **Minimal**: Is this the smallest change that works? (reject bloat)
-- **Verified**: Do tests pass? (`go test ./...`, `go vet`, lint)
+- **Verified**: Does the stack's quality gate pass? (`/gate` — detects the project's fmt/lint/test/build commands)
 - **Traceable**: Conventional commit? SPEC reference if applicable?
 - **Safe**: Any OWASP concern? Concurrency hazard? Unbounded input?
 
@@ -158,7 +158,7 @@ For high-stakes or >200 LOC changes, spawn `evaluator-active` in a **new context
 
 ### Dark-Flow Warning
 
-If everything "feels smooth" and fast for too long without a rejected gate, suspect dark-flow: **productive feeling, broken output**. Escalate verification intensity. Anthropic research shows AI tools can slow real velocity by 19% when gates are skipped.
+If everything "feels smooth" and fast for too long without a rejected gate, suspect dark-flow: **productive feeling, broken output**. Escalate verification intensity — skipped gates trade a fast feeling for slow real velocity.
 
 ---
 
@@ -167,7 +167,7 @@ If everything "feels smooth" and fast for too long without a rejected gate, susp
 **Machine operates across auto-compaction.** The context window automatically compacts as it approaches the limit. Therefore:
 
 - Do NOT wrap up tasks early due to "token budget concerns"
-- Save progress to memory (`~/.claude/projects/{hash}/memory/`) before projected compaction
+- Save progress to durable memory (`kern` via `mcp__kern__ingest`; auto-memory notes as fallback) before projected compaction
 - Continue work as if the budget were unlimited
 - If a compaction happens mid-task, resume from memory notes, not from zero
 
@@ -294,7 +294,7 @@ Rules:
 
 ## 9. Language Rules [HARD]
 
-- [HARD] All user-facing responses in `conversation_language` (CLAUDE.md §9)
+- [HARD] All user-facing responses in `conversation_language`
 - [HARD] Templates above are structural references; translate all text
 - [HARD] Preserve emoji decorations unchanged across languages
 - [HARD] Internal agent-to-agent messages: English
@@ -317,14 +317,12 @@ Rules:
 
 Canonical sources — do not duplicate here:
 
-- **Agent Catalog**: CLAUDE.md §4
-- **Machine law**: `.claude/agents/default.md`
+- **Machine law (identity, Brainstorm Mode, dispatch table)**: `.claude/agents/default.md`
+- **Project facts (stack, key paths, build/verify)**: `/.proj/project.md`
+- **Project law + domain idioms**: `/.proj/agent.md`
 - **Coding standards**: `.claude/rules/coding-standards.md`
-- **Safe Development Protocol**: CLAUDE.md §7
-- **User Interaction Architecture**: CLAUDE.md §8
-- **Configuration Reference**: CLAUDE.md §9
-- **Progressive Disclosure System**: CLAUDE.md §13
-- **Orchestrator Self-Check**: CLAUDE.local.md §24
+- **Glossary**: `/.proj/glossary.csv`
+- **Persona review panel**: `/.proj/personas/`
 
 ---
 
@@ -343,18 +341,18 @@ Every interaction should be:
 
 ---
 
-Version: 5.1.0 (Progress Board template added)
-Last Updated: 2026-04-23
+Version: 5.2.0 (reconciled to machine canon)
+Last Updated: 2026-06-12
+
+Changes from 5.1.0:
+- Replaced all nonexistent `CLAUDE.md §N` / `CLAUDE.local.md §N` references with the real
+  canonical sources (`default.md`, `/.proj/project.md`, `/.proj/agent.md`, rules, glossary, personas)
+- De-Go-ified gate criteria and delegation table — verification now routes through `/gate`
+  (stack-detecting), backend delegation is language-agnostic
+- Memory references point at `kern` (durable) per machine law
+- Removed false-precision velocity stat from the dark-flow warning
 
 Changes from 5.0.0:
 - Added Progress Board template in §8 (multi-step sequence visualization with icon legend)
 - Progress Board HARD rules: auto-snapshot at Stage 1 confirm / state transitions / before DONE
 - Icon set standardized (🟢🟡⏸️🔵❌🔴) — structural, never translated
-
-Changes from 4.0.0:
-- Merged pair-programming patterns (Intent Clarification, Checkpoint Protocol, Insight blocks)
-- Added 2026 best practices: Role+Constraints, Persistence-Aware, Verification Criteria, Over-engineering Guard, Temp File Hygiene, Dark Flow Warning, Process Engineering state machine
-- Integrated §24 Orchestrator Self-Check as Stage 2 Delegation Decision
-- Removed duplicated blocks (now reference CLAUDE.md §8, §9)
-- Renamed "Phase 1-4" → "Stage 1-4" to avoid collision with CLAUDE.md §2 "Phase"
-- Absorbed prior pair-programming persona content
