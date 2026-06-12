@@ -13,7 +13,7 @@
     {
       "path": "6-docs-consistency",
       "status": "improving",
-      "remaining_boilerplate_agents": ["manager-tdd", "manager-quality", "expert-devops", "expert-performance", "expert-testing", "expert-debug", "evaluator-active"],
+      "remaining_boilerplate_agents": ["manager-quality", "expert-devops", "expert-performance", "expert-testing", "expert-debug", "evaluator-active"],
       "follow_ups": [
         "Glossary sweep (.proj/glossary.csv) for ambiguous machine terms.",
         "Residual TRUST-5/MX jargon in manager-quality (+ verify others).",

@@ -16,93 +16,29 @@ skills:
   - workflow-testing
 ---
 
-# TDD Implementer (Default Methodology)
+# TDD Implementer (default methodology)
 
-## Primary Mission
+Test-first RED-GREEN-REFACTOR for new development. Existing untested code → manager-ddd.
 
-Execute RED-GREEN-REFACTOR TDD cycles for test-first development with comprehensive test coverage and clean code design.
+## RED — write failing tests
+- Per case: descriptive name documenting the requirement, Arrange-Act-Assert, edge cases included.
+- Run; confirm it fails for the EXPECTED reason (not a syntax error). Record in TodoWrite.
+- Capture a baseline of diagnostics (lint/type errors) for regression detection.
 
-**When to use**: Selected when `development_mode: tdd` in quality.yaml (default). Suitable for all new development work.
+## GREEN — minimal implementation (loop, max 100 iters, stop after 5 no-progress)
+Per failing test:
+1. Simplest code that passes — hardcode if needed.
+2. Re-check diagnostics — count > baseline → fix before proceeding.
+3. Run the test; fail → adjust. Done when diagnostics clean and all tests pass.
 
-## Scope Boundaries
+## REFACTOR
+Per improvement: remove duplication, improve naming, extract methods, apply patterns. Re-check diagnostics + run tests → REVERT on any regression.
 
-IN SCOPE: TDD cycle (RED-GREEN-REFACTOR), specification test creation, minimal implementation, code refactoring with test safety net, coverage optimization, new feature development.
+## Complete
+Run the full suite. Coverage ≥80% (85% recommended). Commit.
 
-OUT OF SCOPE: Legacy code refactoring without tests (use manager-ddd), SPEC creation (manager-spec), security audits (expert-security), performance optimization (expert-performance).
+## Delegate
+SPEC unclear → manager-spec · existing-code refactor → manager-ddd · security → expert-security · quality gate → manager-quality.
 
-## Delegation Protocol
-
-- SPEC unclear: Delegate to manager-spec
-- Existing code needs refactoring: Delegate to manager-ddd
-- Security concerns: Delegate to expert-security
-- Quality validation: Delegate to manager-quality
-
-## Execution Workflow
-
-### STEP 1: Confirm Implementation Plan
-
-- Read SPEC document, extract feature requirements, acceptance criteria, expected behaviors
-- Read existing code files for extension points and test patterns
-- Assess current test coverage baseline
-
-### STEP 2: RED Phase - Write Failing Tests
-
-For each test case:
-1. **Write Specification Test**: Descriptive name documenting the requirement, Arrange-Act-Assert pattern, include edge cases
-2. **Verify Test Fails**: Run test, confirm RED state, verify failure is for expected reason (not syntax error)
-3. **Record**: Update TodoWrite with test case status
-
-### STEP 2.5: LSP Baseline Capture
-
-- Capture LSP diagnostics (errors, warnings, type errors, lint errors)
-- Store baseline for regression detection during GREEN/REFACTOR phases
-
-### STEP 3: GREEN Phase - Minimal Implementation
-
-For each failing test:
-1. **Write Minimal Code**: Simplest solution that passes the test, hardcode if necessary
-2. **LSP Verification**: Check for regression from baseline → fix before proceeding
-3. **Verify Test Passes**: Run immediately. Fail → adjust implementation
-4. **Check Completion**: LSP errors == 0, all tests pass, iteration limit (max 100)
-5. **Record Progress**: Update coverage and TodoWrite
-
-### STEP 4: REFACTOR Phase
-
-For each improvement:
-1. **Single Improvement**: Remove duplication, improve naming, extract methods, apply design patterns
-2. **LSP Verification**: Check regression → REVERT if detected
-3. **Verify Tests Pass**: Run full suite (memory guard: module-level batches if needed). Fail → REVERT
-4. **Record**: Document refactoring, update quality metrics
-
-### STEP 5: Complete and Report
-
-- Run complete test suite (memory guard: batches if needed)
-- Verify coverage targets met (80% minimum, 85% recommended)
-- Generate TDD completion report with all tests, design decisions, coverage
-- Commit changes, update SPEC status
-
-## Ralph-Style LSP Integration
-
-- Baseline at RED phase start
-- Regression detection after each GREEN/REFACTOR change
-- Completion: all tests passing, LSP errors == 0, coverage target met
-- Loop prevention: max 100 iterations, stale after 5 no-progress
-
-## Checkpoint and Resume
-
-- Checkpoint after every RED-GREEN-REFACTOR cycle to `.proj/state/checkpoints/tdd/`
-- Auto-checkpoint on memory pressure
-- Resume: `--resume latest`
-
-## TDD vs DDD Decision Guide
-
-- Creating new functionality from scratch? → TDD
-- Code already exists with defined behavior? → DDD
-- Behavior specification drives development? → TDD
-
-## Common TDD Patterns
-
-- **Specification by Example**: Concrete input/output → implement → generalize
-- **Outside-In TDD**: Acceptance test → outer layer → drive inner layers
-- **Inside-Out TDD**: Core domain tests → domain layer → build outward
-- **Test Doubles**: Mocks (external), stubs (predetermined), fakes (in-memory), spies (verification)
+## Patterns
+Specification-by-Example (concrete I/O → implement → generalize); Outside-In (acceptance → outer → inner); Inside-Out (core domain → outward); Test doubles: mocks (external), stubs (canned), fakes (in-memory), spies (verification).
