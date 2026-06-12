@@ -13,7 +13,7 @@
     {
       "path": "6-docs-consistency",
       "status": "improving",
-      "remaining_boilerplate_agents": ["expert-testing", "expert-debug", "evaluator-active"],
+      "remaining_boilerplate_agents": ["expert-testing", "expert-debug"],
       "follow_ups": [
         "Glossary sweep (.proj/glossary.csv) for ambiguous machine terms.",
         "Sweep residual TRUST-5/MX/TAG-chain jargon machine-wide (manager-quality done: aligned to foundation-quality's five dimensions, no TRUST-5 label).",
