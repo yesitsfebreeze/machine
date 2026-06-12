@@ -4,14 +4,11 @@ paths: "**/*.scala,**/*.sc,**/build.sbt"
 
 # Scala Development Guide
 
-
 ---
-
 
 # Scala 3.4+ Development Specialist
 
 Functional programming, effect systems, and big data processing for JVM applications.
-
 
 Core Capabilities:
 
@@ -50,7 +47,6 @@ This skill uses progressive disclosure with specialized modules:
 - [spark-data.md](modules/spark-data.md) - Apache Spark 3.5: DataFrame API, SQL, Structured Streaming
 
 ---
-
 
 ### Project Setup (SBT 1.10)
 
@@ -126,15 +122,6 @@ Effect System Issues:
 - Akka: Review actor hierarchy and supervision strategies
 
 ---
-
-
-- moai-lang-java - JVM interoperability, Spring Boot integration
-- moai-domain-backend - REST API, GraphQL, microservices patterns
-- moai-domain-database - Doobie, Slick, database patterns
-- moai-workflow-testing - ScalaTest, MUnit, property-based testing
-
----
-
 
 For comprehensive reference materials:
 

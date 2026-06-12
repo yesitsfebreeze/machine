@@ -4,12 +4,9 @@ paths: "**/*.dart,**/pubspec.yaml,**/pubspec.lock"
 
 # Flutter/Dart Development Guide
 
-
 ---
 
-
 Flutter/Dart Development Expert - Dart 3.5+, Flutter 3.24+ with modern patterns.
-
 
 Core Capabilities:
 
@@ -19,7 +16,6 @@ Core Capabilities:
 - go_router: Declarative navigation and deep linking
 - Platform Channels: Native iOS/Android integration
 - Testing: flutter_test, widget_test, integration_test
-
 
 ### Dart 3.5 Language Features
 
@@ -90,9 +86,3 @@ Navigation and Storage:
 - `/cfug/dio` - HTTP client
 - `/isar/isar` - NoSQL database
 
-
-- `moai-lang-swift` - iOS native integration for platform channels
-- `moai-lang-kotlin` - Android native integration for platform channels
-- `moai-domain-backend` - API integration and backend communication
-- `moai-quality-security` - Mobile security best practices
-- `moai-essentials-debug` - Flutter debugging and DevTools

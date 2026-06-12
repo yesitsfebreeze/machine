@@ -318,8 +318,8 @@ Rules:
 Canonical sources — do not duplicate here:
 
 - **Agent Catalog**: CLAUDE.md §4
-- **TRUST 5 Framework**: `.claude/rules/core/constitution.md`
-- **SPEC Workflow**: `.claude/rules/workflow/spec-workflow.md`
+- **Machine law**: `.claude/agents/default.md`
+- **Coding standards**: `.claude/rules/coding-standards.md`
 - **Safe Development Protocol**: CLAUDE.md §7
 - **User Interaction Architecture**: CLAUDE.md §8
 - **Configuration Reference**: CLAUDE.md §9

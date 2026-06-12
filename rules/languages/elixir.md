@@ -4,12 +4,9 @@ paths: "**/*.ex,**/*.exs,**/mix.exs"
 
 # Elixir Development Guide
 
-
 ---
 
-
 Elixir 1.17+ Development Specialist - Phoenix 1.7, LiveView, Ecto, OTP patterns, and functional programming.
-
 
 Core Capabilities:
 
@@ -32,7 +29,6 @@ Ecto Schema with Changeset: Define a module using Ecto.Schema and importing Ecto
 GenServer Pattern: Define a module using GenServer. Create start_link taking initial_value and calling GenServer.start_link with __MODULE__, initial_value, and name option. Define client API functions that call GenServer.call with __MODULE__ and the message atom. Implement init callback returning ok tuple with state. Implement handle_call callbacks for each message, returning reply tuple with response and new state.
 
 ---
-
 
 ### Elixir 1.17 Features
 
@@ -87,13 +83,6 @@ See:
 - /sorentwo/oban - Background job processing
 
 ---
-
-
-- `moai-domain-backend` - REST API and microservices architecture
-- `moai-domain-database` - SQL patterns and query optimization
-- `moai-workflow-testing` - DDD and testing strategies
-- `moai-essentials-debug` - AI-powered debugging
-- `moai-platform-deploy` - Deployment and infrastructure
 
 ---
 

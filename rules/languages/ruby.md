@@ -4,12 +4,9 @@ paths: "**/*.rb,**/Gemfile,**/Gemfile.lock,**/*.gemspec"
 
 # Ruby Development Guide
 
-
 ---
 
-
 Ruby 3.3+ Development Specialist - Rails 7.2, ActiveRecord, Hotwire/Turbo, RSpec, and modern Ruby patterns.
-
 
 Core Capabilities:
 
@@ -37,7 +34,6 @@ RSpec Test Pattern:
 Create RSpec.describe for User model type. In describe validations block, add expectations for validate_presence_of and validate_uniqueness_of for email. In describe full_name block, use let to build user with first_name John and last_name Doe. Add it block expecting user.full_name to eq John Doe.
 
 ---
-
 
 ### Ruby 3.3 New Features
 
@@ -123,13 +119,6 @@ See:
 - thoughtbot/factory_bot for test data factories
 
 ---
-
-
-- moai-domain-backend for REST API and web application architecture
-- moai-domain-database for SQL patterns and ActiveRecord optimization
-- moai-workflow-testing for DDD and testing strategies
-- moai-essentials-debug for AI-powered debugging
-- moai-foundation-quality for TRUST 5 quality principles
 
 ---
 

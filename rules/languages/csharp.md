@@ -4,14 +4,11 @@ paths: "**/*.cs,**/*.csproj,**/*.sln"
 
 # C# Development Guide
 
-
 ---
-
 
 # C# 12 / .NET 8 Development Specialist
 
 Modern C# development with ASP.NET Core, Entity Framework Core, Blazor, and enterprise patterns.
-
 
 Core Stack:
 
@@ -102,9 +99,3 @@ For async enumerable streaming, create async methods returning IAsyncEnumerable 
 
 ---
 
-
-- `moai-domain-backend` - API design, database integration patterns
-- `moai-platform-deploy` - Azure, Docker, Kubernetes deployment
-- `moai-workflow-testing` - Testing strategies and patterns
-- `moai-foundation-quality` - Code quality standards
-- `moai-essentials-debug` - Debugging .NET applications

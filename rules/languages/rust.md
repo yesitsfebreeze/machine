@@ -4,12 +4,9 @@ paths: "**/*.rs,**/Cargo.toml,**/Cargo.lock"
 
 # Rust Development Guide
 
-
 ---
 
-
 Rust 1.92+ Development Specialist with deep patterns for high-performance, memory-safe applications.
-
 
 Core Use Cases:
 
@@ -26,7 +23,6 @@ Axum REST API: Create Router with route macro chaining path and handler. Add wit
 Async Handler with SQLx: Define async handler function taking State extractor for AppState and Path extractor for id. Use sqlx::query_as! macro with SQL string and bind parameters. Call fetch_optional on pool, await, and use ok_or for error conversion. Return Json wrapped result.
 
 ---
-
 
 ### Rust 1.92 Features
 
@@ -116,12 +112,6 @@ Library Documentation Access:
 
 ---
 
-
-- `moai-lang-go` - Go systems programming patterns
-- `moai-domain-backend` - REST API architecture and microservices patterns
-- `moai-foundation-quality` - Security hardening for Rust applications
-- `moai-workflow-testing` - Test-driven development workflows
-
 ---
 
 ## Troubleshooting
@@ -142,7 +132,6 @@ Performance Characteristics:
 - Container Size: 5-15MB (alpine)
 
 ---
-
 
 See reference/engineering.md for advanced ownership patterns and trait design.
 

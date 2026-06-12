@@ -4,12 +4,9 @@ paths: "**/*.java,**/pom.xml,**/build.gradle,**/build.gradle.kts"
 
 # Java Development Guide
 
-
 ---
 
-
 Java 21 LTS Expert - Enterprise development with Spring Boot 3.3, Virtual Threads, and modern Java features.
-
 
 Core Capabilities:
 
@@ -21,7 +18,6 @@ Core Capabilities:
 - Build Tools: Maven 3.9, Gradle 8.5 with Kotlin DSL
 
 ---
-
 
 ### Java 21 LTS Features
 
@@ -112,13 +108,6 @@ Library mappings for latest documentation:
 - junit-team/junit5 for JUnit 5 testing framework
 
 ---
-
-
-- moai-lang-kotlin for Kotlin interoperability and Spring Kotlin extensions
-- moai-domain-backend for REST API, GraphQL, and microservices architecture
-- moai-domain-database for JPA, Hibernate, and R2DBC patterns
-- moai-foundation-quality for JUnit 5, Mockito, and TestContainers integration
-- moai-infra-docker for JVM container optimization
 
 ---
 

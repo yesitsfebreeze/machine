@@ -4,12 +4,9 @@ paths: "**/*.ts,**/*.tsx,**/tsconfig.json"
 
 # TypeScript Development Guide
 
-
 ---
 
-
 TypeScript 5.9+ Development Specialist - Modern TypeScript with React 19, Next.js 16, and type-safe API patterns.
-
 
 Core Stack:
 
@@ -24,7 +21,6 @@ Quick Commands:
 Create Next.js 16 project using npx create-next-app with latest, typescript, tailwind, and app flags. Install type-safe API stack with npm install for trpc server, client, react-query, zod, and tanstack react-query. Install testing stack with npm install D flag for vitest, testing-library react, and playwright test.
 
 ---
-
 
 ### TypeScript 5.9 Key Features
 
@@ -116,14 +112,6 @@ For comprehensive documentation including advanced TypeScript patterns, performa
 For TypeScript documentation, use microsoft/TypeScript with decorators satisfies topics. For React 19, use facebook/react with server-components use-hook. For Next.js 16, use vercel/next.js with app-router server-actions. For tRPC, use trpc/trpc with procedures middleware. For Zod, use colinhacks/zod with schema validation.
 
 ---
-
-
-- moai-domain-frontend for UI components and styling patterns
-- moai-domain-backend for API design and database integration
-- moai-library-shadcn for component library integration
-- moai-workflow-testing for testing strategies and patterns
-- moai-foundation-quality for code quality standards
-- moai-essentials-debug for debugging TypeScript applications
 
 ---
 

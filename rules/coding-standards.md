@@ -1,11 +1,11 @@
 ---
-description: MoAI-specific coding standards for instruction documents and configuration files
+description: Coding standards for the machine's instruction documents and configuration files
 globs: .claude/**/*.md, .claude/**/*.yaml, .proj/**/*.yaml, CLAUDE.md
 ---
 
 # Coding Standards
 
-MoAI-specific coding standards. General coding conventions are not included as Claude already knows them.
+Coding standards specific to this machine's instruction and configuration files. General coding conventions are not included as Claude already knows them.
 
 ## Language Policy
 
@@ -26,7 +26,7 @@ User-facing documentation may use multiple languages:
 CLAUDE.md must not exceed 40,000 characters.
 
 When approaching limit:
-- Move detailed content to .claude/rules/moai/
+- Move detailed content to .claude/rules/
 - Use @import references
 - Keep only core identity and hard rules in CLAUDE.md
 
@@ -51,8 +51,8 @@ Single source of truth principle:
 All slash command files MUST be thin routing wrappers (under 20 LOC body).
 
 Rules:
-- Commands route to skills via `Skill("moai")` -- they never contain workflow logic
-- All workflow logic belongs in `.claude/skills/moai/workflows/` or skill body
+- Commands route to a skill via the Skill tool -- they never contain workflow logic
+- All workflow logic belongs in the skill body under `.claude/skills/<name>/`
 - YAML frontmatter must include: description, argument-hint, allowed-tools (CSV string)
 - Root commands may contain router tables but no implementation logic
 
@@ -64,12 +64,10 @@ argument-hint: "[Optional arg]"
 allowed-tools: Skill
 ---
 
-Use Skill("moai") with arguments: [subcommand] $ARGUMENTS
+Use the Skill tool to invoke the matching skill with: [subcommand] $ARGUMENTS
 ```
 
-Enforcement: `internal/template/commands_audit_test.go` verifies this pattern on every `go test`.
-
-Source: SPEC-THIN-CMDS-001
+Enforcement: keep command bodies under 20 LOC; all logic lives in the skill.
 
 ## Claude Code Version Compatibility
 
@@ -81,7 +79,7 @@ Settings fields introduced by specific Claude Code versions:
 | `disableBypassPermissionsMode` | v2.1.111 | Prevents agents from using bypassPermissions mode when true |
 | `Bash(timeout=N)` | v2.1.110 | Per-command Bash timeout in ms; max 600,000ms |
 
-When adding new settings fields, update `internal/template/templates/.claude/settings.json.tmpl`
+When adding new settings fields, update `.claude/settings.json`
 and this compatibility table.
 
 ## Paths Frontmatter

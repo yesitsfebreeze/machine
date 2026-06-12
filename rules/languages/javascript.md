@@ -4,12 +4,9 @@ paths: "**/*.js,**/*.mjs,**/*.cjs,**/package.json"
 
 # JavaScript Development Guide
 
-
 ---
 
-
 JavaScript ES2024+ Development Specialist - Modern JavaScript with Node.js 22 LTS, multiple runtimes, and contemporary tooling.
-
 
 Core Stack:
 
@@ -26,7 +23,6 @@ Quick Commands:
 Create a Vite project using npm create vite with latest tag, project name, and vanilla template. Initialize with modern tooling using npm init and npm install with D flag for vitest, eslint, and eslint/js. Run with Node.js watch mode using node with watch flag. Run TypeScript directly in Node.js 22+ using node with experimental-strip-types flag.
 
 ---
-
 
 ### ES2024 Key Features
 
@@ -120,14 +116,6 @@ For comprehensive documentation including advanced async patterns, module system
 For Node.js documentation, use context7 get library docs with nodejs/node and topics like esm modules async. For Express, use expressjs/express with middleware routing. For Fastify, use fastify/fastify with plugins hooks. For Hono, use honojs/hono with middleware validators. For Vitest, use vitest-dev/vitest with mocking coverage.
 
 ---
-
-
-- moai-lang-typescript for TypeScript integration and type checking with JSDoc
-- moai-domain-backend for API design and microservices architecture
-- moai-domain-database for database integration and ORM patterns
-- moai-workflow-testing for DDD workflows and testing strategies
-- moai-foundation-quality for code quality standards
-- moai-essentials-debug for debugging JavaScript applications
 
 ---
 

@@ -4,12 +4,9 @@ paths: "**/*.kt,**/*.kts,**/build.gradle.kts"
 
 # Kotlin Development Guide
 
-
 ---
 
-
 Kotlin 2.0+ Expert - K2 compiler, coroutines, Ktor, Compose Multiplatform with Context7 integration.
-
 
 Core Capabilities:
 
@@ -21,7 +18,6 @@ Core Capabilities:
 - Testing: JUnit 5, MockK, Kotest, Turbine for Flow testing
 
 ---
-
 
 ### Kotlin 2.0 Features
 
@@ -101,13 +97,6 @@ Consider Alternatives When:
 - Big data pipelines (prefer Scala with Spark)
 
 ---
-
-
-- `moai-lang-java` - Java interoperability and Spring Boot patterns
-- `moai-domain-backend` - REST API, GraphQL, microservices architecture
-- `moai-domain-database` - JPA, Exposed, R2DBC patterns
-- `moai-quality-testing` - JUnit 5, MockK, TestContainers integration
-- `moai-infra-docker` - JVM container optimization
 
 ---
 

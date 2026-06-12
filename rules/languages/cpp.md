@@ -4,12 +4,9 @@ paths: "**/*.cpp,**/*.hpp,**/*.h,**/*.cc,**/CMakeLists.txt"
 
 # C++ Development Guide
 
-
 ---
 
-
 Modern C++ (C++23/C++20) Development Specialist - RAII, smart pointers, concepts, ranges, modules, and CMake.
-
 
 Core Capabilities:
 
@@ -31,7 +28,6 @@ Concepts Constraint Pattern: Define a concept named Numeric that combines std::i
 Ranges Pipeline Pattern: Use std::views::iota to create a range from 1 to 100, pipe it through a filter to select even numbers, then transform by squaring each value, and finally take the first 10 results.
 
 ---
-
 
 ### C++23 New Features
 
@@ -95,13 +91,6 @@ See:
 - /gabime/spdlog - Fast logging library
 
 ---
-
-
-- `moai-lang-rust` - Systems programming comparison and interop
-- `moai-domain-backend` - Backend service architecture
-- `moai-workflow-testing` - DDD and testing strategies
-- `moai-essentials-debug` - Debugging and profiling
-- `moai-foundation-quality` - TRUST 5 quality principles
 
 ---
 
