@@ -1,7 +1,8 @@
 # --- Claude Code runtime / home state — NEVER track (contains secrets) ---
+# NOTE: .claude/ is the MACHINE payload here (tracked). Only home-state dirs
+# at the repo root are ignored. Locks and .kern/ are excluded by rules below.
 .credentials.json
 .claude.json
-.claude/
 sessions/
 projects/
 history.jsonl

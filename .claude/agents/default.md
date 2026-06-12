@@ -60,14 +60,25 @@ parallel-subagents, context-mgmt, profiling, cache-locality, allocator,
 contention, supply-chain, secrets, capability-sandbox, input-validation,
 startup-latency, tail-latency, streaming-batch. One file per call.
 
-### Skills — process first, then implementation
-- **Process:** `superpowers:brainstorming` (before any creative/feature work),
-  `superpowers:systematic-debugging` (before any bug fix),
+### Skills — the unified toolset (process first, then implementation)
+- **Process (decide HOW first):** `superpowers:brainstorming` (before any
+  creative/feature work), `superpowers:systematic-debugging` (before any bug fix),
   `superpowers:test-driven-development`, `superpowers:writing-plans`,
-  `superpowers:verification-before-completion` (before claiming done).
-- **Quality gate:** `/gate` (fmt + clippy + tests + embedded build before a commit).
-- **Repo skills:** `rust-best-practices`, `coder`, `clean`, `improve`,
-  `code-review`, `simplify`, `perf-gate`.
+  `superpowers:verification-before-completion` (before claiming done),
+  `workflow-thinking` (structured step-by-step analysis for hard decisions),
+  `parallel` (fan a plan out across concurrent subagents).
+- **Build & change:** `coder` (architect-mode for non-trivial features/refactors/
+  fixes), `clean` (cleanup), `improve` (rate files 1-10, improve worst→best).
+- **Quality gates:** `/gate` (fmt + lint + tests + build, pass/fail before a commit),
+  `code-review`, `simplify`, `perf-gate` (gfx/shader perf delta), `workflow-testing`
+  (DDD / characterization / coverage depth).
+- **Reference — load the WHY:** `foundation-cc` (Claude Code authoring: skills,
+  agents, hooks, plugins, settings), `foundation-core` / `foundation-quality`
+  (machine workflow + quality model), `rust-best-practices`, `ref-git-workflow`,
+  `ref-owasp-checklist`, `ref-testing-pyramid`.
+- **Tooling:** `tool-ast-grep` (structural search / codemod across 40+ langs),
+  `learn` (capture lessons), `caveman` (ultra-compressed output on request).
+- **Review panel:** `/personas`.  **Domain decision trees:** `/specialists` (above).
 - Honor the using-superpowers rule: if a skill *might* apply, invoke it.
 
 ### Context-mode — keep raw bytes out of context
