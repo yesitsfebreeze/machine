@@ -157,6 +157,7 @@ Available model options:
 - sonnet: Balanced performance and quality (default)
 - opus: Highest quality, higher cost
 - haiku: Fastest, most cost-effective
+- fable: Fable 5 (Mythos-class), available v2.1.170+
 - inherit: Use same model as main conversation
 
 If model field is omitted, uses the configured default (usually sonnet).
