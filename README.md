@@ -66,6 +66,58 @@ hooks, or settings.
 
 ---
 
+## Update — agent protocol
+
+**If a user points you at this README and says "update" (the target already has a
+`.claude/` machine), do NOT do a fresh install or wipe `/.proj/`.** An update is two
+moves: *merge the newer machine into `.claude/`*, then *reconcile `/.proj/`* — check it
+is still current and patch only the gaps.
+
+1. **Confirm it's an update.** `$target/.claude/` already exists with the machine tree
+   (`agents/`, `skills/`, `hooks/`, `rules/`, `settings.json`). If it doesn't, this is a
+   fresh install — use the self-install protocol above instead.
+
+2. **Clone the machine** into a temp dir, same as install:
+   ```bash
+   target="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+   tmp="$(mktemp -d)"; git clone --depth 1 "<clone-url>" "$tmp"
+   ```
+
+3. **Merge the new state over `.claude/`.** Same excludes as install, so instance state
+   survives — the nested `.claude/` session dir, `.kern/` data store, and lock files are
+   never touched. `rsync` without `--delete` overwrites machine files with their newer
+   versions and adds new ones, leaving your live state in place:
+   ```bash
+   rsync -a --exclude '.git' --exclude 'README.md' --exclude '.claude' \
+            --exclude '.kern' --exclude '*.lock' --exclude '*.lock.json' \
+            "$tmp"/ "$target/.claude/"
+   ```
+   No `rsync`? Copy the same top-level entries with your file tools, overwriting in
+   place. (A merge does not *remove* files retired upstream; if you want those gone, do a
+   clean reinstall instead — back up `/.proj/` first, it lives outside `.claude/` so it is
+   already safe.)
+
+4. **Reconcile `/.proj/` — do NOT clear it.** Re-read the current repo and compare against
+   the existing project layer. Patch only what drifted:
+   - `project.md` — stack, key paths, build/test/gate commands still accurate?
+   - `glossary.csv` / `glossary.md` — terms still defined, none renamed away?
+   - `personas/` — does the updated machine expect persona slots that are missing?
+   - `agent.md` — identity/domain law still matches the repo's shape?
+
+   If `/.proj/` is missing or structurally stale, run `/bootstrap` to rebuild it. If it is
+   present and largely intact, hand-patch the specific gaps instead of regenerating.
+
+5. **Clean up:** `rm -rf "$tmp"`.
+
+6. **Report** which machine files changed under `.claude/`, what (if anything) you patched
+   in `/.proj/`, and confirm `/personas`, `/gate`, glossary discipline, and the dispatch
+   table are still live.
+
+The contrast: **install** copies the machine in fresh, **bootstrap** clears and rebuilds
+`/.proj/`, **update** merges the machine forward and reconciles `/.proj/` in place.
+
+---
+
 ## Install by hand — fallback
 
 No agent? Two steps:
