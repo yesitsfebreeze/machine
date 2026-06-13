@@ -48,16 +48,25 @@ target repo has a live `.claude/` machine, specialized to itself.
    and `*.lock*`. (The machine source is the agent/skill tree — `agents/`, `skills/`,
    `hooks/`, `rules/`, `output-styles/`, `settings.json`; nothing else.)
 
-5. **Clean up:** `rm -rf "$tmp"`.
+5. **Stamp the version.** Record the exact machine commit you just installed so a later
+   update can tell whether anything changed. Write the source clone's HEAD into
+   `version.log` at the root of the installed machine:
+   ```bash
+   git -C "$tmp" rev-parse HEAD > "$target/.claude/version.log"
+   ```
+   `version.log` is instance state — it is generated here, never copied from the repo, and
+   is excluded from every merge (same as `.kern/` and lock files).
 
-6. **Bootstrap.** `/bootstrap` now resolves from `$target/.claude/skills/bootstrap/`.
+6. **Clean up:** `rm -rf "$tmp"`.
+
+7. **Bootstrap.** `/bootstrap` now resolves from `$target/.claude/skills/bootstrap/`.
    Run it. It scans README / CLAUDE.md / docs / manifests and writes `/.proj/`:
    - `agent.md` — this repo's identity, domain law, idioms (read by `agents/default.md`)
    - `project.md` — facts: stack, key paths, build/test/gate commands
    - `glossary.csv` / `glossary.md` — vocabulary
    - `personas/` + `personas.md` — a review panel tuned to this repo's risks
 
-7. **Report** what landed under `.claude/`, and confirm `/.proj` is specialized and that
+8. **Report** what landed under `.claude/`, and confirm `/.proj` is specialized and that
    `/personas`, `/gate`, glossary discipline, and the dispatch table are live.
 
 That's the whole thing: **point an agent at this README → it clones the machine, installs
@@ -83,7 +92,23 @@ is still current and patch only the gaps.
    tmp="$(mktemp -d)"; git clone --depth 1 "<clone-url>" "$tmp"
    ```
 
-3. **Merge the new state over `.claude/`.** Same excludes as install, so instance state
+3. **Check the version before doing any work.** Compare the installed commit
+   (`$target/.claude/version.log`, written at install) against the freshly cloned HEAD.
+   If they match, the machine is already current — clean up and stop; nothing to merge.
+   Only proceed when the hashes differ (the clone is a newer or different commit):
+   ```bash
+   installed="$(cat "$target/.claude/version.log" 2>/dev/null || echo none)"
+   latest="$(git -C "$tmp" rev-parse HEAD)"
+   if [ "$installed" = "$latest" ]; then
+     echo "Already up to date ($installed) — nothing to do."; rm -rf "$tmp"
+   fi
+   ```
+   If `version.log` is absent (machine predates version stamping), treat it as out of date
+   and continue with the merge. No `bash`? Read the one-line hash from
+   `$target/.claude/version.log` with your file tools and compare it to the clone's HEAD
+   the same way.
+
+4. **Merge the new state over `.claude/`.** Same excludes as install, so instance state
    survives — the nested `.claude/` session dir, `.kern/` data store, and lock files are
    never touched. `rsync` without `--delete` overwrites machine files with their newer
    versions and adds new ones, leaving your live state in place:
@@ -97,7 +122,13 @@ is still current and patch only the gaps.
    clean reinstall instead — back up `/.proj/` first, it lives outside `.claude/` so it is
    already safe.)
 
-4. **Reconcile `/.proj/` — do NOT clear it.** Re-read the current repo and compare against
+5. **Re-stamp the version.** Record the commit you just merged so the next update compares
+   against it:
+   ```bash
+   git -C "$tmp" rev-parse HEAD > "$target/.claude/version.log"
+   ```
+
+6. **Reconcile `/.proj/` — do NOT clear it.** Re-read the current repo and compare against
    the existing project layer. Patch only what drifted:
    - `project.md` — stack, key paths, build/test/gate commands still accurate?
    - `glossary.csv` / `glossary.md` — terms still defined, none renamed away?
@@ -107,9 +138,9 @@ is still current and patch only the gaps.
    If `/.proj/` is missing or structurally stale, run `/bootstrap` to rebuild it. If it is
    present and largely intact, hand-patch the specific gaps instead of regenerating.
 
-5. **Clean up:** `rm -rf "$tmp"`.
+7. **Clean up:** `rm -rf "$tmp"`.
 
-6. **Report** which machine files changed under `.claude/`, what (if anything) you patched
+8. **Report** which machine files changed under `.claude/`, what (if anything) you patched
    in `/.proj/`, and confirm `/personas`, `/gate`, glossary discipline, and the dispatch
    table are still live.
 
@@ -130,9 +161,11 @@ No agent? Two steps:
    rsync -a --exclude '.git' --exclude 'README.md' --exclude '.claude' \
             --exclude '.kern' --exclude '*.lock*' \
             /tmp/machine/ /path/to/newrepo/.claude/
+   git -C /tmp/machine rev-parse HEAD > /path/to/newrepo/.claude/version.log
    rm -rf /tmp/machine
    ```
-   `/.proj/` lives outside `.claude/`, so it never tags along.
+   `/.proj/` lives outside `.claude/`, so it never tags along. The `version.log` line
+   stamps the installed commit so a later update can detect changes.
 
 2. **Run `/bootstrap`.** Open Claude Code in the new repo and run it.
 
@@ -153,3 +186,4 @@ rebuilds it from the current state. (Ephemeral bits — locks, `improve.json`,
 | `skills/bootstrap/` | `/bootstrap` — re-indexes `/.proj` per project |
 | `settings.json` | hook wiring, env, `agent: default` |
 | `rules/` | shared rules loaded as instructions |
+| `version.log` | installed machine commit hash (instance state; written on install/update) |

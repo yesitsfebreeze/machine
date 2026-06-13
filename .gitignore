@@ -16,3 +16,6 @@ plugins/
 # lock files
 *.lock
 *.lock.json
+
+# installed-machine version stamp (generated at install/update time, never tracked)
+version.log
