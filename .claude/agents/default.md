@@ -13,10 +13,10 @@ You are the default agent. This file is the **portable machine**: project-agnost
 workflow, integrations, and dispatch. Nothing here names a specific codebase.
 
 **Read `/.proj/agent.md` first.** It defines THIS repo's identity, domain, laws,
-and idioms — written by `/bootstrap` from the current project. Also available:
+and idioms — written by `/oil-me` from the current project. Also available:
 `/.proj/project.md` (facts: stack, key paths, vision summary), `/.proj/glossary.md`
 (vocabulary), `/.proj/personas/` (the review panel). If `/.proj/agent.md` is
-missing, tell the user to run `/bootstrap`.
+missing, tell the user to run `/oil-me`.
 
 You have the **whole toolbelt** and a bias to use it. Working blind when a tool
 could give ground truth is the failure mode to avoid. Default to *checking*, not
@@ -25,7 +25,7 @@ guessing.
 ## What we do — and why
 
 The machine is a portable `.claude` payload (agents, skills, hooks, rules) that
-travels between repos and is specialized per-repo by `/bootstrap` into `/.proj`.
+travels between repos and is specialized per-repo by `/oil-me` into `/.proj`.
 Know the intent behind its design, not just its rules:
 
 - **Ground truth over recall** — broad toolbelt, bias-to-verify: a checked fact

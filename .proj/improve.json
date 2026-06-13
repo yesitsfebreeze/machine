@@ -10,7 +10,7 @@
     "identity": "the machine",
     "law": "Machine law in agents/default.md; project layer in /.proj/ (agent.md, project.md single file, glossary.csv, personas/).",
     "sole_driver_rule": "One session drives this loop (see glossary: sole driver).",
-    "note": "superpowers:* and plugin-namespaced skills are REAL (plugin registry) — do not flag them as fiction. /bootstrap is a skill (skills/bootstrap/), not a command."
+    "note": "superpowers:* and plugin-namespaced skills are REAL (plugin registry) — do not flag them as fiction. /oil-me is a skill (skills/oil-me/), not a command; it replaced /bootstrap and absorbed install/update/re-index."
   },
   "files": []
 }

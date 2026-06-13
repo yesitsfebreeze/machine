@@ -50,7 +50,7 @@ File memory (CLAUDE.md/rules) holds *instructions*. Durable project *knowledge* 
 - Capture: `mcp__kern__ingest` (required when kern responds; skip silently when down)
 - Never use file-memory for durable knowledge; never duplicate kern content into CLAUDE.md
 
-Machine command surface for memory-adjacent work: `/bootstrap` (re-index /.proj), `/gate`, `/code-review`, `/improve`, `/personas`.
+Machine command surface for memory-adjacent work: `/oil-me` (install/update/re-index /.proj), `/gate`, `/code-review`, `/improve`, `/personas`.
 
 ## Best Practices
 

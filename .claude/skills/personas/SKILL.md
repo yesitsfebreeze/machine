@@ -23,7 +23,7 @@ here, so it stays in sync as personas are added or revised.
    `{WORK_DESCRIPTION}` — include the files touched and the user-visible effect.
 
 If `.proj/personas/` is empty or `/.proj/` is missing, tell the user to run
-`/bootstrap` (or author personas) and stop — do not invent personas.
+`/oil-me` (or author personas) and stop — do not invent personas.
 
 ## Step 2: Spawn one subagent per persona, in parallel
 

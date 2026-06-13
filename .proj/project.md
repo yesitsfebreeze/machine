@@ -1,11 +1,11 @@
 # Project facts — the machine
 
 - **Name:** the machine
-- **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/bootstrap`.
+- **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/oil-me`.
 - **Stack:** Markdown instruction documents (agents, skills, commands, rules, output-styles); Node ESM hooks (`*.mjs`); JSON config (`settings.json`); CSV/Markdown glossary.
 - **Platform:** Windows, PowerShell 7+ shell, git-backed.
 - **Target:** install payload — the tree becomes `<project>/.claude/`. This repo root *is* the machine source; `/.proj/` is the project layer (never copied).
-- **Authoritative spec:** `README.md` (install protocol + layout) + `.claude/agents/default.md` (machine law) are the canonical truth.
+- **Authoritative spec:** `.claude/INSTRUCTIONS.md` (install/update/re-index protocol + layout) + `.claude/agents/default.md` (machine law) are the canonical truth.
 
 ## Key paths
 - `.claude/agents/default.md` — the eager-generalist default agent (reads `/.proj`)
@@ -13,7 +13,8 @@
 - `.claude/skills/` — 21 skill dirs; `name:` frontmatter must match dir name
 - `.claude/rules/coding-standards.md` + `.claude/rules/languages/*` (16 language rules)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
-- `.claude/skills/bootstrap/` — `/bootstrap`, re-indexes `/.proj` from the current repo
+- `.claude/skills/oil-me/` — `/oil-me`, installs/updates the machine and re-indexes `/.proj` from the current repo
+- `.claude/INSTRUCTIONS.md` — the lifecycle protocol `/oil-me` executes
 - `.claude/settings.json` — hook wiring, env, `agent: default`
 - `.proj/improve.json` — **live worklist** for the ongoing `/improve` loop (tracked in git; outstanding work only)
 

@@ -16,7 +16,7 @@ skills:
 
 # Project Manager
 
-Seed and maintain the project layer `/.proj/` — the per-repo half that specializes the portable `.claude/` machine. The canonical procedure is `/bootstrap`; follow it.
+Seed and maintain the project layer `/.proj/` — the per-repo half that specializes the portable `.claude/` machine. The canonical procedure is `/oil-me` (its Re-index `/.proj/` section); follow it.
 
 ## Subagent contract [HARD]
 - Runs stateless via Agent(). Cannot use AskUserQuestion — the caller pre-collects choices.
