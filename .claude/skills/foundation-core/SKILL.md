@@ -33,7 +33,7 @@ triggers:
 
 The principles that keep work in the machine correct, delegated, and verifiable.
 The canonical authority is `.claude/agents/default.md` (Machine law) plus the
-project layer in `/.proj/`; this skill explains the *why* behind four recurring
+project layer in `/.machine/`; this skill explains the *why* behind four recurring
 decisions. It never overrides Machine law or project law.
 
 ## 1. Delegate to the right specialist
@@ -44,7 +44,7 @@ delegation buys an independent context and domain focus.
 
 - Agents resolve by their `name:` frontmatter, not by path. The dispatch table
   lives in `default.md`; the catalog of who-does-what is there and in
-  `/.proj/project.md`.
+  `/.machine/project.md`.
 - Spawn specialists with the Agent tool. When several pieces of work are
   independent, dispatch them in one message so they run in parallel (see
   `superpowers:dispatching-parallel-agents`).
@@ -57,7 +57,7 @@ delegation buys an independent context and domain focus.
 Every non-trivial change answers five questions before it is called complete.
 The dimensions are language-agnostic; the concrete commands come from the
 project's own toolchain via `/gate` (it detects fmt/lint/test/build, or reads
-the exact commands from `/.proj/project.md`).
+the exact commands from `/.machine/project.md`).
 
 - **Tested** — the behavior is covered and the suite passes.
 - **Readable** — names and structure make intent obvious; the linter is clean.
@@ -96,7 +96,7 @@ Keep each skill self-describing and small.
 ## Works well with
 
 - `default.md` — Machine law and the live dispatch table (authority).
-- `/.proj/project.md`, `/.proj/agent.md` — project facts, paths, and project law.
+- `/.machine/project.md`, `/.machine/agent.md` — project facts, paths, and project law.
 - `foundation-cc` — Claude Code authoring detail for skills, agents, hooks,
   plugins, and settings.
 - `foundation-quality` — the quality-gate mechanics in depth.

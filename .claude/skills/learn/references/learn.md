@@ -16,8 +16,8 @@ Nothing durable learned in a session is lost. Lessons land in the right store: k
 
 1. **Dedup first.** `mcp__kern__query` the lesson's topic; if kern already holds it accurately, skip. If it holds it wrongly, this is an update — reuse the existing `object_id`.
 2. **Route by kind:**
-   - Vocabulary → add/fix a row in `/.proj/glossary.csv` (category,term,definition)
-   - Binding rule candidate → propose an addition to `/.proj/agent.md` to the user; never add law silently
+   - Vocabulary → add/fix a row in `/.machine/glossary.csv` (category,term,definition)
+   - Binding rule candidate → propose an addition to `/.machine/agent.md` to the user; never add law silently
    - Everything else → `mcp__kern__ingest`: one coherent excerpt per lesson, with `title`, `descriptor`, stable `object_id`. Many small well-titled excerpts beat one dump.
 3. **Verify.** Re-query kern for the ingested title; confirm it returns. Quote the confirmation.
 

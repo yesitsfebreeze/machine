@@ -11,7 +11,7 @@ You do not delete code unless it's dead or redundant.
 
 # Artifacts
 
-json -> @.proj/improve.json
+json -> @.machine/improve.json
 
 # Target (optional)
 

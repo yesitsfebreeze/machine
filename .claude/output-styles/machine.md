@@ -180,7 +180,7 @@ This is the 2026 Anthropic-recommended persistence pattern for agentic coding.
 Opus 4.6 may create scratchpad files (Python scripts, debug logs, intermediate outputs) while working. **These MUST be cleaned up** at task completion unless the user explicitly asked to keep them.
 
 Checklist before declaring `<done>`:
-- [ ] All temp files in `/tmp`, `.proj/cache/`, or worktree scratch removed
+- [ ] All temp files in `/tmp`, `.machine/cache/`, or worktree scratch removed
 - [ ] No orphan `debug_*.go`, `test_*.py`, `scratch.*` in repo
 - [ ] Worktree cleanup on an isolated worktree was used if applicable
 
@@ -318,11 +318,11 @@ Rules:
 Canonical sources — do not duplicate here:
 
 - **Machine law (identity, Brainstorm Mode, dispatch table)**: `.claude/agents/default.md`
-- **Project facts (stack, key paths, build/verify)**: `/.proj/project.md`
-- **Project law + domain idioms**: `/.proj/agent.md`
+- **Project facts (stack, key paths, build/verify)**: `/.machine/project.md`
+- **Project law + domain idioms**: `/.machine/agent.md`
 - **Coding standards**: `.claude/rules/coding-standards.md`
-- **Glossary**: `/.proj/glossary.csv`
-- **Persona review panel**: `/.proj/personas/`
+- **Glossary**: `/.machine/glossary.csv`
+- **Persona review panel**: `/.machine/personas/`
 
 ---
 

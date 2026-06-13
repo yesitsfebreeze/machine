@@ -3,7 +3,7 @@ name: gate
 description: >
   Fast pre-commit quality gate. Runs format check, lint, tests, and build in one
   pass and reports a pass/fail table. Toolchain-agnostic: detects the project's
-  stack (or reads /.proj/project.md for the exact commands). Use before any commit,
+  stack (or reads /.machine/project.md for the exact commands). Use before any commit,
   or whenever you want a quick "is the tree green?" check. Trigger: "/gate",
   "quality gate", "pre-commit check", "is it green", "run the checks".
 metadata:
@@ -24,7 +24,7 @@ domain sign-off (e.g. real-time/safety, security).
 
 Use the project's own commands, in this priority order:
 
-1. **`/.proj/project.md`** — if it lists a "Quality gate" / build / test line, use
+1. **`/.machine/project.md`** — if it lists a "Quality gate" / build / test line, use
    exactly those. This is the source of truth per repo.
 2. **CI** — mirror `.github/workflows/*` (or other CI config) so a green local gate
    means green CI.
@@ -39,9 +39,9 @@ Use the project's own commands, in this priority order:
    | `CMakeLists.txt` | — | — | `ctest` | `cmake --build build` |
 
    No recognized manifest → report "unknown toolchain" and ask the user for the
-   commands (then suggest adding them to `/.proj/project.md`).
+   commands (then suggest adding them to `/.machine/project.md`).
 
-Honor any **extra project-specific check** named in `/.proj/project.md` (e.g. an
+Honor any **extra project-specific check** named in `/.machine/project.md` (e.g. an
 embedded/`no_std` build, a wasm target, a schema validation) — those catch what the
 generic checks miss; never skip them.
 

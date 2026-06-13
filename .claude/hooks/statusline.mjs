@@ -33,10 +33,10 @@ let cwdLabel = cwd;
 if (home && cwd.startsWith(home)) cwdLabel = "~" + cwd.slice(home.length);
 seg.push(`${C.dim}${cwdLabel}${C.reset}`);
 
-// Project name — prefer /.proj/project.md "Name:", else dir basename.
+// Project name — prefer /.machine/project.md "Name:", else dir basename.
 let projName = projDir.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "·";
 try {
-  const pm = readFileSync(`${projDir}/.proj/project.md`, "utf8");
+  const pm = readFileSync(`${projDir}/.machine/project.md`, "utf8");
   const m = pm.match(/^\s*-?\s*\*\*Name:\*\*\s*(.+)$/m) || pm.match(/^#\s*Project facts\s*[—-]\s*(.+)$/m);
   if (m) projName = m[1].trim();
 } catch {}

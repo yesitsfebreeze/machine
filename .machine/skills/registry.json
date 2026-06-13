@@ -1,0 +1,5 @@
+{
+  "$comment": "Helper-skill tag cloud. Each helper is a tiny project-local doc in .machine/skills/<file> teaching one recurring task in THIS repo. The helper-trigger.mjs UserPromptSubmit hook matches a prompt against `tags` and force-injects a reminder to READ the helper before acting. Add entries via the `helper` skill. Tags should be the words that naturally appear in a prompt about the task.",
+  "version": 1,
+  "helpers": []
+}

@@ -1,6 +1,6 @@
 ---
 description: Coding standards for the machine's instruction documents and configuration files
-globs: .claude/**/*.md, .claude/**/*.yaml, .proj/**/*.md, CLAUDE.md
+globs: .claude/**/*.md, .claude/**/*.yaml, .machine/**/*.md, CLAUDE.md
 ---
 
 # Coding Standards
@@ -14,7 +14,7 @@ All instruction documents must be in English:
 - Agent definitions (.claude/agents/**/*.md)
 - Skill definitions (.claude/skills/**/*.md)
 - Hook scripts (.claude/hooks/**/*.py, *.sh)
-- Project layer documents (/.proj/**/*.md, glossary.csv)
+- Project layer documents (/.machine/**/*.md, glossary.csv)
 
 User-facing documentation may use multiple languages:
 - README.md, CHANGELOG.md

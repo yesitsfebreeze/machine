@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SessionStart hook: resume orchestrator mode when subagents are still open.
-// Scans /.proj/sessions/*.md (excluding README.md) and, for any file whose
+// Scans /.machine/sessions/*.md (excluding README.md) and, for any file whose
 // frontmatter status is pending-approval, running, or changes-requested, emits a
 // short digest via additionalContext so the attention footer resumes after a
 // session restart. Emits nothing (and exits 0) when nothing qualifies, the
@@ -45,7 +45,7 @@ function collect(dir) {
 
 try {
   const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  const dir = join(root, ".proj", "sessions");
+  const dir = join(root, ".machine", "sessions");
   const agents = collect(dir);
   if (agents.length === 0) process.exit(0);
 
@@ -54,7 +54,7 @@ try {
   );
   const context = [
     "Orchestrator mode has open subagents from a prior session.",
-    "Invoke the `orchestrate` skill, resume the attention footer, and rebuild it from /.proj/sessions/:",
+    "Invoke the `orchestrate` skill, resume the attention footer, and rebuild it from /.machine/sessions/:",
     ...lines,
   ].join("\n");
 

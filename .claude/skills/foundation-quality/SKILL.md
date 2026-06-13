@@ -32,7 +32,7 @@ triggers:
 
 How the machine keeps quality high: one gate, reviewed proactively, verified by
 evidence. The runnable check is `/gate` (it detects the project's
-fmt/lint/test/build, or reads the exact commands from `/.proj/project.md`); the
+fmt/lint/test/build, or reads the exact commands from `/.machine/project.md`); the
 five dimensions below are the language-agnostic standard `/gate` enforces, shared
 with `foundation-core`.
 

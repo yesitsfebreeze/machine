@@ -30,15 +30,15 @@ Generate EARS SPECs: WHAT/WHY, never HOW (function names, class/API schemas defe
 
 ## Structure [HARD]
 
-- Directory only, never flat: `.proj/specs/SPEC-{DOMAIN}-{NUM}/` with 3 files: spec.md, plan.md, acceptance.md (+ design.md, tasks.md if complex). Create via MultiEdit.
-- Classify before writing: feature → `.proj/specs/SPEC-{DOMAIN}-{NUM}/`; analysis → `.proj/reports/{TYPE}-{DATE}/`; docs → `.proj/docs/`.
+- Directory only, never flat: `.machine/specs/SPEC-{DOMAIN}-{NUM}/` with 3 files: spec.md, plan.md, acceptance.md (+ design.md, tasks.md if complex). Create via MultiEdit.
+- Classify before writing: feature → `.machine/specs/SPEC-{DOMAIN}-{NUM}/`; analysis → `.machine/reports/{TYPE}-{DATE}/`; docs → `.machine/docs/`.
 - spec.md: frontmatter (id, version, status, created, updated, author, priority, issue_number) + HISTORY + EARS requirements + `## Exclusions (What NOT to Build)` (≥1 entry, required).
 - plan.md: plan, priority-based milestones (no time estimates), technical approach, risks.
 - acceptance.md: Given-When-Then (≥2), edge cases, quality gate, Definition of Done.
 
 ## Process
 
-1. Load `/.proj/project.md` + `/.proj/agent.md`; list `.proj/specs/` for dedup (Grep IDs).
+1. Load `/.machine/project.md` + `/.machine/agent.md`; list `.machine/specs/` for dedup (Grep IDs).
 2. Propose 1-3 candidates (SPEC-{DOMAIN}-{NUM}).
 3. Create 3 files.
 4. Detect domain keywords → recommend expert (backend/frontend/devops) via AskUserQuestion before consultation.

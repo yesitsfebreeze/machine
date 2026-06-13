@@ -22,12 +22,12 @@ Run the audit (below), then take the first match:
 
 ## Audit
 
-Per source file: LOC (`wc -l`/`tokei`), responsibilities (one sentence each — needing two sentences = mixed), duplicate blocks (jscpd or Grep spot-checks), unreferenced symbols, inlined logic other files would reuse. Rank: duplication desc → LOC desc. Use the project's own linter/analyzer when present (detect from the repo or /.proj/project.md).
+Per source file: LOC (`wc -l`/`tokei`), responsibilities (one sentence each — needing two sentences = mixed), duplicate blocks (jscpd or Grep spot-checks), unreferenced symbols, inlined logic other files would reuse. Rank: duplication desc → LOC desc. Use the project's own linter/analyzer when present (detect from the repo or /.machine/project.md).
 
 ## Hard rules
 
 - **One atomic cleanup per commit.** One logical change, even if it touches several files. Never two passes in one cycle.
-- **Gate green between steps.** Run the project's check/tests (use /gate or the commands in /.proj/project.md) after every extract/merge/delete. Never commit on red.
+- **Gate green between steps.** Run the project's check/tests (use /gate or the commands in /.machine/project.md) after every extract/merge/delete. Never commit on red.
 - **Never bulk-stage.** `git add <explicit paths>`; review `git diff --cached`; user WIP stays unstaged. If user WIP overlaps the target file, skip that target this cycle.
 - **Respect user curation.** Never re-add comments or links the user previously stripped.
 
@@ -43,7 +43,7 @@ Grep every reference site (source, tests, configs) before deleting. Symbol young
 
 ## Consolidation guards
 
-Do not merge files with different lifetimes, sharply different dependency sets, or across architectural boundaries the project defines (/.proj/agent.md). When merging, keep invariant-bearing comments and assertions; drop section dividers and restates-the-code narration.
+Do not merge files with different lifetimes, sharply different dependency sets, or across architectural boundaries the project defines (/.machine/agent.md). When merging, keep invariant-bearing comments and assertions; drop section dividers and restates-the-code narration.
 
 ## Done when (per file)
 

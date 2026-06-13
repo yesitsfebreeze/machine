@@ -1,6 +1,6 @@
 ---
 name: oil-me
-description: Oil the machine — the single lifecycle command. Installs the machine into a new repo, updates an existing machine from its source, and re-indexes /.proj to specialize the portable .claude to THIS codebase. Replaces /bootstrap. Run after copying the machine into a new repo, to pull machine updates, or whenever the project changes shape. Trigger: "/oil-me", "oil the machine", "bootstrap", "update the machine", "init the machine", "re-index /.proj".
+description: Oil the machine — the single lifecycle command. Installs the machine into a new repo, updates an existing machine from its source, and re-indexes /.machine to specialize the portable .claude to THIS codebase. Replaces /bootstrap. Run after copying the machine into a new repo, to pull machine updates, or whenever the project changes shape. Trigger: "/oil-me", "oil the machine", "bootstrap", "update the machine", "init the machine", "re-index /.machine".
 ---
 
 # /oil-me — install, update & re-index the machine
@@ -22,20 +22,23 @@ state and executes the matching section of that file.
    inside the machine's own source repo), skip this step — there is nothing to pull from.
 
 3. **Detect the state and run the matching section:**
-   - **No `.claude/` machine in the target** → run **Install**, then **Re-index `/.proj/`**.
-   - **`.claude/` already present** → run **Update**, then **Re-index `/.proj/`** (reconcile
+   - **No `.claude/` machine in the target** → run **Install**, then **Re-index `/.machine/`**.
+     If the user prefers a versioned dependency over a vendored copy, offer the
+     **Install as a plugin** path instead (`machine` plugin, namespaced components).
+   - **`.claude/` already present** → run **Update**, then **Re-index `/.machine/`** (reconcile
      in place, never wipe).
-   - **Machine fine, only the project changed shape** → run **Re-index `/.proj/`** only.
+   - **Installed as the `machine` plugin** → `/plugin update machine`, then **Re-index** only.
+   - **Machine fine, only the project changed shape** → run **Re-index `/.machine/`** only.
 
    The clone URL is derived from the line-one `<url>` (strip the file path, keep owner/repo).
 
-4. **Report** what changed under `.claude/` and `/.proj/`, and confirm `/personas`, `/gate`,
+4. **Report** what changed under `.claude/` and `/.machine/`, and confirm `/personas`, `/gate`,
    glossary discipline, and the dispatch table are live.
 
 ## Boundaries
 
 - Install/Update write under `.claude/` and stamp `.claude/version.log` (instance state).
-- Re-index writes **only** under `/.proj/` — never touch `skills/`, `agents/`, `hooks/`,
+- Re-index writes **only** under `/.machine/` — never touch `skills/`, `agents/`, `hooks/`,
   `settings.json`, or `rules/` during re-index.
 - `version.log` and the filled-in line-one `<url>` are instance state — never committed to
   the machine's source repo.

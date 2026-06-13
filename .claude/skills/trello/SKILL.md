@@ -21,7 +21,7 @@ work, consult it when making decisions.** Don't batch updates to the end.
 
 ## IDs — always load from trello.json
 
-**Never hardcode IDs.** Read `.proj/trello.json` at the start of
+**Never hardcode IDs.** Read `.machine/trello.json` at the start of
 every Trello operation. The JSON is the single source of truth for board ID, list
 IDs, and label IDs.
 

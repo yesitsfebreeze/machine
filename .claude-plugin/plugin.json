@@ -1,0 +1,26 @@
+{
+  "name": "machine",
+  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon. Specialized per-repo by /oil-me into /.machine.",
+  "version": "0.1.0",
+  "author": {
+    "name": "yesitsfebreeze",
+    "url": "https://github.com/yesitsfebreeze"
+  },
+  "homepage": "https://github.com/yesitsfebreeze/machine",
+  "repository": "https://github.com/yesitsfebreeze/machine.git",
+  "keywords": [
+    "agents",
+    "skills",
+    "workflow",
+    "memory",
+    "kern",
+    "code-quality",
+    "orchestration"
+  ],
+  "agents": "./.claude/agents",
+  "skills": "./.claude/skills",
+  "outputStyles": "./.claude/output-styles",
+  "hooks": "./.claude/hooks/hooks.json",
+  "mcpServers": "./.mcp.json",
+  "settings": "./.claude/plugin-settings.json"
+}

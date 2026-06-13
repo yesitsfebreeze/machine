@@ -190,7 +190,7 @@ Execute each check in order. Mark each item PASS, FAIL, or N/A with evidence.
 
 ## Output Format
 
-Write the audit report to `.proj/reports/plan-audit/{SPEC-ID}-review-{iteration}.md`.
+Write the audit report to `.machine/reports/plan-audit/{SPEC-ID}-review-{iteration}.md`.
 
 ```
 # SPEC Review Report: {SPEC-ID}
@@ -244,7 +244,7 @@ Stagnation detection: If a defect appears in all three iterations unchanged, fla
 
 ## Input Contract
 
-This agent receives one input: the absolute path to the SPEC directory (e.g., `.proj/specs/SPEC-AUTH-001/`).
+This agent receives one input: the absolute path to the SPEC directory (e.g., `.machine/specs/SPEC-AUTH-001/`).
 
 The agent reads `spec.md` as the primary input. It may also read `acceptance.md` and `plan.md` for cross-reference.
 
@@ -256,9 +256,9 @@ If the SPEC directory does not exist or spec.md is not found, the agent returns 
 
 Invoke this agent using standard the machine delegation patterns:
 
-- "Use the plan-auditor subagent to audit the SPEC at .proj/specs/SPEC-AUTH-001/ — this is iteration 1"
-- "Use the plan-auditor subagent to review .proj/specs/SPEC-LSP-003/ at iteration 2. Previous review report is at .proj/reports/plan-audit/SPEC-LSP-003-review-1.md"
-- "Run plan-auditor on .proj/specs/SPEC-API-007/ and write the report to .proj/reports/plan-audit/SPEC-API-007-review-3.md (final escalation iteration)"
+- "Use the plan-auditor subagent to audit the SPEC at .machine/specs/SPEC-AUTH-001/ — this is iteration 1"
+- "Use the plan-auditor subagent to review .machine/specs/SPEC-LSP-003/ at iteration 2. Previous review report is at .machine/reports/plan-audit/SPEC-LSP-003-review-1.md"
+- "Run plan-auditor on .machine/specs/SPEC-API-007/ and write the report to .machine/reports/plan-audit/SPEC-API-007-review-3.md (final escalation iteration)"
 
 ## Delegation Note
 

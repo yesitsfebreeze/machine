@@ -65,7 +65,7 @@
   "outputStyle": "machine",
   "effortLevel": "medium",
   "agent": "default",
-  "plansDirectory": ".proj/plans",
+  "plansDirectory": ".machine/plans",
   "showThinkingSummaries": false,
   "theme": "dark-ansi",
   "teammateMode": "auto",

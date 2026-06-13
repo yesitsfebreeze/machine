@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Async orchestrator mode for the main driver. Spawns background subagents for agreed units of work, persists one durable state file per subagent under /.proj/sessions/, validates each result with the gate plus the persona panel, and appends a "needs your attention" footer to every reply. Work is non-blocking — results wait in a pending-approval queue until you approve, revise, or drop them. Trigger via "/orchestrate", "orchestrator mode", "background this", "spawn an agent for this", "keep that open until I approve".
+description: Async orchestrator mode for the main driver. Spawns background subagents for agreed units of work, persists one durable state file per subagent under /.machine/sessions/, validates each result with the gate plus the persona panel, and appends a "needs your attention" footer to every reply. Work is non-blocking — results wait in a pending-approval queue until you approve, revise, or drop them. Trigger via "/orchestrate", "orchestrator mode", "background this", "spawn an agent for this", "keep that open until I approve".
 ---
 
 # Orchestrator mode
@@ -16,7 +16,7 @@ this way for the rest of the session (or until the user says "stop orchestrating
 
 ## Durable state — one file per subagent
 
-All orchestration state lives on disk under `/.proj/sessions/`, one Markdown file
+All orchestration state lives on disk under `/.machine/sessions/`, one Markdown file
 per subagent, named `<id>.md` (ids are short and stable: `a1`, `a2`, ...). The
 file is the single source of truth — rebuild the footer from it every turn, and
 re-read the whole directory when entering the mode so a restarted session resumes
@@ -67,7 +67,7 @@ Dated log of approvals, revisions, and SendMessage round-trips.
 | `approved` | You approved; work applied/merged | removed (file deleted) |
 | `rejected` | You dropped it | removed (file deleted) |
 
-`/.proj/sessions/` converges toward empty: an approved or rejected agent's file is
+`/.machine/sessions/` converges toward empty: an approved or rejected agent's file is
 deleted, not marked done. A clean board is an empty directory. Never accumulate
 completed-work records.
 
@@ -100,7 +100,7 @@ each other.
 ## The attention footer
 
 Append this to the end of **every** reply while any session file exists. Omit it
-entirely only when `/.proj/sessions/` is empty.
+entirely only when `/.machine/sessions/` is empty.
 
 ```
 --- subagents ---

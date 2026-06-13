@@ -37,7 +37,7 @@ frontend expert in the next.
 
 ```
 this repo's root   the machine        ← the install payload; becomes <project>/.claude/
-/.proj/            the project layer  ← never copied; /oil-me writes it per repo
+/.machine/            the project layer  ← never copied; /oil-me writes it per repo
 ```
 
 The split is the whole idea: **one portable machine**, **one per-repo brain**.
@@ -63,7 +63,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   per-directory memory daemon, reached over MCP, that remembers *why* past
   decisions were made and surfaces them before you re-decide. Knowledge is
   ingested on the fly and recalled at session start.
-- **🎭 Persona review panel.** A data-driven panel (defined in `/.proj/personas/`)
+- **🎭 Persona review panel.** A data-driven panel (defined in `/.machine/personas/`)
   spawns one reviewer per lens in parallel, then synthesizes a ship verdict —
   tuned to each repo's real risk surface.
 - **🎼 Orchestrator mode.** Spawn background subagents for agreed units of work,
@@ -85,14 +85,14 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 1. **Drop it in.** Copy this repo's payload into your project so it lives at
    `<your-project>/.claude/`.
 2. **Oil the machine.** Run `/oil-me`. It installs (or updates) the machine and
-   writes `/.proj/` by reading your actual code — identity, stack, glossary, and a
+   writes `/.machine/` by reading your actual code — identity, stack, glossary, and a
    persona panel.
 3. **Work.** The default agent routes to specialists, recalls prior decisions from
    `kern`, gates quality before commits, and offers the review panel after
    non-trivial changes.
 
 > Already installed? Re-run `/oil-me` any time to pull machine updates or
-> re-index `/.proj/` after the project changes.
+> re-index `/.machine/` after the project changes.
 
 ---
 
@@ -103,7 +103,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 - **Machine law is always on.** Root-cause fixes over patches, one clean
   implementation per change, single source of truth, glossary discipline, and
   durable memory in `kern`.
-- **Project law lives in `/.proj/`.** `agent.md` (identity + hard rules),
+- **Project law lives in `/.machine/`.** `agent.md` (identity + hard rules),
   `project.md` (stack, key paths), `glossary.csv`, and `personas/` — all written
   by `/oil-me`, never shipped with the portable payload.
 - **Knowledge loads on demand.** Specialists and skills pull their deep context
@@ -123,7 +123,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ├── settings.json        hook wiring, env, default agent
 └── INSTRUCTIONS.md      the lifecycle protocol /oil-me executes
 
-/.proj/                  the project layer (written per repo by /oil-me)
+/.machine/                  the project layer (written per repo by /oil-me)
 ├── agent.md             this repo's identity + hard rules
 ├── project.md           stack, key paths, vision
 ├── glossary.csv         the repo's vocabulary
