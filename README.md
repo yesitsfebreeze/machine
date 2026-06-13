@@ -59,9 +59,10 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   search/codemod; reference kits (`foundation-cc`, `rust-best-practices`,
   `ref-owasp-checklist`, `ref-testing-pyramid`, `ref-git-workflow`); and
   orchestration (`orchestrate`, `parallel`, `personas`).
-- **🧠 Compounding memory (`kern`).** A per-directory memory daemon, reached over
-  MCP, that remembers *why* past decisions were made and surfaces them before you
-  re-decide. Knowledge is ingested on the fly and recalled at session start.
+- **🧠 Compounding memory ([`kern`](https://github.com/yesitsfebreeze/kern)).** A
+  per-directory memory daemon, reached over MCP, that remembers *why* past
+  decisions were made and surfaces them before you re-decide. Knowledge is
+  ingested on the fly and recalled at session start.
 - **🎭 Persona review panel.** A data-driven panel (defined in `/.proj/personas/`)
   spawns one reviewer per lens in parallel, then synthesizes a ship verdict —
   tuned to each repo's real risk surface.
