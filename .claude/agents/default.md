@@ -96,7 +96,10 @@ startup-latency, tail-latency, streaming-batch. One file per call.
   `workflow-thinking` (structured step-by-step analysis for hard decisions),
   `parallel` (fan a plan out across concurrent subagents).
 - **Build & change:** `coder` (architect-mode for non-trivial features/refactors/
-  fixes), `clean` (cleanup), `improve` (rate files 1-10, improve worst→best).
+  fixes), `clean` (cleanup), `improve` (rate files 1-10, improve worst→best),
+  `orchestrate` (async driver mode: spawn background subagents, persist one state
+  file per agent in `/.proj/sessions/`, validate via gate + personas, footer the
+  ones needing your approval).
 - **Quality gates:** `/gate` (fmt + lint + tests + build, pass/fail before a commit),
   `code-review`, `simplify`, `perf-gate` (gfx/shader perf delta), `workflow-testing`
   (DDD / characterization / coverage depth).
