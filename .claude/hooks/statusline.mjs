@@ -27,6 +27,12 @@ const git = (args) => {
 
 const seg = [];
 
+// Current working directory — first segment. Collapse $HOME to ~.
+const home = process.env.HOME || process.env.USERPROFILE || "";
+let cwdLabel = cwd;
+if (home && cwd.startsWith(home)) cwdLabel = "~" + cwd.slice(home.length);
+seg.push(`${C.dim}${cwdLabel}${C.reset}`);
+
 // Project name — prefer /.proj/project.md "Name:", else dir basename.
 let projName = projDir.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "·";
 try {
