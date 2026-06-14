@@ -1,0 +1,1 @@
+- [Fleet daemon architecture](project_fleet-daemons.md) — kern (memory) + planned mesh (coordination) are sibling per-cwd MCP daemons; git-fs is a separate companion plugin
