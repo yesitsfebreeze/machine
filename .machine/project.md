@@ -14,9 +14,9 @@
 - `.claude/rules/coding-standards.md` + `.claude/rules/languages/*` (16 language rules)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
 - `.claude/skills/oil-me/` — `/oil-me`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)
-- `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` — plugin + marketplace manifests
-- `.claude/hooks/hooks.json` + `.claude/plugin-settings.json` — plugin hook manifest + curated portable settings
-- `.claude/settings.json` — self-host hook wiring, env, `agent: default`
+- `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` — plugin + marketplace manifests (plugin.json lists agent files + skill dirs explicitly; regenerate when adding/removing agents or skills)
+- `.claude/hooks/hooks.json` — plugin hook manifest (`${CLAUDE_PLUGIN_ROOT}` paths); plugin `settings` are inline in plugin.json
+- `.claude/settings.json` — self-host hook wiring, env, `agent: default` (NOT shipped by the plugin — keeps `bypassPermissions` out of installs)
 - `.machine/improve.json` — **live worklist** for the ongoing `/improve` loop (tracked in git; outstanding work only)
 
 ## Build / test / quality gate

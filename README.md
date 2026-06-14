@@ -124,8 +124,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ├── hooks/               Node ESM hooks + hooks.json plugin manifest
 ├── rules/               coding standards (project-scope; not shipped by the plugin)
 ├── output-styles/       comm modes (machine, caveman)
-├── settings.json        self-host hook wiring, env, default agent
-└── plugin-settings.json curated portable settings shipped by the plugin
+└── settings.json        self-host hook wiring, env, default agent
 
 /.machine/                  the project layer (written per repo by /oil-me)
 ├── agent.md             this repo's identity + hard rules

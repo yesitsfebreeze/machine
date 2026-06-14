@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Home marketplace for the machine plugin.",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "plugins": [
     {
       "name": "machine",
       "source": ".",
       "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern memory).",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "development",
       "keywords": ["agents", "skills", "workflow", "memory", "orchestration"]
     }
