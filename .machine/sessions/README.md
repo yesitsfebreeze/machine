@@ -1,16 +1,23 @@
-# /.proj/sessions/ — orchestrator state board
+# /.machine/sessions/ — orchestrator taskboard
 
-One Markdown file per background subagent, named `<id>.md` (`a1`, `a2`, ...).
-Written and read by the `orchestrate` skill. This directory is the single source
-of truth for the orchestrator's attention footer.
+One Markdown entry-file per task, named `<id>.md` (`a1`, `a2`, ...). Together these
+files ARE the orchestrator's taskboard — there is no separate board file. Written
+and read by the `orchestrate` skill, and read by the `ignite` SessionStart hook to
+resume open work. This directory is the single source of truth for the
+orchestrator's timed attention footer.
 
-This directory converges toward empty: a subagent's file is **deleted** when its
-work is approved or dropped — never marked done. A clean board is an empty
-directory (this README aside).
+Each entry is a *task with a timer*, not only a finished-subagent record: it
+carries a settle countdown (`fire_at`) and auto-fires when the countdown elapses
+unless the user intervenes, then — once fired and validated — waits for approval.
 
-See `.claude/skills/orchestrate/SKILL.md` for the file schema, status lifecycle,
-and the approve / redo / show / drop commands. Do not duplicate that schema here —
-update the skill, not this note.
+This directory converges toward empty: a task's file is **deleted** when it is
+approved or dropped — never marked done. A clean board is an empty directory (this
+README aside).
+
+See `.claude/skills/orchestrate/SKILL.md` for the entry-file schema, the status
+lifecycle, the settle countdown, the ScheduleWakeup scheduler, and the
+add / edit / freeze / approve / drop / show / redo commands. Do not duplicate that
+schema here — update the skill, not this note.
 
 These are ephemeral working files. They are intentionally not meaningful history;
 once resolved they are gone.

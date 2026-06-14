@@ -54,18 +54,11 @@ delegation buys an independent context and domain focus.
 
 ## 2. Pass a quality gate before "done"
 
-Every non-trivial change answers five questions before it is called complete.
-The dimensions are language-agnostic; the concrete commands come from the
-project's own toolchain via `/gate` (it detects fmt/lint/test/build, or reads
-the exact commands from `/.machine/project.md`).
-
-- **Tested** — the behavior is covered and the suite passes.
-- **Readable** — names and structure make intent obvious; the linter is clean.
-- **Unified** — formatting and imports match the project; one clean
-  implementation, no leftover duplicate.
-- **Secured** — no introduced vulnerability, unbounded input, or concurrency
-  hazard; escalate to `expert-security` when in doubt.
-- **Trackable** — a clear commit message; the change is traceable to its reason.
+Every non-trivial change must pass the machine's five-dimension quality gate
+before it is called done; the five dimensions are defined canonically in the
+`foundation-quality` skill (the single source other skills reference). `/gate`
+runs the concrete check — it detects fmt/lint/test/build, or reads the exact
+commands from `/.machine/project.md`.
 
 Verify by evidence, not by feeling: run the check and quote the output
 (`superpowers:verification-before-completion`). In this repo "build" means

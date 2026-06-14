@@ -11,7 +11,16 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const ACTIVE = new Set(["pending-approval", "running", "changes-requested"]);
+// Statuses that mean "open work to resume" in the footer. `scheduled` and
+// `frozen` are v2 pre-fire taskboard states; the rest are in-flight or
+// awaiting-approval states inherited from v1.
+const ACTIVE = new Set([
+  "scheduled",
+  "frozen",
+  "pending-approval",
+  "running",
+  "changes-requested",
+]);
 
 function field(frontmatter, key) {
   const match = frontmatter.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, "m"));
@@ -26,7 +35,12 @@ function parseSession(text) {
   if (!ACTIVE.has(status)) return null;
   const id = field(block, "id");
   if (!id) return null;
-  return { id, label: field(block, "label") || id, status };
+  // fire_at drives v2 timer-resume (TB-009). It may be absent on older
+  // v1 records; treat missing/unparseable as "no timer" so the hook never errors.
+  const fireRaw = field(block, "fire_at").replace(/^["']|["']$/g, "");
+  const fireMs = Date.parse(fireRaw);
+  const fireAt = Number.isNaN(fireMs) ? null : fireMs;
+  return { id, label: field(block, "label") || id, status, fireAt };
 }
 
 function collectSessions(dir) {
@@ -62,8 +76,30 @@ try {
   if (machineReady) {
     const open = collectSessions(join(root, ".machine", "sessions"));
     if (open.length > 0) {
-      lines.push("Open subagents from a prior session (resume the attention footer):");
+      lines.push("Open taskboard from a prior session (resume the attention footer):");
       for (const a of open) lines.push(`[${a.id}] ${a.label} ${a.status.toUpperCase()}`);
+
+      // TB-009 timer-resume: classify scheduled tasks by their persisted fire_at
+      // vs now. Overdue (and not frozen) tasks are immediately eligible on resume;
+      // the soonest still-future fire_at is where the wakeup re-schedules. This is
+      // state-gathering only — the `ignite`/`orchestrate` skill owns the recompute
+      // and the dependency/freeze eligibility check.
+      const now = Date.now();
+      const settling = open.filter((a) => a.status === "scheduled" && a.fireAt !== null);
+      const overdue = settling.filter((a) => a.fireAt <= now).map((a) => a.id);
+      const future = settling.filter((a) => a.fireAt > now);
+      if (overdue.length > 0) {
+        lines.push(
+          `Overdue (fire_at elapsed while the session was down): ${overdue.join(", ")}. ` +
+            "Recompute eligibility (dependencies approved, not frozen) and launch the due ones now.",
+        );
+      }
+      if (future.length > 0) {
+        const soonest = future.reduce((m, a) => (a.fireAt < m.fireAt ? a : m));
+        lines.push(
+          `Soonest future fire_at: [${soonest.id}] at ${new Date(soonest.fireAt).toISOString()} — schedule the single wakeup to it.`,
+        );
+      }
     }
   }
 

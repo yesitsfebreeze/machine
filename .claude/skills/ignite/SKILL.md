@@ -32,11 +32,20 @@ problem, not an ignite step.
 
 ## 3. Orchestration (only when oiled)
 
-Enter orchestration mode: invoke the `orchestrate` skill. If the hook listed open
-subagents from a prior session (status pending-approval / running /
-changes-requested), rebuild the "needs your attention" footer from
-`/.machine/sessions/` and resume tracking them. If there were none, enter
+Enter orchestration mode: invoke the `orchestrate` skill. If the hook listed an
+open taskboard from a prior session (any non-terminal status: scheduled / frozen /
+running / pending-approval / changes-requested), rebuild the timed board footer
+from `/.machine/sessions/` and resume tracking them. If there were none, enter
 orchestration ready but idle — do not invent work.
+
+Timer-resume (TB-009): for every `scheduled` task, recompute eligibility from its
+persisted `fire_at` against the current time. A task whose `fire_at` already
+elapsed — and whose `dependencies` are all `approved` and which is not `frozen` —
+is immediately eligible: launch it on this first evaluation (catch-up). The hook
+flags which tasks are overdue and the soonest still-future `fire_at`; schedule the
+single wakeup to that soonest future `fire_at`. `frozen` tasks stay frozen across
+the restart and are excluded from scheduling until the user acts. Auto-fire is an
+in-session behavior only — nothing fired while the session was down.
 
 ## 4. Status line
 
