@@ -1,0 +1,31 @@
+[package]
+name = "mesh"
+version = "0.1.0"
+edition = "2021"
+description = "Fleet inter-agent communication daemon — kern's coordination sibling (roster, atomic claims, durable mail) exposed as an MCP server."
+license = "MIT"
+repository = "https://github.com/yesitsfebreeze/machine"
+
+[[bin]]
+name = "mesh"
+path = "src/main.rs"
+
+[lib]
+name = "mesh"
+path = "src/lib.rs"
+
+[dependencies]
+heed = "0.20"
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+ulid = "1"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+lto = true
+codegen-units = 1

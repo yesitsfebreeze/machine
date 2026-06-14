@@ -63,6 +63,11 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   per-directory memory daemon, reached over MCP, that remembers *why* past
   decisions were made and surfaces them before you re-decide. Knowledge is
   ingested on the fly and recalled at session start.
+- **🕸️ Fleet coordination (`mesh`).** kern's coordination sibling: a per-directory
+  MCP daemon that gives a fleet of parallel agents a live roster, atomic
+  cross-process claims/locks (with leases, queues, and self-healing on agent
+  death), and durable point-to-point/broadcast/topic mail with per-agent read
+  cursors. Same install idiom and on-disk shape as `kern`.
 - **🎭 Persona review panel.** A data-driven panel (defined in `/.machine/personas/`)
   spawns one reviewer per lens in parallel, then synthesizes a ship verdict —
   tuned to each repo's real risk surface.
@@ -97,8 +102,10 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 > Pull machine updates with `/plugin update machine`. Re-run `/oil-me` any time to
 > re-index `/.machine/` after the project changes shape.
 
-> **Bundled MCP servers.** The plugin ships three servers in its `.mcp.json`:
+> **Bundled MCP servers.** The plugin ships four servers in its `.mcp.json`:
 > [`kern`](https://github.com/yesitsfebreeze/kern) (memory),
+> `mesh` (fleet coordination — roster, atomic claims, durable mail; build with
+> `cargo install --path mesh`),
 > [`context7`](https://context7.com) (current library docs — set `CONTEXT7_API_KEY`),
 > and `pdf-reader` (PDF extraction via `npx @sylphx/pdf-reader-mcp`).
 >

@@ -13,6 +13,9 @@ plugins/
 # kern daemon data store (binary LMDB)
 .kern/
 
+# mesh daemon data store (LMDB primary + SQLite-WAL journal)
+.mesh/
+
 # lock files
 *.lock
 *.lock.json
