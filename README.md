@@ -138,7 +138,30 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 
 <div align="center">
 
+
+
 **Built for [Claude Code](https://claude.com/claude-code).**
 Portable. Project-agnostic. Specializes itself.
 
 </div>
+
+
+
+
+
+
+
+
+                    ⯆
+11 12 13  21 22 23 ⯈31 32 33 
+14 15 16  24 25 26  34 35 36 
+17 28 19  27 28 39  37 38 39⯇ 
+                           ⯅
+41 42 43  51 52 53  61 62 63 
+44 45 46  54 55 56  64 65 66 
+47 48 49  57 58 59  67 68 69 
+
+71 72 73  81 82 83  91 92 93 
+74 75 76  84 85 86  94 95 96 
+77 78 79  57 58 89  97 98 99 
+                        

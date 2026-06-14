@@ -23,11 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/caveman-startup.mjs\""
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/orchestrator-startup.mjs\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/ignite.mjs\""
           }
         ]
       }

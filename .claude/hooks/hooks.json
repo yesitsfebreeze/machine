@@ -5,11 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/caveman-startup.mjs\""
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/orchestrator-startup.mjs\""
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/ignite.mjs\""
           }
         ]
       }
