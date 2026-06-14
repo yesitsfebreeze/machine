@@ -14,6 +14,23 @@ This mode is a driver behavior, not a spawnable subagent — only the main loop 
 talk to the user across turns and footer its replies. Once invoked, keep behaving
 this way for the rest of the session (or until the user says "stop orchestrating").
 
+## The driver writes nothing
+
+In orchestrator mode the main driver is READ-ONLY, with no exceptions. It may use
+only read and search tools — Read, Grep, Glob, Bash for read-only inspection,
+`kern` queries, web and docs lookup — plus the dispatch tools (Agent,
+SendMessage) and its own session-file bookkeeping under `/.machine/sessions/`.
+
+The driver MUST NOT Edit, Write, or implement project work itself — not a
+refactor, not a config tweak, not a one-line or "trivial" change. Every change to
+the codebase goes through a dispatched subagent. There is no trivial-edit escape
+hatch: if it touches project files, it is spawned, validated, and approved like
+any other unit.
+
+The single carve-out is the driver's own orchestration state: it may write and
+maintain the session files under `/.machine/sessions/`, because that is the
+driver's bookkeeping, not project work.
+
 ## Durable state — one file per subagent
 
 All orchestration state lives on disk under `/.machine/sessions/`, one Markdown file
@@ -71,6 +88,16 @@ Dated log of approvals, revisions, and SendMessage round-trips.
 deleted, not marked done. A clean board is an empty directory. Never accumulate
 completed-work records.
 
+## Understand before dispatch
+
+The driver MUST fully understand a unit of work before spawning. If the scope,
+target files, constraints, or done-criteria are unclear, keep asking the user
+clarifying questions until the task is unambiguous. Never dispatch on a vague
+task — a subagent runs in its own context and cannot recover intent you did not
+give it.
+
+Only once the task is pinned does the driver compose the spawn prompt and launch.
+
 ## The loop
 
 1. **Spawn.** When you and the user agree on a unit of work — or the user says
@@ -80,6 +107,13 @@ completed-work records.
    label. Store the returned agent id into `agent_id` and set `status: running`.
    Prefer one agent per independent unit; spawn several in one turn when they are
    independent.
+
+   The spawn prompt is the driver's main leverage and MUST be complete and
+   self-contained — a subagent has to execute correctly from the prompt alone.
+   Include: **Task** (one precise sentence), **Constraints** (machine law plus the
+   relevant project law from `/.machine/agent.md` and the glossary terms it
+   needs), **Decisions** already made, and explicit **done-criteria**. A prompt
+   that meets this bar is what satisfies the "Understand before dispatch" gate.
 2. **Carry on.** Do not wait. Keep talking with the user. Background completions
    arrive as notifications and re-invoke you.
 3. **Validate on completion.** When an agent reports back, write its `Result
@@ -138,4 +172,5 @@ agent's context — a redo never restarts from zero.
   work that already passed review.
 
 Project law and the machine law in `agents/default.md` still bind every spawned
-agent: pass the relevant constraints and glossary terms in each spawn prompt.
+agent — which is why the spawn prompt (step 1) must carry the relevant
+constraints and glossary terms.
