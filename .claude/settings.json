@@ -23,9 +23,7 @@
     "command": "node .claude/hooks/statusline.mjs",
     "refreshInterval": 10
   },
-  "enabledPlugins": {
-    "machine@machine": true
-  },
+  "enabledPlugins": {},
   "outputStyle": "machine",
   "effortLevel": "medium",
   "agent": "default",

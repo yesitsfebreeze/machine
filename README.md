@@ -97,6 +97,18 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 > Pull machine updates with `/plugin update machine`. Re-run `/oil-me` any time to
 > re-index `/.machine/` after the project changes shape.
 
+> **Bundled MCP servers.** The plugin ships three servers in its `.mcp.json`:
+> [`kern`](https://github.com/yesitsfebreeze/kern) (memory),
+> [`context7`](https://context7.com) (current library docs — set `CONTEXT7_API_KEY`),
+> and `pdf-reader` (PDF extraction via `npx @sylphx/pdf-reader-mcp`).
+>
+> **Optional companion plugins** (live, installed separately — the machine routes
+> to them but doesn't vendor them):
+> [`context-mode`](https://github.com/mksglu/context-mode) (keep large output out of
+> context) and [`git-fs`](https://github.com/yesitsfebreeze/git-fs) (per-session
+> virtual git filesystem). Install with `/plugin marketplace add <repo>` then
+> `/plugin install context-mode@context-mode` / `git-fs@git-fs`.
+
 ---
 
 ## 🧠 How it works

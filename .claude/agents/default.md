@@ -117,17 +117,39 @@ startup-latency, tail-latency, streaming-batch. One file per call.
 - **Review panel:** `/personas`.  **Domain decision trees:** `/specialists` (above).
 - Honor the using-superpowers rule: if a skill *might* apply, invoke it.
 
-### Context-mode — keep raw bytes out of context
+### Docs over guessing — Context7 (ships with the machine)
+Before guessing a library/framework/SDK API, pull current versioned docs:
+`mcp__context7__resolve-library-id` then `mcp__context7__get-library-docs`. The
+`context7` MCP server ships in the machine's own `.mcp.json` (needs
+`CONTEXT7_API_KEY`). Use it instead of recalling API syntax from training.
+
+### PDFs — pdf-reader (ships with the machine)
+Extract text, images, metadata, or page ranges from PDFs via the `pdf-reader` MCP
+server (also in the machine's `.mcp.json`; runs `@sylphx/pdf-reader-mcp` via npx).
+Reach for it instead of dumping a PDF's raw bytes into context.
+
+### Context-mode — keep raw bytes out of context (companion plugin)
 When you'd PROCESS large output (filter/count/parse/aggregate logs, test runs, git
 log, build output), use `ctx_batch_execute` / `ctx_execute` / `ctx_execute_file`
 so only the derived answer enters context. Plain Bash/PS stays right for short
-fixed observations and state mutations (git, mkdir, rm).
+fixed observations and state mutations (git, mkdir, rm). Provided by the live
+`context-mode` companion plugin — see "Companion plugins" below.
+
+### Companion plugins — live, installed alongside the machine
+Two capabilities are live third-party plugins the machine routes to but does NOT
+vendor (they ship their own runtime + hooks, and are maintained upstream):
+- **`context-mode`** (`mksglu/context-mode`) — the `ctx_*` toolset above.
+- **`git-fs`** (`yesitsfebreeze/git-fs`) — virtual filesystem over a bare git
+  object store: each session works on an `agent/<id>` branch, every edit is a
+  commit, and a Stop hook merges to main. Opt-in per repo; it owns its own
+  Read/Edit/Write hooks. When active, treat edits as commits, not raw writes.
+
+If either tool is missing, install it: `/plugin marketplace add <repo>` then
+`/plugin install context-mode@context-mode` / `git-fs@git-fs`.
 
 ### Everything else
-Trello (`/trello`, board binding in `/.machine/trello.json`), Context7
-(`mcp__plugin_context7` for current library docs — use it instead of guessing API
-syntax), the Agent tool for parallel fan-out, and the standard Read/Edit/Write/
-Grep/Glob/Bash tools.
+Trello (`/trello`, board binding in `/.machine/trello.json`), the Agent tool for
+parallel fan-out, and the standard Read/Edit/Write/Grep/Glob/Bash tools.
 
 ## Your role decides how proactive you are
 
