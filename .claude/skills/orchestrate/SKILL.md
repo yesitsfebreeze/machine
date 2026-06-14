@@ -164,13 +164,11 @@ and compute `fire_at = added_at + settle_delay`.
 
 ## Status lifecycle
 
-```
-proposed -> scheduled -> running -> pending-approval -> approved
-                            ^                         -> rejected
-                            |
-              changes-requested (via redo)
-   (any pre-fire state) -> frozen
-```
+The table below is the authoritative lifecycle. In summary: a task moves
+`proposed` (optional) to `scheduled` to `running` to `pending-approval` to
+`approved`, or to `rejected` from a drop; a `running` task re-entered via `redo`
+passes through `changes-requested` back to `running`; and any pre-fire state can
+move to `frozen`.
 
 | Status | Meaning | Footer |
 |--------|---------|--------|
@@ -242,7 +240,9 @@ driver-created entry, not `untrusted`), its `fire_at` has passed, every id in it
 ## The ScheduleWakeup scheduler
 
 `ScheduleWakeup` is the Claude Code built-in driver tool that re-invokes the
-driver after a delay. Use it to wake at the soonest pending `fire_at`: schedule
+driver after a delay — a driver-only capability that only the main-loop
+orchestrator can call, never a dispatched sub-agent, consistent with the
+read-only-driver model. Use it to wake at the soonest pending `fire_at`: schedule
 the single wakeup to that delta, and on wake the driver is re-invoked to launch
 the now-due tasks.
 

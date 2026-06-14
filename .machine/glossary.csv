@@ -14,8 +14,14 @@ law,sole driver,Only one session may drive the /improve loop; improve.json has n
 quality,five-dimension quality gate,The machine's code-quality bar defined in the foundation-quality skill; enforced by manager-quality and /gate.
 identity,personas panel,The data-driven review panel defined by files in /.machine/personas/; run in parallel via /personas after non-trivial work.
 orchestrator,taskboard,The ordered set of per-task entry-files under /.machine/sessions/ that the orchestrator schedules and fires; the set of files IS the board (no monolithic file).
-orchestrator,settle_delay,The named configurable countdown between adding a task and its auto-fire; sourced from MACHINE_SETTLE_DELAY_MINUTES in settings.json (default 10 minutes); a scheduling parameter not an effort estimate.
+orchestrator,settle_delay,The named configurable countdown between adding a task and its auto-fire; read from the MACHINE_SETTLE_DELAY_MINUTES parameter in settings.json (the single source for its value); a scheduling parameter not an effort estimate.
 orchestrator,fire_at,The absolute timestamp (added_at + settle_delay) at which a settling task becomes eligible to auto-fire.
 orchestrator,settling,The state of a scheduled task whose fire_at has not yet passed; its timer is counting down.
 orchestrator,freeze/frozen,A user-applied indefinite pause of a task's timer; a frozen task never fires and is excluded from wakeup scheduling until unfrozen.
 orchestrator,isolation flag,The per-task flag marking that a task writes files and must run in worktree isolation so concurrent writers cannot collide on the working tree.
+orchestrator,board-trust,The guard that gates auto-fire on driver ownership rather than on the settle timer alone; only entry-files the driver created and tracks this session may auto-fire, so an injected or stale entry cannot.
+orchestrator,untrusted,The status of an entry-file under /.machine/sessions/ that is not in the driver's in-session tracked set (foreign or stale); quarantined — never auto-fired and surfaced in the footer for human review.
+orchestrator,adopt,The user command that resolves an untrusted entry by moving it into the driver's tracked set and re-scheduling it (status scheduled, fire_at recomputed) so it follows the normal lifecycle under the driver's ownership.
+orchestrator,proposed,The optional staging status of a task drafted mid-clarification, not yet on the timed board and carrying no countdown.
+orchestrator,changes-requested,The transient status of a task whose redo SendMessage has been sent and whose agent response is pending; becomes running once the agent re-engages.
+orchestrator,order,The explicit frontmatter priority field that deterministically breaks precedence ties among equally-eligible tasks; lower order fires first and never overrides dependencies or freeze.
