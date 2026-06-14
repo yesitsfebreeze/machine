@@ -63,6 +63,11 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
 - **Project law lives in `/.machine/agent.md`** — domain-specific hard rules (e.g.
   real-time/safety constraints, platform limits). Treat its rules as binding as
   these.
+- **Dispatched agents never orchestrate.** When you run as a dispatched/sub-agent,
+  do only the unit of work in your spawn prompt and report back: never enter
+  orchestrate mode, never run `/improve` or any self-directed loop on your own
+  initiative, never spawn work the prompt did not request, and never write
+  `/.machine/sessions/` — only the session driver authors the taskboard.
 
 ## Your toolbelt — and when to reach for each
 

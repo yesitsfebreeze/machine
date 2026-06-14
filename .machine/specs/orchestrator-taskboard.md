@@ -1,7 +1,7 @@
 ---
 id: SPEC-ORCH-001
 title: "Orchestrator v2 — delayed taskboard auto-execution"
-version: 1.0.0
+version: 1.1.1
 status: draft
 created: 2026-06-14
 updated: 2026-06-14
@@ -17,6 +17,8 @@ issue_number: null
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0.0 | 2026-06-14 | machine-manager-spec | Initial draft. Specifies the v2 ordered taskboard, per-task settle delay, approve-as-override model, ScheduleWakeup scheduler, and the Write permission path. |
+| 1.1.0 | 2026-06-14 | machine-builder-skill | Add the board-trust model: TB-013 (driver-owned board, quarantine of untrusted entries) and TB-014 (dispatched agents may not orchestrate or write the board). Closes the control gap where a dispatched agent dropped self-authored entry-files into the live board that could auto-fire without human approval. |
+| 1.1.1 | 2026-06-14 | machine-builder-skill | Reconcile TB-010 with shipped code: the orchestrator's `Write` is confined to `/.machine/**` by its `tools:` allowlist (Write, no Edit/NotebookEdit) plus a profile/skill contract, NOT a settings.json deny-rule. A global Write-deny was considered and rejected (deny arrays do not support `!`-negation; the only working deny-except-one-dir form is project-global and would block dispatched specialists from writing project code). TB-013 board-trust is the safety layer. Fixed Scenario 5, integration items, risks, and DoD to match. |
 
 ## Context and Relationship to the Existing Skill
 
@@ -298,26 +300,48 @@ Acceptance criteria:
 - Resume reads the entry-files' frontmatter only; it does not require any live
   agent to have survived.
 
-### TB-010 — Board write-path and permission containment
+### TB-010 — Board write-path and contract-based confinement
 
 **Ubiquitous.** The orchestrator **shall** be granted `Write` in its `tools:`
-allowlist so it can author and maintain taskboard entry-files under
-`/.machine/`, AND the project settings **shall** deny `Write` on every path
-OUTSIDE `/.machine/**`.
+allowlist — but NOT `Edit`, `NotebookEdit`, or any kern mutation tool — so it can
+create and append taskboard entry-files and its session bookkeeping under
+`/.machine/` while remaining unable to modify existing project files in place.
+The confinement of that `Write` to `/.machine/**` **shall** be a CONTRACT of the
+orchestrator profile (`agents/orchestrator.md`) and the `orchestrate` skill, NOT a
+`settings.json` permission rule.
 
-**Unwanted-behavior.** **If** the orchestrator attempts to `Write` any path
-outside `/.machine/**`, **then** the settings deny-rule **shall** block it, so the
-driver can still never author project code directly.
+A `settings.json` global `Write`-deny was considered and REJECTED for two verified
+reasons: (1) Claude Code permission `deny` arrays do not support `!`-prefixed
+gitignore-style negation, so "deny `Write` everywhere, then re-include
+`/.machine/**`" cannot be expressed; (2) the only working "deny except one
+directory" form (`deny: ["Write"]` plus an allow) is PROJECT-GLOBAL and would block
+every dispatched specialist from writing project code, breaking the orchestrator's
+dispatch model. `settings.json` permissions therefore remain plain
+`{"defaultMode":"bypassPermissions"}` with no `Write` deny, precisely so dispatched
+specialists can still write project code.
+
+**Unwanted-behavior.** **If** the orchestrator would otherwise modify an existing
+project file, **then** that action is prevented structurally: the profile grants no
+`Edit`/`NotebookEdit`, so the driver has no in-place-edit capability, and the
+board-trust model (TB-013) is the safety layer against unwanted writes to the
+board itself.
 
 Acceptance criteria:
-- `agents/orchestrator.md` `tools:` includes `Write`.
-- `settings.json` contains a deny rule that blocks `Write` outside `/.machine/**`
-  (allowing `Write` within `/.machine/**`).
-- A driver attempt to write a project file is denied; a driver write to a
-  taskboard entry-file under `/.machine/sessions/` succeeds.
+- `agents/orchestrator.md` `tools:` includes `Write` but does NOT include `Edit` or
+  `NotebookEdit` (nor any kern mutation tool).
+- `settings.json` contains NO `Write` deny-rule; its permissions remain
+  `{"defaultMode":"bypassPermissions"}` so dispatched specialists can write project
+  code.
+- Confinement of the driver's `Write` to `/.machine/**` is contract-based: it is
+  stated as a binding rule in both `agents/orchestrator.md` and the `orchestrate`
+  skill, not enforced by a harness permission rule.
+- TB-013 board-trust is the real safety layer: untrusted entry-files are
+  quarantined and never auto-fired, mitigating the absence of a hard harness
+  boundary.
 - This requirement is recorded as the resolution of the previously unresolved
-  "session-file write path" question: the driver is no longer carved out only by
-  prose — its write capability is now real but hard-contained to `/.machine/**`.
+  "session-file write path" question: the driver now holds a real `Write`
+  capability, contract-bound to `/.machine/**` and structurally unable to edit
+  existing project files in place.
 - Every spawn prompt the board emits still carries machine law + the relevant
   project law and glossary terms, because dispatched subagents — not the driver —
   perform all project writes (this constraint is unchanged from v1 and binding).
@@ -359,6 +383,62 @@ Acceptance criteria:
 - The footer's reply hint lists the v2 commands (`add`, `edit`, `freeze`,
   `approve`, `drop`, `show`, `redo`).
 
+### TB-013 — Driver-owned board and quarantine of untrusted entries
+
+**Ubiquitous.** The orchestrator (the driver in the user-facing session)
+**shall** be the only actor permitted to create, schedule, or auto-fire taskboard
+entry-files, and **shall** track in-session the set of entry ids it created so it
+can distinguish its own entries from any others.
+
+**Unwanted-behavior.** **If** an entry-file appears under `/.machine/sessions/`
+that is not in the driver's tracked set (created by a dispatched/sub-agent, left
+over stale from a prior session, or produced by a nested cascade), **then** the
+orchestrator **shall** treat it as `untrusted`, **shall not** auto-fire it on the
+settle timer, **shall** surface it in the footer as needing explicit human review,
+and **shall** wait for an explicit user command (`approve`, `drop`, or `adopt`)
+before acting on it.
+
+Acceptance criteria:
+- The driver maintains an in-session record of the entry ids it created this
+  session; an entry id not in that record is `untrusted`.
+- An `untrusted` entry is never auto-fired by the scheduler (TB-005/TB-008) and is
+  never launched by SessionStart catch-up (TB-009); the settle timer does not
+  apply to it.
+- The footer lists every `untrusted` entry in the attention section (alongside
+  `pending-approval` and blocked tasks) marked as needing human review, never with
+  a time-to-fire.
+- The driver acts on an `untrusted` entry only after an explicit user command:
+  `drop` deletes it; `adopt`/`approve` moves it into the driver's tracked set,
+  after which it follows the normal lifecycle. The driver never silently fires,
+  applies, or merges an `untrusted` entry.
+- On SessionStart resume, any pre-existing entry-file the driver did not create in
+  the current session is reconciled as `untrusted` until the user adopts or drops
+  it; resume-driven catch-up (TB-009) fires only trusted, driver-created entries.
+
+### TB-014 — Dispatched agents may not orchestrate or write the board
+
+**Ubiquitous.** A dispatched specialist or sub-agent **shall** perform only the
+single unit of work in its spawn prompt and report back, and **shall not** enter
+orchestrate mode, run `/improve` or any other self-directed autonomous loop on its
+own initiative, spawn further work the spawn prompt did not request, or write any
+file under `/.machine/sessions/`.
+
+**Unwanted-behavior.** **If** a dispatched agent would otherwise self-direct
+beyond its spawn prompt (scope creep, a nested cascade, writing the taskboard),
+**then** that action is prohibited; the board-trust model (TB-013) is the backstop
+that quarantines any entry-file such an agent nonetheless produces.
+
+Acceptance criteria:
+- The prohibition is stated as a hard rule in `orchestrate/SKILL.md` and as a
+  one-line consistent note in `agents/default.md` and `agents/orchestrator.md`.
+- A dispatched agent does exactly the unit of work in its spawn prompt and reports
+  back; it does not invoke orchestrate, `/improve`, or any improvement loop on its
+  own initiative, and does not spawn work beyond what the spawn prompt directs.
+- A dispatched agent writes no file under `/.machine/sessions/`; only the driver
+  authors the board.
+- Any entry-file that nonetheless appears from a dispatched agent is caught by
+  TB-013 as `untrusted` and is never auto-fired.
+
 ---
 
 ## Exclusions (What NOT to Build)
@@ -373,9 +453,10 @@ Acceptance criteria:
 - **No new generic worker agent.** v2 routes every task to an existing specialist
   via the dispatch table in `agents/default.md`; it does not create a new
   catch-all worker type.
-- **No driver-authored project code.** The added `Write` capability is hard-bound
-  to `/.machine/**`; the driver still performs zero project writes (TB-010). All
-  project changes go through dispatched, validated, approved subagents.
+- **No driver-authored project code.** The added `Write` capability is contract-bound
+  to `/.machine/**`, and the driver has no `Edit`/`NotebookEdit` to modify existing
+  project files in place; the driver still performs zero project writes (TB-010).
+  All project changes go through dispatched, validated, approved subagents.
 - **No removal of the post-completion approval gate.** v2 adds a pre-fire timed
   gate; it does not replace or weaken the v1 requirement that a validated result
   waits for explicit approval before being applied/merged.
@@ -398,14 +479,19 @@ Acceptance criteria:
    (`add`/`edit`/`freeze`/`approve`/`drop`/`show` + retained `redo`), and the
    footer changes (time-to-fire, frozen marker). Reference v1 retained mechanics;
    do not duplicate them.
-2. **`.claude/agents/orchestrator.md`** — add `Write` to the `tools:` allowlist and
-   update the "you write nothing — enforced" section to "you write only
-   `/.machine/**` — enforced by allowlist + settings deny-rule", reconciling the
-   prose with TB-010.
-3. **`.claude/settings.json`** — add a permissions deny-rule blocking `Write`
-   outside `/.machine/**`. If this uses a settings field not already present,
-   update the Claude Code Version Compatibility table in
-   `.claude/rules/coding-standards.md` accordingly.
+2. **`.claude/agents/orchestrator.md`** — add `Write` (but NOT `Edit`/`NotebookEdit`)
+   to the `tools:` allowlist and update the "you write nothing — enforced" section
+   to "you write only `/.machine/**` — a binding profile/skill contract; you have
+   no `Edit`/`NotebookEdit` so you cannot modify existing project files in place",
+   reconciling the prose with TB-010. This allowlist change (add `Write`, no `Edit`)
+   is the integration point that lets the driver author the board.
+3. **`.claude/settings.json`** — no `Write` deny-rule is added (a global deny was
+   considered and rejected per TB-010). Permissions remain
+   `{"defaultMode":"bypassPermissions"}` so dispatched specialists can still write
+   project code. The only settings.json change for v2 is the
+   `MACHINE_SETTLE_DELAY_MINUTES` env entry exposing `settle_delay` (TB-003). If
+   that uses a settings field not already present, update the Claude Code Version
+   Compatibility table in `.claude/rules/coding-standards.md` accordingly.
 4. **SessionStart / `ignite` hook** — confirm/extend
    `.claude/hooks/ignite.mjs` so resume reads the new timer fields. The hook
    already parses session-file frontmatter for `id`/`label`/`status`; TB-009
@@ -434,9 +520,11 @@ this change must pass.
 
 ### Milestones (priority-ordered, no time estimates)
 
-1. **Permission path first (TB-010).** Add `Write` to the orchestrator allowlist
-   and the `settings.json` deny-rule; verify `settings.json` parses and the deny
-   containment is correct. This unblocks the driver actually writing the board.
+1. **Write path first (TB-010).** Add `Write` (but not `Edit`/`NotebookEdit`) to the
+   orchestrator allowlist and state the contract-based `/.machine/**` confinement in
+   the profile and skill; leave `settings.json` permissions as
+   `bypassPermissions` (no `Write` deny). Verify `settings.json` parses. This
+   unblocks the driver actually writing the board.
 2. **Schema + lifecycle (TB-001..TB-007).** Define the entry-file schema deltas,
    the status lifecycle including `frozen`, and the per-task timer-reset rule in
    the skill.
@@ -451,9 +539,11 @@ this change must pass.
 
 - **Session-death surprise.** Users may expect tasks to fire while away; the
   in-session limitation must be loud in the skill and footer (TB-008, TB-012).
-- **Permission deny-rule scope.** A too-broad deny could block the driver's own
-  `/.machine/**` writes; a too-narrow one could leak project-write capability.
-  TB-010 acceptance must be tested both ways.
+- **Contract not hard-enforced.** The driver's confinement to `/.machine/**` is a
+  profile/skill contract, not a harness permission boundary (a global `Write`-deny
+  was rejected per TB-010 because it cannot negate one directory and would block
+  dispatched specialists). Mitigation: the profile grants no `Edit`/`NotebookEdit`
+  (no in-place project edits) and TB-013 board-trust quarantines untrusted writes.
 - **Concurrent writer collisions.** If the worktree-isolation rule (TB-006) is not
   honored per task, parallel writers corrupt the tree. The `isolation` flag must
   be set wherever a task writes.
@@ -501,13 +591,18 @@ this change must pass.
   `approved`; when `b1` is approved, `b2` becomes eligible and launches at the
   next evaluation.
 
-### Scenario 5 — Write containment
+### Scenario 5 — Write containment (contract-based)
 
-- **Given** the orchestrator has `Write` in its allowlist and the
-  `/.machine/**` deny-rule is active,
-- **When** the driver writes a taskboard entry-file under `/.machine/sessions/`
-  and (in a separate attempt) tries to write a project source file,
-- **Then** the entry-file write succeeds and the project-file write is denied.
+- **Given** the orchestrator has `Write` but no `Edit`/`NotebookEdit` in its
+  allowlist, `settings.json` carries no `Write` deny-rule, and the profile/skill
+  contract confines the driver's writes to `/.machine/**`,
+- **When** the driver needs to record board state and, separately, a project source
+  file must change,
+- **Then** the driver writes the taskboard entry-file under `/.machine/sessions/`
+  successfully; it does not attempt an in-place edit of any existing project file
+  (it has no `Edit` capability) and honors the contract by not authoring project
+  code, so the project change flows instead through a dispatched specialist that
+  writes the project file in its own (worktree-isolated) context.
 
 ### Edge cases
 
@@ -519,10 +614,18 @@ this change must pass.
   writers use worktree isolation (TB-006).
 - `edit` on a `running`/`pending-approval` task: not a timer reset — routed to
   `redo` (TB-004).
+- An entry-file the driver did not create appears under `/.machine/sessions/` (a
+  dispatched agent wrote it, or it is a stale leftover): it is `untrusted`, never
+  auto-fires, and is surfaced in the footer for human review until adopted or
+  dropped (TB-013).
+- A dispatched agent attempts to run `/improve` or spawn nested work beyond its
+  spawn prompt: prohibited (TB-014); any entry-file it nonetheless drops is caught
+  as `untrusted` (TB-013).
 
 ### Quality gate
 
-- `settings.json` parses as valid JSON and the deny-rule is well-formed.
+- `settings.json` parses as valid JSON and contains NO `Write` deny-rule
+  (permissions remain `{"defaultMode":"bypassPermissions"}`).
 - `agents/orchestrator.md` and `orchestrate/SKILL.md` reference only resolvable
   agents/skills.
 - Any modified hook passes `node --check`.
@@ -531,8 +634,8 @@ this change must pass.
 
 ### Definition of Done
 
-- All twelve requirements (TB-001..TB-012) are implemented across the integration
-  points, each with its acceptance criteria met.
+- All fourteen requirements (TB-001..TB-014) are implemented across the
+  integration points, each with its acceptance criteria met.
 - The six locked decisions are each traceable to a requirement:
   ordered driver-written board → TB-001/TB-002; per-task settle countdown →
   TB-003/TB-004; parallel-where-independent → TB-005/TB-006; approve-as-override +
