@@ -4,8 +4,8 @@
 - **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/oil-me`.
 - **Stack:** Markdown instruction documents (agents, skills, commands, rules, output-styles); Node ESM hooks (`*.mjs`); JSON config (`settings.json`); CSV/Markdown glossary.
 - **Platform:** Windows, PowerShell 7+ shell, git-backed.
-- **Target:** install payload — the tree becomes `<project>/.claude/`. This repo root *is* the machine source; `/.machine/` is the project layer (never copied).
-- **Authoritative spec:** `.claude/INSTRUCTIONS.md` (install/update/re-index protocol + layout) + `.claude/agents/default.md` (machine law) are the canonical truth.
+- **Target:** Claude Code plugin named `machine` (manifest in `.claude-plugin/`); also usable vendored as `<project>/.claude/`. This repo root *is* the machine source; `/.machine/` is the project layer (never shipped).
+- **Authoritative spec:** `.claude-plugin/plugin.json` (plugin manifest) + `.claude/skills/oil-me/SKILL.md` (re-index protocol) + `.claude/agents/default.md` (machine law) are the canonical truth.
 
 ## Key paths
 - `.claude/agents/default.md` — the eager-generalist default agent (reads `/.machine`)
@@ -13,9 +13,10 @@
 - `.claude/skills/` — 21 skill dirs; `name:` frontmatter must match dir name
 - `.claude/rules/coding-standards.md` + `.claude/rules/languages/*` (16 language rules)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
-- `.claude/skills/oil-me/` — `/oil-me`, installs/updates the machine and re-indexes `/.machine` from the current repo
-- `.claude/INSTRUCTIONS.md` — the lifecycle protocol `/oil-me` executes
-- `.claude/settings.json` — hook wiring, env, `agent: default`
+- `.claude/skills/oil-me/` — `/oil-me`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)
+- `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` — plugin + marketplace manifests
+- `.claude/hooks/hooks.json` + `.claude/plugin-settings.json` — plugin hook manifest + curated portable settings
+- `.claude/settings.json` — self-host hook wiring, env, `agent: default`
 - `.machine/improve.json` — **live worklist** for the ongoing `/improve` loop (tracked in git; outstanding work only)
 
 ## Build / test / quality gate

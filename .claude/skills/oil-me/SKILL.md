@@ -1,44 +1,95 @@
 ---
 name: oil-me
-description: Oil the machine — the single lifecycle command. Installs the machine into a new repo, updates an existing machine from its source, and re-indexes /.machine to specialize the portable .claude to THIS codebase. Replaces /bootstrap. Run after copying the machine into a new repo, to pull machine updates, or whenever the project changes shape. Trigger: "/oil-me", "oil the machine", "bootstrap", "update the machine", "init the machine", "re-index /.machine".
+description: Oil the machine — re-index /.machine to specialize the portable machine to THIS codebase. Install and update are handled by the Claude Code plugin system (`/plugin`); this skill owns the per-repo project layer. Run after installing the machine plugin in a new repo, or whenever the project changes shape. Trigger: "/oil-me", "oil the machine", "re-index", "update the machine", "init the machine", "re-index /.machine".
 ---
 
-# /oil-me — install, update & re-index the machine
+# /oil-me — re-index the project layer
 
-`/oil-me` is the machine's one lifecycle command. The full protocol lives in
-**`.claude/INSTRUCTIONS.md`** (single source of truth); this skill detects the current
-state and executes the matching section of that file.
+The machine ships as a Claude Code **plugin** named `machine`. Install and update
+are the plugin system's job; `/oil-me` owns the one thing the plugin cannot: the
+per-repo **project layer** `/.machine/`, which specializes the portable machine to
+*this* codebase.
 
-## Procedure
+## Install & update (plugin system — not this skill)
 
-1. **Read `.claude/INSTRUCTIONS.md`.** It is the authoritative protocol — install, update,
-   and re-index, plus the self-update directive on its first line.
+```
+/plugin marketplace add yesitsfebreeze/machine
+/plugin install machine@machine
+/plugin update machine
+```
 
-2. **Self-refresh the instructions.** Take the `<url>` on line one of
-   `.claude/INSTRUCTIONS.md` (filled in at install). Fetch that remote URL. If the remote
-   body differs from the local file, overwrite the local file with the remote content, then
-   re-substitute `<url>` on line one with the real raw URL so it keeps self-refreshing. If
-   line one still holds the literal `<url>` placeholder (never installed, or you are running
-   inside the machine's own source repo), skip this step — there is nothing to pull from.
+Installing namespaces every component (`machine:<skill>`, `machine:<agent>`).
+The project layer `/.machine/` is **never** part of the plugin — it diverges per
+repo and is always generated locally by this skill. Rules (`.claude/rules/`) and
+harness policy such as `permissions.defaultMode` stay the installing repo's call.
 
-3. **Detect the state and run the matching section:**
-   - **No `.claude/` machine in the target** → run **Install**, then **Re-index `/.machine/`**.
-     If the user prefers a versioned dependency over a vendored copy, offer the
-     **Install as a plugin** path instead (`machine` plugin, namespaced components).
-   - **`.claude/` already present** → run **Update**, then **Re-index `/.machine/`** (reconcile
-     in place, never wipe).
-   - **Installed as the `machine` plugin** → `/plugin update machine`, then **Re-index** only.
-   - **Machine fine, only the project changed shape** → run **Re-index `/.machine/`** only.
+After `/plugin install` (or after the repo changes shape), run `/oil-me`.
 
-   The clone URL is derived from the line-one `<url>` (strip the file path, keep owner/repo).
+## Re-index `/.machine/`
 
-4. **Report** what changed under `.claude/` and `/.machine/`, and confirm `/personas`, `/gate`,
-   glossary discipline, and the dispatch table are live.
+Specialize the portable machine to *this* repo. On first run, regenerate from
+scratch. If a project layer already exists, **reconcile in place** — patch only
+what drifted, never blow away a working layer.
+
+### First run — regenerate
+
+1. **Clear `/.machine/` (keep structure, wipe instance state):**
+   ```bash
+   cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
+   mkdir -p .machine/personas .machine/skills
+   rm -f .machine/agent.md .machine/project.md .machine/trello.json .machine/improve.json
+   rm -f .machine/*.lock .machine/*.lock.json
+   rm -f .machine/personas/*.md
+   printf 'category,term,definition\n' > .machine/glossary.csv
+   ```
+   Keep `/.machine/.gitignore` and `/.machine/glossary.md` if present.
+
+2. **Scan the project** (Read/Glob/Grep, plus `mcp__kern__query` for prior decisions):
+   - **Identity & vision:** `README*`, `CLAUDE.md`, `docs/VISION.md` or `docs/**`.
+   - **Stack & build:** manifests (`Cargo.toml`, `package.json`, `pyproject.toml`, `go.mod`,
+     `CMakeLists.txt`, `Justfile`, `Makefile`), `.github/workflows/*`.
+   - **Shape:** top-level module layout, entry points, the hot/critical path.
+   - **Platform:** OS, shell, target (desktop/embedded/web).
+   - **Domain laws:** non-negotiable constraints in docs (real-time/safety, hardware limits,
+     security boundaries, perf budgets).
+
+   If the project is thin or undocumented, ask the user 2-3 focused questions rather than
+   guessing identity or laws.
+
+3. **Seed the project layer** — terse, specific to THIS repo:
+   - **`/.machine/project.md`** — facts: name, domain (one line), stack, platform, target,
+     authoritative spec path, key paths (hot path, entry points, mapping docs), build + test
+     + quality-gate commands, CI path.
+   - **`/.machine/agent.md`** — the project half of the agent (read by
+     `.claude/agents/default.md`): *What this project is*, *Project law* (binding domain
+     rules — as hard as machine law), *Domain idioms*, the *persona panel* roster, and
+     *build/verify* commands.
+   - **`/.machine/glossary.csv`** — seed rows (`category,term,definition`) for ambiguous domain
+     terms. Header-only is fine if none are clear yet.
+   - **`/.machine/personas/` + `/.machine/personas.md`** — a review panel tuned to the project's
+     real risk surfaces. One `*.md` per reviewer (name, role, what they catch);
+     `personas.md` indexes them with `**File:** .machine/personas/<name>.md` pointers. If the
+     domain is unclear, write an empty `personas.md` stub and tell the user to author it.
+
+### Re-run — reconcile in place
+
+Re-read the current repo and compare against the existing project layer. Patch only what
+drifted; do **not** clear `/.machine/`:
+- `project.md` — stack, key paths, build/test/gate commands still accurate?
+- `glossary.csv` / `glossary.md` — terms still defined, none renamed away?
+- `personas/` — does the updated machine expect persona slots that are missing?
+- `agent.md` — identity/domain law still matches the repo's shape?
+
+If `/.machine/` is missing or structurally stale, regenerate it (the first-run path above).
+If present and largely intact, hand-patch the specific gaps.
+
+## Report
+
+Report what changed under `/.machine/`, and confirm `/personas`, `/gate`, glossary
+discipline, and the dispatch table are live.
 
 ## Boundaries
 
-- Install/Update write under `.claude/` and stamp `.claude/version.log` (instance state).
-- Re-index writes **only** under `/.machine/` — never touch `skills/`, `agents/`, `hooks/`,
-  `settings.json`, or `rules/` during re-index.
-- `version.log` and the filled-in line-one `<url>` are instance state — never committed to
-  the machine's source repo.
+- `/oil-me` writes **only** under `/.machine/`. Never touch the machine itself
+  (`skills/`, `agents/`, `hooks/`, `settings.json`, `rules/`) during re-index —
+  that is the plugin's content, updated via `/plugin update machine`.

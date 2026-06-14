@@ -1,5 +1,5 @@
 ---
-instructions: If you are a claude code agent, read this file instead -> **`.claude/INSTRUCTIONS.md`**
+instructions: If you are a Claude Code agent, install the machine as a plugin -> `/plugin marketplace add yesitsfebreeze/machine` then `/plugin install machine@machine`, then run `/oil-me` to write the project layer.
 ---
 
 <div align="center">
@@ -25,19 +25,19 @@ themselves to each one.**
 
 ## What is this?
 
-The machine is a drop-in `.claude/` payload you copy into any repository. It gives
-your Claude Code agent a full operating system: a roster of specialist subagents,
-an on-demand skill toolbelt, a quality gate, a review panel, and a compounding
-memory — none of it tied to a particular codebase.
+The machine is a Claude Code **plugin** you install into any repository. It gives
+your agent a full operating system: a roster of specialist subagents, an on-demand
+skill toolbelt, a quality gate, a review panel, and a compounding memory — none of
+it tied to a particular codebase. Installing namespaces every component under
+`machine:` (`machine:gate`, `machine:coder`, …).
 
-When you run `/oil-me`, it reads the repo it lives in and writes a thin **project
-layer** that teaches the portable machine your stack, your laws, and your
-vocabulary. The same payload behaves like a Rust expert in one repo and a
-frontend expert in the next.
+When you run `/oil-me`, it reads the repo and writes a thin **project layer** that
+teaches the portable machine your stack, your laws, and your vocabulary. The same
+plugin behaves like a Rust expert in one repo and a frontend expert in the next.
 
 ```
-this repo's root   the machine        ← the install payload; becomes <project>/.claude/
-/.machine/            the project layer  ← never copied; /oil-me writes it per repo
+the machine plugin   the portable payload  ← installed + updated via /plugin
+/.machine/              the project layer     ← never shipped; /oil-me writes it per repo
 ```
 
 The split is the whole idea: **one portable machine**, **one per-repo brain**.
@@ -75,24 +75,27 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 - **⚙️ Hooks and modes.** Session-start context injection, a live status line, an
   ultra-compressed "caveman" output mode, and orchestrator resume — wired through
   6 Node hooks.
-- **🔁 One lifecycle command.** `/oil-me` installs the machine, pulls updates, and
-  re-indexes the project layer whenever the repo changes shape.
+- **🔁 Clean lifecycle.** Install and update are the plugin system's job
+  (`/plugin install` / `/plugin update`); `/oil-me` re-indexes the project layer
+  whenever the repo changes shape.
 
 ---
 
 ## 🚀 Quick start
 
-1. **Drop it in.** Copy this repo's payload into your project so it lives at
-   `<your-project>/.claude/`.
-2. **Oil the machine.** Run `/oil-me`. It installs (or updates) the machine and
-   writes `/.machine/` by reading your actual code — identity, stack, glossary, and a
-   persona panel.
+1. **Install the plugin.** Add the marketplace and install:
+   ```
+   /plugin marketplace add yesitsfebreeze/machine
+   /plugin install machine@machine
+   ```
+2. **Oil the machine.** Run `/oil-me`. It writes `/.machine/` by reading your actual
+   code — identity, stack, glossary, and a persona panel.
 3. **Work.** The default agent routes to specialists, recalls prior decisions from
    `kern`, gates quality before commits, and offers the review panel after
    non-trivial changes.
 
-> Already installed? Re-run `/oil-me` any time to pull machine updates or
-> re-index `/.machine/` after the project changes.
+> Pull machine updates with `/plugin update machine`. Re-run `/oil-me` any time to
+> re-index `/.machine/` after the project changes shape.
 
 ---
 
@@ -114,14 +117,15 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ## 🗂️ Layout
 
 ```
-.claude/                 the portable machine (this is the install payload)
+.claude-plugin/          plugin + marketplace manifests (plugin.json, marketplace.json)
+.claude/                 the portable machine (the plugin payload)
 ├── agents/              23 dispatch agents — resolved by `name:` frontmatter
 ├── skills/              24 skills — one dir each, `name:` matches the dir
-├── hooks/               6 Node ESM hooks (session start, statusline, personas…)
-├── rules/               coding standards for instruction files
+├── hooks/               Node ESM hooks + hooks.json plugin manifest
+├── rules/               coding standards (project-scope; not shipped by the plugin)
 ├── output-styles/       comm modes (machine, caveman)
-├── settings.json        hook wiring, env, default agent
-└── INSTRUCTIONS.md      the lifecycle protocol /oil-me executes
+├── settings.json        self-host hook wiring, env, default agent
+└── plugin-settings.json curated portable settings shipped by the plugin
 
 /.machine/                  the project layer (written per repo by /oil-me)
 ├── agent.md             this repo's identity + hard rules
