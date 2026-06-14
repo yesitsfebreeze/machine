@@ -43,7 +43,9 @@ This mirrors `kern`'s `.kern/` shape exactly.
 
 All are MCP tools on the `mesh` server, namespaced `mcp__mesh__*`. Every request
 carries the caller's `agent_id` (the git-fs `agent/<id>` identity), treated as the
-authenticated principal.
+authenticated principal. This is the verb summary only — see SPEC-COMM-001 §4 for
+the full request/response shapes (the single source of truth for field names and
+meanings).
 
 | Family | Verb | Purpose |
 |---|---|---|
@@ -68,9 +70,11 @@ caller wins; the rest are `denied` or `queued`.
   release/expiry).
 - **Fence token:** monotonically increasing per resource across its whole life,
   even after the lock is fully released and re-acquired.
-- **Self-healing:** a crashed holder's lock is freed on lease expiry, and all of a
-  dead agent's claims are released when its heartbeat goes stale — no lock is held
-  forever.
+- **Self-healing:** a crashed holder's lock is freed on lease expiry, and a dead
+  agent's claims are released once its liveness reaches `dead`. Liveness follows
+  the SPEC R-3 state machine: `alive` while within the heartbeat TTL, `stale`
+  during a bounded grace window after it, then `dead`. Only the `dead` state frees
+  claims — a `stale` agent keeps its holds — so no lock is held forever.
 
 ## Messaging
 

@@ -12,7 +12,7 @@
     {
       "name": "machine",
       "source": ".",
-      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern + context7 + pdf-reader MCP servers).",
+      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern + mesh + context7 + pdf-reader MCP servers).",
       "version": "0.3.1",
       "category": "development",
       "keywords": ["agents", "skills", "workflow", "memory", "orchestration"]

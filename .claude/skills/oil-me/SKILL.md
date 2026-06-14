@@ -27,8 +27,9 @@ After `/plugin install` (or after the repo changes shape), run `/oil-me`.
 
 ### Bundled MCP servers & companion plugins
 
-The plugin's `.mcp.json` ships `kern` (memory), `context7` (library docs — needs
-`CONTEXT7_API_KEY`), and `pdf-reader` (PDF extraction). Two live companion plugins
+The plugin's `.mcp.json` ships `kern` (memory), `mesh` (fleet coordination — needs
+`cargo install --path mesh`), `context7` (library docs — needs `CONTEXT7_API_KEY`),
+and `pdf-reader` (PDF extraction). Two live companion plugins
 are routed to but not vendored — `context-mode` (`mksglu/context-mode`) and
 `git-fs` (`yesitsfebreeze/git-fs`); install them separately if a repo wants them.
 The default agent's toolbelt section is the single source of truth for when to use

@@ -1,6 +1,6 @@
 {
   "name": "machine",
-  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon. Specialized per-repo by /oil-me into /.machine.",
+  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil-me into /.machine.",
   "version": "0.3.1",
   "author": {
     "name": "yesitsfebreeze",
@@ -14,6 +14,7 @@
     "workflow",
     "memory",
     "kern",
+    "mesh",
     "code-quality",
     "orchestration"
   ],
