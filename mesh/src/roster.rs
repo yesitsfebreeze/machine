@@ -63,7 +63,6 @@ impl Daemon {
                     registered_at: prev.registered_at,
                     last_seen: now,
                     expires_at: now + ttl,
-                    ttl_seconds: ttl,
                     epoch: if was_dead { prev.epoch + 1 } else { prev.epoch },
                 }
             }
@@ -75,7 +74,6 @@ impl Daemon {
                 registered_at: now,
                 last_seen: now,
                 expires_at: now + ttl,
-                ttl_seconds: ttl,
                 epoch: 1,
             },
         };
@@ -102,6 +100,10 @@ impl Daemon {
         let rtxn = store.env().read_txn()?;
         let db = store.roster_db();
 
+        // Build the agent -> held-resources index in a single pass over the
+        // claims DB, instead of re-scanning it once per agent.
+        let mut held_by = self.held_claims_index(&rtxn, now)?;
+
         let mut agents = Vec::new();
         for item in db.iter(&rtxn)? {
             let (_key, bytes) = item?;
@@ -110,7 +112,7 @@ impl Daemon {
             if liveness == Liveness::Dead && !req.include_stale {
                 continue;
             }
-            let held = self.held_claims_for(&rtxn, &rec.agent_id, now)?;
+            let held = held_by.remove(&rec.agent_id).unwrap_or_default();
             agents.push(RosterEntry {
                 agent_id: rec.agent_id,
                 branch: rec.branch,

@@ -134,7 +134,6 @@ impl Store {
                  posted_at  TEXT NOT NULL,
                  expires_unix INTEGER
              );
-             CREATE INDEX IF NOT EXISTS idx_message_log_id ON message_log(message_id);
 
              CREATE TABLE IF NOT EXISTS claim_events (
                  id        INTEGER PRIMARY KEY AUTOINCREMENT,

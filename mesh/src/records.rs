@@ -19,7 +19,6 @@ pub struct RosterRecord {
     pub last_seen: i64,
     /// `last_seen + ttl`, Unix seconds.
     pub expires_at: i64,
-    pub ttl_seconds: i64,
     /// Incremented each fresh join after death, so peers can detect a restart.
     pub epoch: i64,
 }
@@ -30,10 +29,9 @@ pub struct QueuedTicket {
     pub agent_id: String,
     pub claim_id: String,
     pub mode: ClaimMode,
+    /// Lease the waiter will receive when promoted to holder.
     pub lease_seconds: i64,
     pub note: Option<String>,
-    /// Enqueue time (Unix seconds) — preserves FIFO promotion order.
-    pub enqueued_at: i64,
 }
 
 /// A single live holder of a resource.
@@ -43,7 +41,6 @@ pub struct Holder {
     pub claim_id: String,
     /// Auto-expiry of this hold, Unix seconds (SPEC C-12).
     pub lease_expires_at: i64,
-    pub lease_seconds: i64,
     pub note: Option<String>,
 }
 

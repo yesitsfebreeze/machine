@@ -86,9 +86,10 @@ impl Daemon {
         let now = self.clock.now_unix();
         self.sweep(now)?;
 
-        // Collect expired message ids from the log.
+        let conn = self.store.journal()?;
+        // Collect expired ids so their LMDB bodies (keyed by message_id) can be
+        // removed; the log rows themselves are cleared with one bulk DELETE.
         let expired: Vec<String> = {
-            let conn = self.store.journal()?;
             let mut stmt = conn.prepare(
                 "SELECT message_id FROM message_log
                  WHERE expires_unix IS NOT NULL AND expires_unix <= ?1",
@@ -108,16 +109,11 @@ impl Daemon {
             }
             wtxn.commit()?;
         }
-        // Remove log rows.
-        {
-            let conn = self.store.journal()?;
-            for id in &expired {
-                conn.execute(
-                    "DELETE FROM message_log WHERE message_id = ?1",
-                    rusqlite::params![id],
-                )?;
-            }
-        }
+        // Remove the corresponding log rows in a single statement.
+        conn.execute(
+            "DELETE FROM message_log WHERE expires_unix IS NOT NULL AND expires_unix <= ?1",
+            rusqlite::params![now],
+        )?;
         Ok(expired.len())
     }
 }

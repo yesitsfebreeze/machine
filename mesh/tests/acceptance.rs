@@ -476,6 +476,29 @@ fn ac3_exactly_eight_verbs() {
     assert_eq!(VERBS, expected, "tool list must be exactly these eight");
 }
 
+#[test]
+fn verb_dispatch_and_schema_stay_in_sync_with_verbs() {
+    // Guards the implicit contract that VERBS, call_verb dispatch, and the tool
+    // schemas all enumerate the same set. Every VERB must dispatch (an empty-args
+    // call fails validation as BadRequest, NOT as an unknown verb), and an unknown
+    // name must be rejected as such.
+    use mesh::mcp::{call_verb, VERBS};
+    let tmp = tempfile::tempdir().unwrap();
+    let d = daemon(tmp.path(), Clock::fixed_at(T0));
+
+    for verb in VERBS {
+        let err = call_verb(&d, verb, serde_json::json!({}))
+            .expect_err("empty args should fail validation");
+        assert!(
+            !err.to_string().contains("unknown verb"),
+            "known verb {verb} must dispatch, got: {err}"
+        );
+    }
+    let err = call_verb(&d, "does_not_exist", serde_json::json!({}))
+        .expect_err("bogus verb must be rejected");
+    assert!(err.to_string().contains("unknown verb"), "got: {err}");
+}
+
 // --- #14: storage shape (LMDB primary + SQLite-WAL journal) -----------------
 
 #[test]

@@ -10,6 +10,7 @@
 //! - Ordering: `message_id` is a ULID — sortable and time-ordered — giving a total
 //!   order per recipient cursor.
 
+use rusqlite::Connection;
 use ulid::Ulid;
 
 use crate::clock::iso_from_unix;
@@ -74,7 +75,7 @@ impl Daemon {
             )?;
         }
 
-        let fanout = self.fanout_for(&req.to, now)?;
+        let fanout = self.fanout_for(&req.to)?;
         Ok(PostResponse {
             message_id,
             posted_at: iso_from_unix(now)?,
@@ -88,13 +89,16 @@ impl Daemon {
             return Err(MeshError::BadRequest("agent_id is required".into()));
         }
         let now = self.clock.now_unix();
-        let cursor = match &req.since {
-            Some(s) => s.clone(),
-            None => self.cursor_for(&req.agent_id)?,
-        };
         let limit = req.limit.unwrap_or(100).clamp(1, 1000);
 
-        let pending = self.pending_after(&req.agent_id, &cursor, &req.topics, now)?;
+        // One journal connection serves every read in this call.
+        let conn = self.store.journal()?;
+        let live_cursor = cursor_for(&conn, &req.agent_id)?;
+        // `inbox` does not advance the cursor, so the live cursor is also the read
+        // window when the caller did not override it with `since`.
+        let cursor = req.since.clone().unwrap_or_else(|| live_cursor.clone());
+
+        let pending = pending_after(&conn, &req.agent_id, &cursor, &req.topics, now)?;
         let total = pending.len() as i64;
 
         let mut messages = Vec::new();
@@ -104,7 +108,6 @@ impl Daemon {
             }
         }
         let returned = messages.len() as i64;
-        let live_cursor = self.cursor_for(&req.agent_id)?;
         Ok(InboxResponse {
             messages,
             cursor: live_cursor,
@@ -121,25 +124,22 @@ impl Daemon {
                 "agent_id and up_to are required".into(),
             ));
         }
-        let current = self.cursor_for(&req.agent_id)?;
+        // One journal connection serves the read, the write, and the count.
+        let conn = self.store.journal()?;
+        let current = cursor_for(&conn, &req.agent_id)?;
         // Cursor only ever moves forward.
         let new_cursor = if req.up_to > current {
             req.up_to.clone()
         } else {
             current
         };
-        {
-            let conn = self.store.journal()?;
-            conn.execute(
-                "INSERT INTO read_cursors (agent_id, cursor) VALUES (?1, ?2)
-                 ON CONFLICT(agent_id) DO UPDATE SET cursor = excluded.cursor",
-                rusqlite::params![req.agent_id, new_cursor],
-            )?;
-        }
+        conn.execute(
+            "INSERT INTO read_cursors (agent_id, cursor) VALUES (?1, ?2)
+             ON CONFLICT(agent_id) DO UPDATE SET cursor = excluded.cursor",
+            rusqlite::params![req.agent_id, new_cursor],
+        )?;
         let now = self.clock.now_unix();
-        let remaining = self
-            .pending_after(&req.agent_id, &new_cursor, &[], now)?
-            .len() as i64;
+        let remaining = pending_after(&conn, &req.agent_id, &new_cursor, &[], now)?.len() as i64;
         Ok(ReadResponse {
             cursor: new_cursor,
             remaining,
@@ -147,56 +147,6 @@ impl Daemon {
     }
 
     // --- helpers -----------------------------------------------------------
-
-    /// The caller's stored cursor, or the zero cursor if none yet.
-    fn cursor_for(&self, agent_id: &str) -> Result<String> {
-        let conn = self.store.journal()?;
-        let cursor: Option<String> = conn
-            .query_row(
-                "SELECT cursor FROM read_cursors WHERE agent_id = ?1",
-                rusqlite::params![agent_id],
-                |row| row.get(0),
-            )
-            .ok();
-        Ok(cursor.unwrap_or_else(|| ZERO_CURSOR.to_string()))
-    }
-
-    /// Ordered message_ids addressed to `agent_id` (point-to-point, `*`, and the
-    /// caller's requested `topics`) with id strictly greater than `cursor` and not
-    /// expired. Drives both `inbox` and `read.remaining`.
-    fn pending_after(
-        &self,
-        agent_id: &str,
-        cursor: &str,
-        topics: &[String],
-        now: i64,
-    ) -> Result<Vec<String>> {
-        let conn = self.store.journal()?;
-        let mut stmt = conn.prepare(
-            "SELECT message_id, recipient, expires_unix FROM message_log
-             WHERE message_id > ?1 ORDER BY message_id ASC",
-        )?;
-        let rows = stmt.query_map(rusqlite::params![cursor], |row| {
-            let id: String = row.get(0)?;
-            let recipient: String = row.get(1)?;
-            let expires: Option<i64> = row.get(2)?;
-            Ok((id, recipient, expires))
-        })?;
-
-        let mut out = Vec::new();
-        for row in rows {
-            let (id, recipient, expires) = row?;
-            if let Some(exp) = expires {
-                if exp <= now {
-                    continue; // TTL-expired (M-6)
-                }
-            }
-            if addressed_to(&recipient, agent_id, topics) {
-                out.push(id);
-            }
-        }
-        Ok(out)
-    }
 
     /// Load a stored message body from LMDB by id (None if GC'd).
     fn load_message(&self, message_id: &str) -> Result<Option<MessageRecord>> {
@@ -206,20 +156,65 @@ impl Daemon {
             None => Ok(None),
         }
     }
+}
 
+/// The caller's stored cursor, or the zero cursor if none yet.
+fn cursor_for(conn: &Connection, agent_id: &str) -> Result<String> {
+    let cursor: Option<String> = conn
+        .query_row(
+            "SELECT cursor FROM read_cursors WHERE agent_id = ?1",
+            rusqlite::params![agent_id],
+            |row| row.get(0),
+        )
+        .ok();
+    Ok(cursor.unwrap_or_else(|| ZERO_CURSOR.to_string()))
+}
+
+/// Ordered message_ids addressed to `agent_id` (point-to-point, `*`, and the
+/// caller's requested `topics`) with id strictly greater than `cursor` and not
+/// expired. Drives both `inbox` and `read.remaining`.
+fn pending_after(
+    conn: &Connection,
+    agent_id: &str,
+    cursor: &str,
+    topics: &[String],
+    now: i64,
+) -> Result<Vec<String>> {
+    let mut stmt = conn.prepare(
+        "SELECT message_id, recipient, expires_unix FROM message_log
+         WHERE message_id > ?1 ORDER BY message_id ASC",
+    )?;
+    let rows = stmt.query_map(rusqlite::params![cursor], |row| {
+        let id: String = row.get(0)?;
+        let recipient: String = row.get(1)?;
+        let expires: Option<i64> = row.get(2)?;
+        Ok((id, recipient, expires))
+    })?;
+
+    let mut out = Vec::new();
+    for row in rows {
+        let (id, recipient, expires) = row?;
+        if let Some(exp) = expires {
+            if exp <= now {
+                continue; // TTL-expired (M-6)
+            }
+        }
+        if addressed_to(&recipient, agent_id, topics) {
+            out.push(id);
+        }
+    }
+    Ok(out)
+}
+
+impl Daemon {
     /// Count of distinct recipients a `to` address resolves to right now (M-1).
     /// `*` counts every known agent; `topic:` is unbounded by registration so it
     /// reports 0 named recipients (topic delivery is reader-driven, M-2); a direct
     /// address counts as 1.
-    fn fanout_for(&self, to: &str, _now: i64) -> Result<i64> {
+    fn fanout_for(&self, to: &str) -> Result<i64> {
         if to == "*" {
             let rtxn = self.store.env().read_txn()?;
-            let mut n = 0i64;
-            for item in self.store.roster_db().iter(&rtxn)? {
-                item?;
-                n += 1;
-            }
-            Ok(n)
+            Ok(self.store.roster_db().len(&rtxn)? as i64)
         } else if to.starts_with("topic:") {
             Ok(0)
         } else {

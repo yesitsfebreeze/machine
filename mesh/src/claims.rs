@@ -11,6 +11,8 @@
 //! and promoting waiters. This makes a crashed holder unable to hold a lock
 //! forever without requiring a background thread.
 
+use std::collections::HashMap;
+
 use heed::RoTxn;
 use ulid::Ulid;
 
@@ -64,7 +66,6 @@ impl Daemon {
         if let Some(pos) = record.holders.iter().position(|h| h.agent_id == req.agent_id) {
             let holder = &mut record.holders[pos];
             holder.lease_expires_at = now + lease;
-            holder.lease_seconds = lease;
             if req.note.is_some() {
                 holder.note = req.note.clone();
             }
@@ -93,7 +94,6 @@ impl Daemon {
                 agent_id: req.agent_id.clone(),
                 claim_id: claim_id.clone(),
                 lease_expires_at: now + lease,
-                lease_seconds: lease,
                 note: req.note.clone(),
             });
             let fence = record.fence;
@@ -122,7 +122,6 @@ impl Daemon {
                     mode: req.mode,
                     lease_seconds: lease,
                     note: req.note.clone(),
-                    enqueued_at: now,
                 });
                 let position = record.queue.len() as i64;
                 let fence = record.fence;
@@ -175,12 +174,10 @@ impl Daemon {
             }
         };
 
-        // Is the caller a holder of this exact claim_id?
         let holder_idx = record
             .holders
             .iter()
             .position(|h| h.agent_id == req.agent_id && h.claim_id == req.claim_id);
-        // Or a queued ticket owner?
         let queue_idx = record
             .queue
             .iter()
@@ -327,28 +324,32 @@ impl Daemon {
         Ok(changed)
     }
 
-    /// Resource ids currently held by `agent_id` (for roster `held_claims`).
-    pub fn held_claims_for(
+    /// Index of `agent_id` -> sorted resource ids it currently holds, built in a
+    /// single pass over the claims DB (for roster `held_claims`). Each agent's
+    /// list is sorted so the roster output is stable.
+    pub fn held_claims_index(
         &self,
         rtxn: &RoTxn,
-        agent_id: &str,
         now: i64,
-    ) -> Result<Vec<String>> {
+    ) -> Result<HashMap<String, Vec<String>>> {
         let cdb = self.store.claims_db();
-        let mut out = Vec::new();
+        let mut index: HashMap<String, Vec<String>> = HashMap::new();
         for item in cdb.iter(rtxn)? {
             let (_key, bytes) = item?;
             let rec: ClaimRecord = decode(bytes)?;
-            let holds = rec
-                .holders
-                .iter()
-                .any(|h| h.agent_id == agent_id && h.lease_expires_at > now);
-            if holds {
-                out.push(rec.resource);
+            for holder in &rec.holders {
+                if holder.lease_expires_at > now {
+                    index
+                        .entry(holder.agent_id.clone())
+                        .or_default()
+                        .push(rec.resource.clone());
+                }
             }
         }
-        out.sort();
-        Ok(out)
+        for resources in index.values_mut() {
+            resources.sort();
+        }
+        Ok(index)
     }
 
     /// Persist a claim record, or delete the key when the resource is fully idle
@@ -421,33 +422,27 @@ fn promote_queue(record: &mut ClaimRecord, now: i64) -> Option<String> {
     record.mode = ticket.mode;
     record.fence += 1;
     let first = ticket.agent_id.clone();
-    record.holders.push(Holder {
-        agent_id: ticket.agent_id,
-        claim_id: ticket.claim_id,
-        lease_expires_at: now + ticket.lease_seconds,
-        lease_seconds: ticket.lease_seconds,
-        note: ticket.note,
-    });
+    record.holders.push(holder_from_ticket(ticket, now));
 
     // For shared, absorb leading shared waiters so they share the grant.
     if record.mode == ClaimMode::Shared {
-        while let Some(next) = record.queue.first() {
-            if next.mode != ClaimMode::Shared {
-                break;
-            }
+        while record.queue.first().map(|t| t.mode) == Some(ClaimMode::Shared) {
             let t = record.queue.remove(0);
-            record.holders.push(Holder {
-                agent_id: t.agent_id,
-                claim_id: t.claim_id,
-                lease_expires_at: now + t.lease_seconds,
-                lease_seconds: t.lease_seconds,
-                note: t.note,
-            });
+            record.holders.push(holder_from_ticket(t, now));
         }
     }
     Some(first)
 }
 
+/// Build a [`Holder`] from a promoted queue ticket, anchoring its lease at `now`.
+fn holder_from_ticket(ticket: QueuedTicket, now: i64) -> Holder {
+    Holder {
+        agent_id: ticket.agent_id,
+        claim_id: ticket.claim_id,
+        lease_expires_at: now + ticket.lease_seconds,
+        note: ticket.note,
+    }
+}
 
 /// Is `agent_id` past its dead threshold per the roster (C-13)?
 /// An agent with no roster entry is treated as not-dead (it may be claiming
