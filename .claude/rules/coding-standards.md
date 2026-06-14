@@ -79,6 +79,7 @@ changelog):
 | `ultracode` keyword | v2.1.161 | Workflow trigger keyword (renamed from `workflow`) |
 | Stop/SubagentStop `additionalContext` | v2.1.163 | Hooks may return `hookSpecificOutput.additionalContext` |
 | Nested subagents | v2.1.172 | Sub-agents can spawn up to 5 levels deep |
+| `ScheduleWakeup` | built-in | Harness built-in: driver tool that re-invokes the main-loop driver after a delay (timed wakeup); used by the taskboard to wake at the soonest pending `fire_at` |
 
 ## Paths Frontmatter
 

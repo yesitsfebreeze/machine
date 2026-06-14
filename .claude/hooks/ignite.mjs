@@ -11,10 +11,11 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-// Statuses that mean "open work to resume" in the footer. `scheduled` and
-// `frozen` are v2 pre-fire taskboard states; the rest are in-flight or
-// awaiting-approval states inherited from v1.
+// Statuses that mean "open work to resume" in the footer. `proposed`,
+// `scheduled`, and `frozen` are v2 pre-fire taskboard states; the rest are
+// in-flight or awaiting-approval states inherited from v1.
 const ACTIVE = new Set([
+  "proposed",
   "scheduled",
   "frozen",
   "pending-approval",

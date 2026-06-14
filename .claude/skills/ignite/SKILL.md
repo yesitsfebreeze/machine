@@ -9,7 +9,7 @@ when_to_use: Fired by the ignite SessionStart hook every session, or on explicit
 
 Single entry point for a session. Run the steps in order, quietly. Do not narrate
 each step; act, then give one short status line. Honor any state the hook passed
-in `additionalContext` (oiled or not, open subagents list).
+in `additionalContext` (oiled or not, open taskboard).
 
 ## 1. Comms
 
@@ -35,8 +35,12 @@ problem, not an ignite step.
 Enter orchestration mode: invoke the `orchestrate` skill. If the hook listed an
 open taskboard from a prior session (any non-terminal status: scheduled / frozen /
 running / pending-approval / changes-requested), rebuild the timed board footer
-from `/.machine/sessions/` and resume tracking them. If there were none, enter
-orchestration ready but idle — do not invent work.
+from `/.machine/sessions/`. Per TB-013 board-trust, the driver's tracked set
+starts EMPTY on resume: every entry-file already on disk was not created in THIS
+session, so surface each in the footer as `untrusted`, pending the user's `adopt`
+or `drop` — never auto-fire or auto-track a pre-existing entry. The board-trust
+section of the `orchestrate` skill is the single source of truth for this model.
+If there were none, enter orchestration ready but idle — do not invent work.
 
 Timer-resume (TB-009): for every `scheduled` task, recompute eligibility from its
 persisted `fire_at` against the current time. A task whose `fire_at` already
@@ -50,6 +54,6 @@ in-session behavior only — nothing fired while the session was down.
 ## 4. Status line
 
 Close with one compact line, e.g.:
-`machine: oiled · caveman full · orchestration on · 2 open subagents`
+`machine: oiled · caveman full · orchestration on · 2 open tasks`
 or when unoiled:
 `machine: not oiled — run /oil-me to specialize this repo`

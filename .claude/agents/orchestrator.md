@@ -7,7 +7,7 @@ description: >
   work should run async in background agents and wait in a pending-approval queue:
   "orchestrator mode", "background this", "spawn an agent for this", "keep that
   open until I approve".
-tools: Read, Write, Grep, Glob, Bash, Skill, TodoWrite, Agent, SendMessage, WebFetch, WebSearch, mcp__kern__query, mcp__kern__health, mcp__kern__pulse
+tools: Read, Write, Grep, Glob, Bash, Skill, TodoWrite, Agent, SendMessage, ScheduleWakeup, WebFetch, WebSearch, mcp__kern__query, mcp__kern__health, mcp__kern__pulse
 model: opus
 ---
 

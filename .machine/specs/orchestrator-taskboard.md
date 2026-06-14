@@ -250,8 +250,9 @@ Acceptance criteria:
   it means "apply the result". Both behaviors are documented in the command table.
 - A `frozen` task has a clearly suspended timer: no `fire_at` recomputation occurs
   while frozen, and it is excluded from wakeup scheduling until unfrozen
-  (unfreezing is achieved by `approve` to fire now, by edit to re-schedule a fresh
-  countdown, or by `drop`).
+  (unfreezing is achieved by `approve` to fire now, or by `drop`). Editing a
+  `frozen` task updates its content only and leaves it frozen (per TB-004); edit
+  is not an unfreeze.
 - Reaching `approved` or `rejected` deletes the entry-file; the board converges
   toward empty exactly as in v1.
 
@@ -360,6 +361,7 @@ extending the existing v1 command table:
 | `drop <id>` | Stop the subagent if live, set `rejected`, delete the entry-file (any state). |
 | `show <id>` | Print the full entry: label, agent_type, job/spawn-prompt, dependencies, added_at/fire_at, status, isolation, and (if present) result summary and validation. |
 | `redo <id>: <note>` | Retained from v1: `SendMessage` to that task's `agent_id` with the note, set `changes-requested` then `running`; context preserved, never restarts from zero. |
+| `adopt <id>` | Move a quarantined `untrusted` entry into the driver's tracked set and schedule it: set `status: scheduled`, `added_at: now`, `fire_at: now + settle_delay`; re-schedule the wakeup (TB-013). The entry then follows the normal lifecycle under the driver's ownership. |
 
 Acceptance criteria:
 - Every command above is defined in the v2 skill command table with its exact
@@ -381,7 +383,7 @@ Acceptance criteria:
 - The footer never invents an entry not backed by a file; terminal
   (`approved`/`rejected`, deleted) tasks are absent.
 - The footer's reply hint lists the v2 commands (`add`, `edit`, `freeze`,
-  `approve`, `drop`, `show`, `redo`).
+  `approve`, `drop`, `show`, `redo`, `adopt`).
 
 ### TB-013 — Driver-owned board and quarantine of untrusted entries
 
