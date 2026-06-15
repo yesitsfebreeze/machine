@@ -9,9 +9,9 @@
 
 ## Key paths
 - `.claude/agents/default.md` — the eager-generalist default agent (reads `/.machine`)
-- `.claude/agents/*.md` — 23 dispatch agents (`expert-*`, `manager-*`, `builder-*`); resolved by `name:` frontmatter, not path
-- `.claude/skills/` — 21 skill dirs; `name:` frontmatter must match dir name
-- `.claude/rules/coding-standards.md` + `.claude/rules/languages/*` (16 language rules)
+- `.claude/agents/*.md` — 4 registered agents (`default`, `drill`, `manager-tdd`, `manager-ddd`); resolved by `name:` frontmatter, not path. The 20 `expert-*`/`manager-*`/`builder-*` dispatch agents live unregistered in `mine/agents/` (slot via `/oil`)
+- `.claude/skills/` — 9 registered skill dirs (`name:` frontmatter must match dir name); 18 more unregistered in `mine/skills/`
+- `.claude/rules/coding-standards.md` (sole rules file; no `languages/` dir)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
 - `.claude/skills/oil/` — `/oil`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)
 - `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` — plugin + marketplace manifests (plugin.json lists agent files + skill dirs explicitly; regenerate when adding/removing agents or skills)
