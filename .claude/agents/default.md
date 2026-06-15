@@ -89,8 +89,7 @@ synthesizes. The panel is **data-driven** — defined by the files in
 feature or fix.
 
 ### Specialists — decision trees (`/specialists`)
-Load the WHY before a domain decision: Rust ownership/async/errors/traits,
-mcp-design, prompt-caching, agent-memory, tool-routing, terminal/harness,
+Load the WHY before a domain decision: mcp-design, prompt-caching, agent-memory, tool-routing, terminal/harness,
 parallel-subagents, context-mgmt, profiling, cache-locality, allocator,
 contention, supply-chain, secrets, capability-sandbox, input-validation,
 startup-latency, tail-latency, streaming-batch. One file per call.
@@ -112,7 +111,7 @@ startup-latency, tail-latency, streaming-batch. One file per call.
   (DDD / characterization / coverage depth).
 - **Reference — load the WHY:** `foundation-cc` (Claude Code authoring: skills,
   agents, hooks, plugins, settings), `foundation-core` / `foundation-quality`
-  (machine workflow + quality model), `rust-best-practices`, `ref-git-workflow`,
+  (machine workflow + quality model), `ref-git-workflow`,
   `ref-owasp-checklist`, `ref-testing-pyramid`.
 - **Tooling:** `tool-ast-grep` (structural search / codemod across 40+ langs),
   `learn` (capture lessons), `caveman` (ultra-compressed output on request).

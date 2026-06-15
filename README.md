@@ -56,8 +56,8 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 - **🧰 25 on-demand skills.** A toolbelt that loads only when needed: `coder`,
   `clean`, `improve`, `simplify` for building and polishing; `gate`,
   `code-review`, `perf-gate` for quality; `tool-ast-grep` for structural
-  search/codemod; reference kits (`foundation-cc`, `rust-best-practices`,
-  `ref-owasp-checklist`, `ref-testing-pyramid`, `ref-git-workflow`); and
+  search/codemod; reference kits (`foundation-cc`, `ref-owasp-checklist`,
+  `ref-testing-pyramid`, `ref-git-workflow`); and
   orchestration (`orchestrate`, `parallel`, `personas`).
 - **🧠 Compounding memory ([`kern`](https://github.com/yesitsfebreeze/kern)).** A
   per-directory memory daemon, reached over MCP, that remembers *why* past

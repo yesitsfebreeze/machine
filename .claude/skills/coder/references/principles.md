@@ -41,6 +41,6 @@ Don't build until required. Four costs of speculative features (Fowler 2015):
 
 ## Add
 
-- Comment when *why* non-obvious: hidden constraint, subtle invariant, workaround for specific bug, surprising behavior
+- Comment only to prevent a real head-scratcher, or as a utility marker: hidden constraint, subtle invariant, workaround for a specific bug, surprising behavior. If well-named code already shows it, don't.
 
 If removing a comment wouldn't confuse reader, don't write it.

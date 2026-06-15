@@ -80,7 +80,6 @@ Pick the ones that apply; keep `categories` consistent across the run so arrays 
 - LOC (lines of code)
 - Complexity (cyclomatic complexity)
 - Clarity (subjective, based on readability, naming, structure)
-- Comments (presence and quality of comments)
 - Single responsibility (does the file have one clear purpose?)
 - Adherence to requirements (does the file meet the specified requirements?)
 - Test coverage (are there sufficient tests for the file?)

@@ -15,7 +15,7 @@ metadata:
   status: "active"
   updated: "2026-01-11"
   tags: "ast, refactoring, code-search, lint, structural-search, security, codemod"
-  related-skills: "workflow-testing, foundation-quality, rust-best-practices"
+  related-skills: "workflow-testing, foundation-quality"
   context: "fork"
   agent: "Explore"
 

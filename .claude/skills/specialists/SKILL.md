@@ -1,6 +1,6 @@
 ---
 name: specialists
-description: Sub-loader for domain specialists (Rust, agent infra, terminal, harness, perf, security, speed). Each entry captures the WHY and decision tree only — not implementation details. Trigger via `/specialists` or whenever a decision in one of these domains is on the table.
+description: Sub-loader for domain specialists (agent infra, terminal, harness, perf, security, speed). Each entry captures the WHY and decision tree only — not implementation details. Trigger via `/specialists` or whenever a decision in one of these domains is on the table.
 ---
 
 # Specialists
@@ -13,14 +13,6 @@ Index of domain specialists. Each file answers **why** to pick an approach and *
 - When unsure which approach fits — read the decision tree first, then commit.
 
 ## Index
-
-### Rust systems
-| Specialist | When to load |
-|------------|--------------|
-| [rust-ownership](rust-ownership.md) | Choosing borrow vs clone vs Arc/Rc/Cow; refactor away from `Arc<Mutex<T>>` smell |
-| [rust-async](rust-async.md) | Picking a runtime, sync↔async boundary, `Send` bound problems, blocking inside async |
-| [rust-errors](rust-errors.md) | Designing error types, library vs app style, where to `?` vs handle |
-| [rust-traits](rust-traits.md) | Static vs dynamic dispatch, type-state, sealed traits, generic-vs-`dyn` |
 
 ### Agent / AI infra
 | Specialist | When to load |

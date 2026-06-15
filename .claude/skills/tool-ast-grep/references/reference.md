@@ -254,7 +254,6 @@ sg scan --config sgconfig.yml --json > results.json
 
 - **workflow-testing** - DDD integration, test pattern detection
 - **foundation-quality** - five-dimension quality gate, code quality
-- **rust-best-practices** - idiomatic Rust patterns for structural rules
 
 ### Related Agents
 
