@@ -1,7 +1,7 @@
 ---
 id: SPEC-FACTORY-001
 title: "Feature factory — the repo as a fleet of dispatchable senior programmers"
-version: 1.3.0
+version: 1.4.0
 status: accepted
 created: 2026-06-15
 updated: 2026-06-15
@@ -21,12 +21,13 @@ runs it inside a subagent we can communicate with, isolates it on its own
 This document specifies WHAT and WHY in EARS form. It prescribes behaviour and
 contracts, not function names, prompt wording, or file layouts beyond the schema
 the ledger requires. It builds on `SPEC-COMM-001` (mesh) and the existing
-`orchestrate`, `personas`, and `gate` machinery.
+`drill`, `personas`, and `gate` machinery.
 
 ## HISTORY
 
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
+| 1.4.0 | 2026-06-15 | machine-default | Vocabulary + D2 re-resolution pass after the orchestrate->drill rewrite. D2/R7 re-resolved against the drill model (ledger = drill's live roster, no settle queue/auto-fire, two human gates); SPEC-ORCH-001 TB-references repointed to drill/SKILL.md 'Board trust'; branch naming `agent/<id>`->`gitfs/<sid>`; orchestrate skill/taskboard/approval-queue prose -> drill. Body only; prior history rows unchanged. |
 | 1.3.0 | 2026-06-15 | machine-default | Stage 8 present-and-close: CLOSE-FACTORY-001 written mapping all 8 acceptance criteria to evidence (AC4 live-verified, AC7 release-verified, rest wired); added feature-factory/README.md doc index; status draft -> accepted. |
 | 1.2.0 | 2026-06-15 | machine-default | Stage-2 plan written (PLAN-FACTORY-001). Resolved D3 (stand down + register interest on held claim), D4 (three-iteration fix-loop bound then escalate), D5 (mesh = durable state/coordination, SendMessage = live operator steering). Amended R9: factory agent posts stage to mesh and never writes the ledger; the driver is sole ledger writer and reconciles mesh->ledger, resolving the conflict with SPEC-ORCH-001 TB-013/TB-014. |
 | 1.1.0 | 2026-06-15 | machine-default | Added D6 (RESOLVED): the lifecycle runner may be a dispatched factory agent, not only the main-loop driver, per target.md's communicable-subagent requirement; default.md now distinguishes stage dispatch from factory-job dispatch. |
@@ -49,8 +50,9 @@ let the agents talk so two of them never build the same thing twice.
 
 Per `CONCEPT-FACTORY-001` section 2, every primitive exists: `kern` (memory),
 `mesh` (awareness/claims/chat), `git-fs` (per-job isolation + merge-on-stop), the
-`orchestrate` taskboard (async dispatch + settle queue + approval gate), and one
-specialist per lifecycle stage. The factory is wiring, not new infrastructure.
+`drill` ledger (grill-first dispatch with two human gates -- dispatch and merge --
+and a live roster, replacing the old settle queue + auto-fire), and one specialist
+per lifecycle stage. The factory is wiring, not new infrastructure.
 
 ### 1.3 The gap
 
@@ -71,19 +73,23 @@ the gap:
   skill or agent type. The eight-stage loop is baked into
   `.claude/agents/default.md` ("The job lifecycle"). G1 is agent behaviour, not a
   new artifact.
-- **D2 (RESOLVED) -- the ledger is the orchestrate taskboard.** Reuse the
-  per-task entry-files under `/.machine/sessions/`, extended with three fields:
-  `stage` (lifecycle position, orthogonal to orchestration `status`), `branch`
-  (`git-fs` `agent/<id>`), and `claim_id` (mesh claim handle). No parallel
-  structure, no new directory.
+- **D2 (RE-RESOLVED v1.4.0) -- the ledger is the drill's live roster.** Reuse the
+  per-job entry-files under `/.machine/sessions/`, extended with three fields:
+  `stage` (lifecycle position, orthogonal to the drill's `status`), `branch`
+  (`git-fs` `gitfs/<sid>`), and `claim_id` (mesh claim handle). No parallel
+  structure, no new directory. The drill model has no settle queue and no
+  auto-fire: dispatch is grill-first, gated by the two human gates (dispatch,
+  merge). Originally resolved (v1.0.0) against the `orchestrate` taskboard, since
+  replaced by the `drill`; the ledger-as-roster substance carries over unchanged
+  -- only the timed-dispatch framing is dropped.
 - **D6 (RESOLVED) -- the runner may be a dispatched factory agent, not only the
   driver.** `target.md` requires the lifecycle to run "inside a subagent we can
   communicate with". The default agent therefore has two dispatch roles: a *stage
   dispatch* (do one unit, report back) and a *factory-job dispatch* (own one
   feature's full eight-stage lifecycle on its own branch, pulling in
   stage-specialists, coordinating via mesh). Owning one lifecycle is NOT
-  orchestrating -- a factory agent never runs the orchestrate taskboard, never
-  manages an approval queue, and never spawns further factory agents -- so the
+  orchestrating -- a factory agent never runs the drill, never
+  manages a merge queue, and never spawns further factory agents -- so the
   binding "dispatched agents never orchestrate" law still holds. Baked into
   `.claude/agents/default.md` (role section + "The job lifecycle"). Strengthens R1.
 
@@ -94,7 +100,7 @@ the gap:
 | **job** | A one-line unit of work handed to a factory agent. |
 | **factory agent** | A `default`-agent session running the eight-stage lifecycle for one job. |
 | **feature** | The named thing a job builds; the unit a `mesh` claim locks. |
-| **ledger entry** | A taskboard entry-file under `/.machine/sessions/` carrying `stage`, `branch`, `claim_id`. |
+| **ledger entry** | A drill roster entry-file under `/.machine/sessions/` carrying `stage`, `branch`, `claim_id`. |
 | **stage** | One of the eight lifecycle positions (concept ... present/close). |
 | **handshake** | The G3 pre-stage-1 ritual: `roster` + `claims` + `claim` + intent `post`. |
 
@@ -116,27 +122,27 @@ the gap:
   stages 4-6, looping until the persona panel returns a ship verdict OR the
   iteration bound (D4) is reached.
 - **R5 (event-driven).** WHEN stage 8 begins, the agent SHALL present the result
-  into the orchestrate approval queue and merge via `git-fs`; it SHALL NOT merge
-  to `main` before the gate passes.
+  to the drill's merge gate (gate two) and merge via `git-fs`; it SHALL NOT merge
+  to `main` before the gate passes and the user approves.
 - **R6 (unwanted behaviour).** IF the `gate` skill fails at any point in stages
   4-8, THEN the agent SHALL NOT advance to present/close and SHALL return to
   stage 7.
 
 ### 4.2 G2 -- the feature ledger
 
-- **R7 (ubiquitous).** The factory SHALL use the orchestrate taskboard under
+- **R7 (ubiquitous).** The factory SHALL use the drill's roster under
   `/.machine/sessions/` as the single feature ledger; it SHALL NOT create a
   parallel feature-tracking structure.
 - **R8 (ubiquitous).** Each ledger entry SHALL carry `stage`, `branch`, and
-  `claim_id` in addition to the existing orchestration fields, where `stage` is
-  orthogonal to orchestration `status`.
+  `claim_id` in addition to the drill's existing roster fields, where `stage` is
+  orthogonal to the drill's `status`.
 - **R9 (event-driven, amended v1.2.0).** WHEN a factory agent crosses a stage
   boundary, it SHALL `post` the new stage to `mesh` (R3) and SHALL NOT write the
-  ledger itself. The driver, as sole ledger writer (SPEC-ORCH-001 TB-013/TB-014),
-  SHALL reconcile that mesh post into the entry's `stage` field on its next turn.
-  Rationale: a factory agent is a dispatched agent; TB-014 forbids dispatched
-  agents writing `/.machine/sessions/` and TB-013 quarantines any entry they
-  write. mesh is the source of truth for stage; the ledger is the driver's durable
+  ledger itself. The driver (the drill), as sole ledger writer (drill/SKILL.md, 'Board trust
+  -- only the drill writes the ledger'), SHALL reconcile that mesh post into the
+  entry's `stage` field on its next turn. Rationale: a factory agent is a
+  dispatched agent; board trust forbids dispatched agents writing
+  `/.machine/sessions/` and quarantines any entry they write as `untrusted`. mesh is the source of truth for stage; the ledger is the driver's durable
   projection. See PLAN-FACTORY-001 section 1.
 - **R10 (event-driven).** WHEN a factory agent acquires its branch and claim, it
   SHALL record `branch` and `claim_id` on the ledger entry before stage 1 begins.
@@ -183,13 +189,13 @@ the gap:
   Shapes R12.
 - **D4 (RESOLVED) -- fix-loop bound: three iterations then escalate.** Stages 4-6
   loop into stage 7 at most three times; on the third non-shipping panel result
-  the agent presents to the approval queue WITH the remaining objections,
+  the agent presents at the drill's merge gate WITH the remaining objections,
   escalating to the operator. Shapes R4 and acceptance criterion 6.
 - **D5 (RESOLVED) -- channels, role-split.** `mesh` carries durable STATE and
   COORDINATION (stage posts, intent/interest, claims, peer awareness; survives
   agent death) -- the agent->driver and agent<->peer channel. `SendMessage`
   carries live, context-preserving operator STEERING of a running agent (the
-  `redo` path, SPEC-ORCH-001 TB-011). Operator verb: "message the job"/`redo` ->
+  `redo` path, drill/SKILL.md `redo` command). Operator verb: "message the job"/`redo` ->
   SendMessage; durable state -> mesh.
 
 ## 7. Remaining open decisions

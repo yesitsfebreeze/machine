@@ -14,16 +14,21 @@ full eight stages: concept (CONCEPT-FACTORY-001) -> plan (PLAN-FACTORY-001) ->
 implement (M1-M6) -> test (live mesh dedup) -> persona analysis (5-reviewer panel)
 -> evaluate -> fix (F1 enum, F2 glossary pointer) -> present and close (this doc).
 
+> Amended (post-rewrite): references below to the `orchestrate` taskboard and
+> SPEC-ORCH-001 TB-rules now read as the **drill's roster** and the drill's
+> board-trust rule (drill/SKILL.md); see SPEC-FACTORY-001 D2 (v1.4.0). The
+> shipped substance is unchanged -- only the vocabulary and source pointers moved.
+
 ## What shipped
 
 - **G1 -- lifecycle runner = the `default` agent.** Two dispatch roles in
   `.claude/agents/default.md`: stage dispatch (one unit, report back) and
   factory-job dispatch (own one feature's full eight-stage lifecycle on its own
   git-fs branch). Owning one lifecycle is not orchestrating (D6).
-- **G2 -- feature ledger = the orchestrate taskboard.** `.claude/skills/orchestrate/SKILL.md`
-  entry-file schema carries `stage`/`branch`/`claim_id`; the driver is sole ledger
+- **G2 -- feature ledger = the drill's roster.** `.claude/skills/drill/SKILL.md`
+  entry-file schema carries `stage`/`branch`/`claim_id`; the drill is sole ledger
   writer and reconciles the factory agent's `mesh` posts (amended R9), preserving
-  board-trust TB-013/TB-014.
+  the drill's board-trust rule.
 - **G3 -- dedup handshake.** `roster` + `claims` + `claim` + intent `post` before
   stage 1; on a held claim, post deferred-interest and stand down (D3).
 - **Decisions:** D1/D2/D6 (roles + ledger), D3 (stand down + register interest),
@@ -39,10 +44,10 @@ implement (M1-M6) -> test (live mesh dedup) -> persona analysis (5-reviewer pane
 | 2 | Stage observable in mesh + reflected in ledger | WIRED + mesh side shown | live test broadcast `stage:plan`; driver->ledger reconciliation is instruction-level |
 | 3 | Entry resolves to one branch + one claim_id | WIRED | schema fields; not runtime-exercised |
 | 4 | Same feature -> exactly one builds | **LIVE-VERIFIED PASS** | alice won claim 01KV537JT3..., bob stood down (D3); driver-verified claims=[] after release |
-| 5 | Gate passes before merge to main | WIRED | default.md stage 5/8 + TB-010; this build's own stage-4 gate passed |
+| 5 | Gate passes before merge to main | WIRED | default.md stage 5/8 + the drill's gate two; this build's own stage-4 gate passed |
 | 6 | Fix loop bounded, non-shipping never reaches close | WIRED | D4 three-iteration bound in default.md stage 7 |
 | 7 | Close releases claim + closes entry; no orphan claim | PARTIAL-VERIFIED | release verified live (claims=[]); ledger-close is instruction-level |
-| 8 | No parallel tracking structure | VERIFIED | ledger IS the taskboard; no new directory created |
+| 8 | No parallel tracking structure | VERIFIED | ledger IS the drill's roster; no new directory created |
 
 ## Honest remaining gap
 

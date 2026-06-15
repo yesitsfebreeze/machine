@@ -14,6 +14,6 @@ Document trail (the factory's own lifecycle, applied to itself):
 | Close | `CLOSE.md` (CLOSE-FACTORY-001, evidence + verdict) |
 
 Operational behaviour lives in `.claude/agents/default.md` (the lifecycle + the
-two dispatch roles + the handshake) and `.claude/skills/orchestrate/SKILL.md` (the
+two dispatch roles + the handshake) and `.claude/skills/drill/SKILL.md` (the
 ledger schema + driver reconciliation). These docs are the design record; do not
 duplicate operational rules here.

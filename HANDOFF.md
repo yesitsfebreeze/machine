@@ -72,6 +72,17 @@ green build plus approval.
   plugin cache dirs under `~/.claude/plugins/cache/`.
 - Reload reported "1 error during load" — surfaced only by `/doctor`; likely the
   `yesitsfebreeze/git-fs` marketplace mapped to two local paths in `~/.claude.json`.
+- **Feature-factory specs aligned to the drill (done this pass).** All five
+  `.machine/specs/feature-factory/*` docs (CONCEPT/SPEC/PLAN/README/CLOSE) were swept
+  to the drill model: dead `.claude/skills/orchestrate/SKILL.md` links repointed to
+  `drill/SKILL.md`; `SPEC-ORCH-001` TB-rules repointed to the drill's "Board trust"
+  section; branch naming `agent/<id>` → `gitfs/<sid>`; taskboard/settle-queue/
+  approval-queue prose → drill ledger-as-roster + two human gates. **D2/R7 were
+  re-resolved** (SPEC v1.4.0): the now-invalid "ledger = orchestrate taskboard with
+  settle queue" is replaced by "ledger = the drill's live roster," substance
+  unchanged. Prior HISTORY rows left intact as audit trail. `.machine/sessions/README.md`
+  also rewritten to the drill model. The factory itself is still unbuilt (Next #3);
+  AC1 (single continuous end-to-end run) remains the open validation.
 
 ## Next — open
 1. **Validate the flow end-to-end.** Drive one real job grill→plan→implement→merge in

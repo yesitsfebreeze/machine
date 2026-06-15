@@ -11,6 +11,11 @@ priority: high
 
 # Feature Factory
 
+> Note (post-rewrite): this concept predates the orchestrate->drill rename. The
+> "orchestrate taskboard" it refers to is now the **drill's live roster**; see
+> SPEC-FACTORY-001 D2 (v1.4.0) for the re-resolved ledger model. Body updated to
+> drill vocabulary; the design intent is unchanged.
+
 ## 1. The target
 
 From `target.md`: the repo should behave like a real senior programmer we hand
@@ -42,7 +47,7 @@ infrastructure.
 | Live coordination, awareness, chat | `mesh` daemon (SPEC-COMM-001) |
 | Atomic dedup — "don't build it twice" | `mesh` `claim` / `claims` / `roster` |
 | Per-job isolation, edit-as-commit, merge-on-stop | `git-fs` companion plugin |
-| Async dispatch, settle queue, approval gate | `orchestrate` skill + taskboard |
+| Grill-first dispatch + two human gates | `drill` skill + ledger (roster) |
 | Stage 1 — concept | `superpowers:brainstorming`, `manager-spec` |
 | Stage 2 — plan | `manager-strategy`, `superpowers:writing-plans` |
 | Stage 3 — implement | `manager-tdd` / `manager-ddd` + `expert-*` |
@@ -50,19 +55,19 @@ infrastructure.
 | Stage 5 — persona analysis | `personas` skill + `/.machine/personas/` |
 | Stage 6 — evaluate | `evaluator-active`, `plan-auditor` |
 | Stage 7 — fixes | `expert-*` agents |
-| Stage 8 — present and close | `manager-git`, gate + approval queue |
+| Stage 8 — present and close | `manager-git`, gate + the drill's merge gate |
 
 ## 3. The gap
 
 No single dispatchable unit chains stages 1-8. Today an operator drives each
-agent by hand through the orchestrate skill. The target wants one job = one
+agent by hand through the drill skill. The target wants one job = one
 self-driving lifecycle. Three concrete pieces are missing:
 
 - **G1 — the lifecycle runner.** A skill/agent that, given a one-line job, walks
   all eight stages itself, dispatching the right specialist per stage and gating
-  each handoff. The orchestrate skill is the async driver but does not encode
+  each handoff. The drill skill is the grill-first driver but does not encode
   this fixed 8-stage chain.
-- **G2 — the feature ledger.** RESOLVED (D2): the orchestrate taskboard under
+- **G2 — the feature ledger.** RESOLVED (D2): the drill's roster under
   `/.machine/sessions/` IS the ledger, extended with `stage`, `branch`, and
   `claim_id` fields so each entry maps a mesh claim to a feature, its lifecycle
   stage, and its git-fs branch. No parallel structure.
@@ -85,13 +90,13 @@ Given a concrete job, the default agent:
 
 1. runs the G3 dedup handshake against `mesh` (`roster` + `claims` + `claim` +
    intent `post`); stands down or queues if the feature is already held;
-2. on a clean claim, works on its git-fs `agent/<id>` branch and (G2) records the
+2. on a clean claim, works on its git-fs `gitfs/<sid>` branch and (G2) records the
    feature, stage, and branch;
 3. drives stages 1-8 itself, delegating a single stage to a specialist only for
    depth, and posting progress to `mesh` as it crosses each stage;
 4. validates with `gate` + `personas` (stages 4-6), looping fixes until the panel
    ships it;
-5. presents and closes (stage 8) into the orchestrate approval queue, merging via
+5. presents and closes (stage 8) at the drill's merge gate (gate two), merging via
    git-fs;
 6. releases the `mesh` claim.
 
@@ -102,10 +107,10 @@ visible to the others through the roster and the ledger.
 
 - D1: RESOLVED — the `default` agent is the runner; the 8-stage loop is baked into
   its definition. No separate skill or agent type.
-- D2: RESOLVED — reuse the orchestrate taskboard under `/.machine/sessions/` as the
-  single feature ledger. Added three fields to its entry-file schema: `stage`
-  (lifecycle position, orthogonal to orchestration `status`), `branch` (git-fs
-  `agent/<id>`), and `claim_id` (mesh claim handle). No new directory.
+- D2: RE-RESOLVED (v1.4.0) — reuse the drill's roster under `/.machine/sessions/` as
+  the single feature ledger. Added three fields to its entry-file schema: `stage`
+  (lifecycle position, orthogonal to the drill's `status`), `branch` (git-fs
+  `gitfs/<sid>`), and `claim_id` (mesh claim handle). No new directory.
 - D3: How a queued (lost-the-claim) agent behaves — stand down, watch, or assist
   the holder.
 - D4: Whether stages 5-7 loop until the persona panel returns a ship verdict, and
