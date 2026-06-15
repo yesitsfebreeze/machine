@@ -22,3 +22,7 @@ plugins/
 
 # installed-machine version stamp (generated at install/update time, never tracked)
 version.log
+
+# --- git-fs companion plugin runtime (per-repo object store, never track) ---
+.git-fs/
+.agent
