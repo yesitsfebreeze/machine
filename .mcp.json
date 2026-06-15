@@ -25,6 +25,12 @@
         "-y",
         "@sylphx/pdf-reader-mcp"
       ]
+    },
+    "git-fs": {
+      "command": "git-fs-mcp",
+      "env": {
+        "GIT_FS_REPO": "${CLAUDE_PROJECT_DIR}/.git-fs"
+      }
     }
   }
 }

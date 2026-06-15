@@ -81,6 +81,8 @@ what drifted, never blow away a working layer.
      `personas.md` indexes them with `**File:** .machine/personas/<name>.md` pointers. If the
      domain is unclear, write an empty `personas.md` stub and tell the user to author it.
 
+4. **Wire the status line into this project** — see "Wire the status line into this project" below.
+
 ### Re-run — reconcile in place
 
 Re-read the current repo and compare against the existing project layer. Patch only what
@@ -89,9 +91,49 @@ drifted; do **not** clear `/.machine/`:
 - `glossary.csv` / `glossary.md` — terms still defined, none renamed away?
 - `personas/` — does the updated machine expect persona slots that are missing?
 - `agent.md` — identity/domain law still matches the repo's shape?
+- status line — re-wire it; see "Wire the status line into this project" below.
 
 If `/.machine/` is missing or structurally stale, regenerate it (the first-run path above).
 If present and largely intact, hand-patch the specific gaps.
+
+## Wire the status line into this project
+
+A plugin cannot contribute a main `statusLine`, so the machine's status line only
+appears once it is wired into the target repo. This per-repo step performs that
+wiring by injecting a `statusLine` block into the TARGET project's
+`.claude/settings.json`.
+
+Resolve the installed plugin's status line script at `${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs`.
+The `${CLAUDE_PLUGIN_ROOT}` token expands here in skill content, so capture the
+RESOLVED absolute path. Write that resolved path as a LITERAL string into the
+project settings, because the `${CLAUDE_PLUGIN_ROOT}` token does NOT expand inside
+a project `settings.json`.
+
+Merge a `statusLine` block into `<project>/.claude/settings.json` without
+clobbering any other keys. If the file is absent, create it as `{}` first, then
+merge. The result must remain valid JSON. The merged block sets `statusLine.type`
+to `"command"`, `statusLine.command` to `node "<resolved-abs-path>"` (the resolved
+absolute path quoted inside the command string), and `statusLine.refreshInterval`
+to `10`.
+
+This step is idempotent: on every re-run, overwrite only the `statusLine` key and
+leave the rest of the settings untouched. Overwriting rather than skipping means a
+plugin update that moves the install directory self-heals the recorded path on the
+next run.
+
+```bash
+SETTINGS="$(git rev-parse --show-toplevel)/.claude/settings.json"
+SCRIPT="${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs"
+mkdir -p "$(dirname "$SETTINGS")"
+[ -f "$SETTINGS" ] || printf '{}' > "$SETTINGS"
+node -e '
+  const fs = require("fs");
+  const [file, script] = process.argv.slice(1);
+  const s = JSON.parse(fs.readFileSync(file, "utf8"));
+  s.statusLine = { type: "command", command: `node "${script}"`, refreshInterval: 10 };
+  fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
+' "$SETTINGS" "$SCRIPT"
+```
 
 ## Report
 

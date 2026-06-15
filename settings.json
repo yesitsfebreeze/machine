@@ -7,10 +7,5 @@
     "CLAUDE_CODE_NO_FLICKER": "1",
     "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1"
   },
-  "outputStyle": "machine",
-  "statusLine": {
-    "type": "command",
-    "command": "node \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs\"",
-    "refreshInterval": 10
-  }
+  "outputStyle": "machine"
 }
