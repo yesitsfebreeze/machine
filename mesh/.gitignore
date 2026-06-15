@@ -1,2 +1,2 @@
-# Rust build artifacts — never tracked.
-/target
+# Runtime coordination state — never tracked.
+/.mesh

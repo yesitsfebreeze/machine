@@ -27,7 +27,7 @@ Division of labour:
 | Component | Kind | How |
 |---|---|---|
 | `kern` | memory daemon | release installer / cargo (via `bootstrap.sh`) |
-| `mesh` | coordination daemon | `cargo install --path mesh` (via `bootstrap.sh`) |
+| `mesh` | coordination daemon | bundled Node script `mesh/mesh.mjs` (no build) |
 | `git-fs` | companion plugin | `/plugin install git-fs@git-fs` |
 | `context-mode` | vendored MCP (`ctx_*`) | runs via `npx`; needs Node >=22.5.0 |
 | `context7` | vendored MCP | needs `CONTEXT7_API_KEY` |
@@ -37,7 +37,7 @@ Division of labour:
 
 ## 1. Resolve the machine root
 
-The dependency installer and the `mesh` source ship inside the plugin payload.
+The dependency installer and the `mesh` script ship inside the plugin payload.
 Resolve the root once; `${CLAUDE_PLUGIN_ROOT}` expands in skill content to the
 installed plugin directory, and falls back to the repo root when developing the
 machine itself.

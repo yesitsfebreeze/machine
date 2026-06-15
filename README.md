@@ -106,8 +106,8 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 
 > **Bundled MCP servers.** The plugin ships five servers in its `.mcp.json`:
 > [`kern`](https://github.com/yesitsfebreeze/kern) (memory),
-> `mesh` (fleet coordination — roster, atomic claims, durable mail; build with
-> `cargo install --path mesh`),
+> `mesh` (fleet coordination — roster, atomic claims, durable mail; a
+> zero-dependency Node script — no build),
 > [`context7`](https://context7.com) (current library docs — set `CONTEXT7_API_KEY`),
 > `pdf-reader` (PDF extraction via `npx @sylphx/pdf-reader-mcp`),
 > and [`context-mode`](https://github.com/mksglu/context-mode) (keep large output out

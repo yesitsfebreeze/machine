@@ -2,6 +2,29 @@
 
 All notable changes to the `mesh` daemon are documented here.
 
+## [0.2.0] - 2026-06-15
+
+Zero-dependency Node ESM rewrite. The daemon is now a single self-contained
+`mesh.mjs` script requiring only a Node runtime — no Rust toolchain, no `cargo`
+build, no native modules.
+
+### Changed
+
+- Replaced the Rust + LMDB + SQLite implementation with one Node ESM file.
+  Launches as `node mesh.mjs mcp`; wired in `.mcp.json` via `${CLAUDE_PLUGIN_ROOT}`.
+- Storage is a single JSON document (`.mesh/state.json`). Cross-process atomicity
+  for the claim CAS comes from an OS-atomic lock directory plus atomic rename on
+  write; a stale lock from a crashed process is reclaimed after a bounded wait.
+
+### Preserved
+
+- Identical wire contract: the same eight verbs (`register`, `roster`, `claim`,
+  `release`, `claims`, `post`, `inbox`, `read`) with the same request/response
+  shapes, and the same semantics — exclusive/shared modes, no_wait/queue policies,
+  monotonic per-resource fence, lease expiry and dead-agent self-heal, durable
+  exactly-once mail via per-agent cursors, broadcast/topic addressing.
+- Acceptance suite (`node test.mjs`) covering the highest-risk SPEC criteria.
+
 ## [0.1.0] - 2026-06-14
 
 Initial implementation of SPEC-COMM-001.
