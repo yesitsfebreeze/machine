@@ -12,7 +12,11 @@
   },
   "includeGitInstructions": true,
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "Edit",
+      "Write"
+    ]
   },
   "enableAllProjectMcpServers": false,
   "skillOverrides": {

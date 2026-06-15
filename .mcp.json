@@ -32,6 +32,12 @@
         "-y",
         "context-mode@latest"
       ]
+    },
+    "git-fs": {
+      "command": "git-fs-mcp",
+      "env": {
+        "GIT_FS_REPO": "/mnt/e/dev/machine/.git-fs"
+      }
     }
   }
 }

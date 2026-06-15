@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Home marketplace for the machine plugin.",
-    "version": "0.3.5"
+    "version": "0.3.6"
   },
   "plugins": [
     {
       "name": "machine",
       "source": ".",
       "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern + mesh + context7 + pdf-reader + context-mode MCP servers).",
-      "version": "0.3.5",
+      "version": "0.3.6",
       "category": "development",
       "keywords": ["agents", "skills", "workflow", "memory", "orchestration"]
     }
