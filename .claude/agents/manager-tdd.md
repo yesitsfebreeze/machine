@@ -11,9 +11,6 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__pl
 model: haiku
 permissionMode: bypassPermissions
 memory: project
-skills:
-  - foundation-core
-  - workflow-testing
 ---
 
 # TDD Implementer (default methodology)
@@ -38,7 +35,7 @@ Per improvement: remove duplication, improve naming, extract methods, apply patt
 Run the full suite. Coverage ≥80% (85% recommended). Commit.
 
 ## Delegate
-SPEC unclear → manager-spec · existing-code refactor → manager-ddd · security → expert-security · quality gate → manager-quality.
+Existing-code refactor → manager-ddd. For a SPEC, security review, or quality-gate specialist, suggest slotting the matching agent from `mine/`.
 
 ## Patterns
 Specification-by-Example (concrete I/O → implement → generalize); Outside-In (acceptance → outer → inner); Inside-Out (core domain → outward); Test doubles: mocks (external), stubs (canned), fakes (in-memory), spies (verification).

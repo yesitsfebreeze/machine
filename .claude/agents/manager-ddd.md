@@ -11,9 +11,6 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__pl
 model: haiku
 permissionMode: bypassPermissions
 memory: project
-skills:
-  - foundation-core
-  - workflow-testing
 ---
 
 # DDD Implementer
@@ -44,7 +41,7 @@ Per transformation:
 - Run the FULL suite regardless of scale. Verify snapshots match. Report before/after smells. Commit.
 
 ## Delegate
-SPEC unclear → manager-spec · security → expert-security · perf → expert-performance · quality gate → manager-quality.
+Greenfield → manager-tdd. For a SPEC, security, performance, or quality-gate specialist, suggest slotting the matching agent from `mine/`.
 
 ## Common patterns
 Extract Method/Class, Move Method (feature envy), Rename — always test callers first, transform atomically (ast-grep rewrite for safe multi-file rename).

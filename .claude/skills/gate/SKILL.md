@@ -51,8 +51,7 @@ Run the checks from the repo root. Launch the read-only ones concurrently (separ
 Bash calls in one message) and collect results.
 
 - **`--fix`** — apply safe auto-fixes first (formatter, lint `--fix`), then re-run.
-  Never auto-"fix" failing tests or a broken build — those need diagnosis
-  (the `expert-debug` agent).
+  Never auto-"fix" failing tests or a broken build — those need diagnosis.
 
 ## Report
 

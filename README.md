@@ -46,19 +46,19 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 
 ## ✨ What it can do
 
-- **🤖 23 specialist agents, auto-dispatched.** Domain work routes itself to the
-  right expert — `expert-backend`, `expert-frontend`, `expert-security`,
-  `expert-performance`, `expert-debug`, `expert-devops`, `expert-testing`,
-  `expert-refactoring`; the `manager-*` line for TDD, DDD, specs, strategy, git,
-  docs, quality, and project setup; `builder-*` for authoring new agents, skills,
-  and plugins; plus `researcher`, `plan-auditor`, and an adversarial
-  `evaluator-active`.
-- **🧰 25 on-demand skills.** A toolbelt that loads only when needed: `coder`,
-  `clean`, `improve`, `simplify` for building and polishing; `gate`,
-  `code-review`, `perf-gate` for quality; `tool-ast-grep` for structural
-  search/codemod; reference kits (`foundation-cc`, `ref-owasp-checklist`,
-  `ref-testing-pyramid`, `ref-git-workflow`); and
-  orchestration (`orchestrate`, `parallel`, `personas`).
+- **🤖 Bare-bones agent core.** Four agents stay loaded: the eager-generalist
+  `default`, the `orchestrator` driver, and `manager-tdd` / `manager-ddd` for
+  greenfield and legacy implementation. The generalist drives everything else.
+- **🧰 Small skill core.** Eight skills load by default: `coder` and `clean` for
+  building and polishing; `gate` for the quality gate; `personas` for review;
+  `orchestrate` to drive background work; and `ignite` / `assemble` / `oil` for
+  setup and the project layer.
+- **📦 The `mine/` addon kit.** The rest of the toolbelt — the `expert-*` and
+  `builder-*` agents, `manager-spec` / `-strategy` / `-git` / `-docs` / etc.,
+  `tool-ast-grep`, `workflow-*`, `foundation-*`, `ref-*`, `specialists`, `improve`,
+  `parallel`, `perf-gate`, `learn`, `caveman`, `trello`, and more — lives in
+  `mine/` at the repo root. Nothing there is loaded until you slot it in; `/oil`
+  can scan it and suggest the pieces that fit a given repo.
 - **🧠 Compounding memory ([`kern`](https://github.com/yesitsfebreeze/kern)).** A
   per-directory memory daemon, reached over MCP, that remembers *why* past
   decisions were made and surfaces them before you re-decide. Knowledge is
@@ -77,9 +77,8 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   blocking the conversation.
 - **✅ Language-agnostic quality gate.** `/gate` detects the stack and runs
   format, lint, tests, and build in one pass — pass/fail before any commit.
-- **⚙️ Hooks and modes.** Session-start context injection, a live status line, an
-  ultra-compressed "caveman" output mode, and orchestrator resume — wired through
-  6 Node hooks.
+- **⚙️ Hooks and modes.** Session-start context injection (ignite), a live status
+  line, and a post-task persona-review nudge — wired through the active Node hooks.
 - **🔁 Clean lifecycle.** Install and update are the plugin system's job
   (`/plugin install` / `/plugin update`); `/oil` re-indexes the project layer
   whenever the repo changes shape.
@@ -97,9 +96,9 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
    dependency (`kern`, `mesh`, the `git-fs` plugin, the MCP prerequisites), wires
    the status line and API keys, then oils the project layer (`/oil`) — writing
    `/.machine/` from your actual code (identity, stack, glossary, persona panel).
-3. **Work.** The default agent routes to specialists, recalls prior decisions from
-   `kern`, gates quality before commits, and offers the review panel after
-   non-trivial changes.
+3. **Work.** The default generalist drives the work — slotting specialists from
+   `mine/` when a domain needs one — recalls prior decisions from `kern`, gates
+   quality before commits, and offers the review panel after non-trivial changes.
 
 > Pull machine updates with `/plugin update machine`. Re-run `/assemble` to
 > reinstall deps or re-wire config, or `/oil` alone to re-index `/.machine/`
@@ -129,15 +128,17 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ## 🧠 How it works
 
 - **The default agent is an eager generalist.** Whole-toolbelt, bias-to-verify; it
-  prefers ground truth over guessing and routes domain decisions to specialists.
+  prefers ground truth over guessing and drives most work itself, slotting a
+  specialist from `mine/` when a domain decision needs one.
 - **Machine law is always on.** Root-cause fixes over patches, one clean
   implementation per change, single source of truth, glossary discipline, and
   durable memory in `kern`.
 - **Project law lives in `/.machine/`.** `agent.md` (identity + hard rules),
   `project.md` (stack, key paths), `glossary.csv`, and `personas/` — all written
   by `/oil`, never shipped with the portable payload.
-- **Knowledge loads on demand.** Specialists and skills pull their deep context
-  only when a decision calls for it, keeping every turn token-cheap.
+- **Knowledge loads on demand.** Skills pull their deep context only when a
+  decision calls for it, keeping every turn token-cheap. The `mine/` kit goes one
+  step further — its agents and skills are not loaded at all until slotted in.
 
 ---
 
@@ -146,12 +147,17 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ```
 .claude-plugin/          plugin + marketplace manifests (plugin.json, marketplace.json)
 .claude/                 the portable machine (the plugin payload)
-├── agents/              23 dispatch agents — resolved by `name:` frontmatter
-├── skills/              24 skills — one dir each, `name:` matches the dir
+├── agents/              4 core agents — resolved by `name:` frontmatter
+├── skills/              8 core skills — one dir each, `name:` matches the dir
 ├── hooks/               Node ESM hooks + hooks.json plugin manifest
 ├── rules/               coding standards (project-scope; not shipped by the plugin)
-├── output-styles/       comm modes (machine, caveman)
+├── output-styles/       comm modes (machine, einstein)
 └── settings.json        self-host hook wiring, env, default agent
+
+mine/                       the addon kit (curated; not loaded — slot in via /oil)
+├── agents/             extracted specialist agents
+├── skills/             extracted skills
+└── hooks/              extracted hook scripts
 
 /.machine/                  the project layer (written per repo by /oil)
 ├── agent.md             this repo's identity + hard rules

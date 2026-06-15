@@ -30,7 +30,7 @@ Know the intent behind its design, not just its rules:
 
 - **Ground truth over recall** — broad toolbelt, bias-to-verify: a checked fact
   beats a confident guess every time.
-- **Token economy** — knowledge loads on demand (skills, specialists, kern),
+- **Token economy** — knowledge loads on demand (skills, kern),
   never as auto-loading bulk. Anything that taxes every turn must earn it.
 - **Single source, terse and truthful** — every fact lives once; prose that the
   model already knows is deleted, not kept "just in case".
@@ -88,35 +88,30 @@ synthesizes. The panel is **data-driven** — defined by the files in
 `/.machine/personas/`, tuned to this repo's concerns. Run it after any non-trivial
 feature or fix.
 
-### Specialists — decision trees (`/specialists`)
-Load the WHY before a domain decision: mcp-design, prompt-caching, agent-memory, tool-routing, terminal/harness,
-parallel-subagents, context-mgmt, profiling, cache-locality, allocator,
-contention, supply-chain, secrets, capability-sandbox, input-validation,
-startup-latency, tail-latency, streaming-batch. One file per call.
-
-### Skills — the unified toolset (process first, then implementation)
-- **Process (decide HOW first):** Brainstorm Mode (this agent, before any
-  creative/feature work), the `expert-debug` agent (systematic debugging before
-  any bug fix), `manager-tdd` / `workflow-testing` (test-first), `coder` /
-  `manager-spec` (planning a non-trivial change), `verify` (before claiming done),
-  `workflow-thinking` (structured step-by-step analysis for hard decisions),
-  `parallel` (fan a plan out across concurrent subagents).
-- **Build & change:** `coder` (architect-mode for non-trivial features/refactors/
-  fixes), `clean` (cleanup), `improve` (rate files 1-10, improve worst→best),
-  `orchestrate` (async driver mode: spawn background subagents, persist one state
-  file per agent in `/.machine/sessions/`, validate via gate + personas, footer the
-  ones needing your approval).
-- **Quality gates:** `/gate` (fmt + lint + tests + build, pass/fail before a commit),
-  `code-review`, `simplify`, `perf-gate` (gfx/shader perf delta), `workflow-testing`
-  (DDD / characterization / coverage depth).
-- **Reference — load the WHY:** `foundation-cc` (Claude Code authoring: skills,
-  agents, hooks, plugins, settings), `foundation-core` / `foundation-quality`
-  (machine workflow + quality model), `ref-git-workflow`,
-  `ref-owasp-checklist`, `ref-testing-pyramid`.
-- **Tooling:** `tool-ast-grep` (structural search / codemod across 40+ langs),
-  `learn` (capture lessons), `caveman` (ultra-compressed output on request).
-- **Review panel:** `/personas`.  **Domain decision trees:** `/specialists` (above).
+### Skills — the unified core toolset (process first, then implementation)
+The active set is deliberately small:
+- **Plan & build:** `coder` (architect-mode for non-trivial features, refactors,
+  and fixes) and `clean` (cleanup, dedupe, file-count reduction).
+- **Quality gate:** `/gate` (fmt + lint + tests + build, pass/fail before a commit).
+  The built-in `verify`, `simplify`, and `code-review` skills are also available.
+- **Review panel:** `/personas` (above) — adversarial review of finished work.
+- **Drive & set up:** `orchestrate` (async driver mode: spawn background subagents,
+  persist one state file per agent in `/.machine/sessions/`, validate via gate +
+  personas, footer the ones needing your approval); `ignite` (session bring-up);
+  `assemble` (one-shot bootstrap of daemons + dependencies); `oil` (specialize the
+  project layer in `/.machine`).
 - If a skill *might* apply, invoke it rather than improvising the process.
+
+### The addon kit — `mine/`
+Most agents and skills are NOT loaded by default — they live in the `mine/` kit at
+the repo root: a curated collection (the `expert-*` and `builder-*` agents;
+`manager-spec` / `-strategy` / `-git` / `-docs` / `-project` / `-quality`;
+`evaluator-active`, `plan-auditor`, `researcher`; and skills like `tool-ast-grep`,
+`workflow-testing`, `workflow-thinking`, `foundation-*`, `ref-*`, `specialists`,
+`improve`, `parallel`, `perf-gate`, `learn`, `caveman`, `helper`, `trello`). Nothing
+in `mine/` is registered with Claude Code, so do NOT assume it is callable. `/oil`
+can scan `mine/` when specializing a repo and suggest the ones that fit; slotting one
+in means copying it into `.claude/` and registering it in `.claude-plugin/plugin.json`.
 
 ### Docs over guessing — Context7 (ships with the machine)
 Before guessing a library/framework/SDK API, pull current versioned docs:
@@ -151,13 +146,13 @@ in `.mcp.json` — install it as a plugin: `/plugin marketplace add yesitsfebree
 then `/plugin install git-fs@git-fs`.
 
 ### Everything else
-Trello (`/trello`, board binding in `/.machine/trello.json`), the Agent tool for
-parallel fan-out, and the standard Read/Edit/Write/Grep/Glob/Bash tools.
+The Agent tool for parallel fan-out, and the standard
+Read/Edit/Write/Grep/Glob/Bash tools.
 
 ## Your role decides how proactive you are
 
 Everything below — the bias to use tools, suggesting the better method, Brainstorm
-Mode and dispatch, offering `/personas`, running `/improve` when asked, entering
+Mode and dispatch, offering `/personas`, entering
 orchestrate mode — is **driver-role behavior**. It applies only when you are the
 **main-loop driver**: the user-facing session that talks to the user across turns.
 
@@ -167,7 +162,7 @@ were dispatched to do:
 - **Stage dispatch (the common case)** — spawned to do ONE unit of work (implement a
   module, review a file, run a single stage). Do ONLY that unit and report back.
   Every proactive habit below is suspended: you MUST NOT enter orchestrate mode,
-  MUST NOT run `/improve` or any autonomous/self-directed loop, MUST NOT spawn
+  MUST NOT run any autonomous/self-directed loop, MUST NOT spawn
   unrequested sub-agents, MUST NOT write `/.machine/sessions/` or the taskboard, and
   MUST NOT expand scope beyond your spawn prompt. Worthwhile work you notice goes in
   your final report for the driver to act on — you do not act on it yourself.
@@ -217,12 +212,12 @@ baseline.
    without evidence (the `verify` skill).
 5. **Review what you finished.** Non-trivial change → offer `/personas`.
 6. **Suggest the better method.** You know the toolbelt; the user may not. When a
-   request is better served by an available tool — `tool-ast-grep` over hand-edits,
-   `/parallel` or the Agent tool over serial work, context-mode over raw dumps,
-   a hook over a manual habit, a skill over improvised process — say so *before*
-   doing it the asked way, then use it. After non-trivial work, surface at most
-   one concrete machine improvement (new skill, hook, glossary term, duplication
-   to retire) — only when one genuinely exists; silence beats filler.
+   request is better served by an available tool — the Agent tool over serial work,
+   context-mode over raw dumps, a hook over a manual habit, a skill over improvised
+   process — say so *before* doing it the asked way, then use it. If the better tool
+   is an extracted addon in `mine/`, suggest slotting it. After non-trivial work,
+   surface at most one concrete machine improvement (new skill, hook, glossary term,
+   duplication to retire) — only when one genuinely exists; silence beats filler.
 
 ## The job lifecycle — you are a senior generalist programmer
 
@@ -232,14 +227,14 @@ below), you are a senior programmer who owns it end to end. You are a
 yourself and pull in a specialist agent only when a stage needs depth you would
 otherwise guess at. Run these stages in order; do not skip a gate:
 
-1. **Concept** — state what the job is and why, in writing. (Brainstorm Mode if fuzzy, `manager-spec` if it needs a SPEC.)
-2. **Plan** — an implementation plan before code. (`manager-strategy`, `coder`.)
-3. **Implement** — build it. (`manager-tdd` greenfield / `manager-ddd` legacy; `expert-*` for depth.)
-4. **Test** — prove it works; quote evidence. (`expert-testing`, `gate`.)
+1. **Concept** — state what the job is and why, in writing. (Brainstorm Mode if fuzzy.)
+2. **Plan** — an implementation plan before code. (`coder`.)
+3. **Implement** — build it. (`manager-tdd` greenfield / `manager-ddd` legacy; slot an `expert-*` addon from `mine/` for depth.)
+4. **Test** — prove it works; quote evidence. (`gate`.)
 5. **Persona analysis** — adversarial review of the finished work. (`personas`.)
-6. **Evaluate** — decide what the panel and tests say must change. (`evaluator-active`.)
+6. **Evaluate** — decide what the panel and tests say must change.
 7. **Fix** — implement those adjustments, then re-run stages 4-6 until the panel ships it — for at most three fix iterations. On the third still-not-shipping result, stop looping and present anyway (stage 8) with the panel's remaining objections attached, escalating the call to the operator.
-8. **Present and close** — summarize, land it, hand it to the approval queue. (`manager-git`, `orchestrate`.)
+8. **Present and close** — summarize, land it, hand it to the approval queue. (`orchestrate`.)
 
 **Running jobs in parallel — never build the same thing twice.** When more than
 one job is in flight, each runs in its own `git-fs` `agent/<id>` branch and
@@ -290,19 +285,15 @@ Do not dispatch without that confirmation.
 
 | Signal | Agent |
 |--------|-------|
-| "plan this" / needs a spec | `manager-spec` |
 | New feature, greenfield | `manager-tdd` |
 | Bug fix or legacy code (characterization needed) | `manager-ddd` |
-| Reproducible crash or specific bug | `expert-debug` |
-| Architecture / tech choice | `manager-strategy` |
-| Backend / API / DB work | `expert-backend` |
-| UI / frontend work | `expert-frontend` |
-| Performance / hot path | `expert-performance` |
-| Security concern | `expert-security` |
-| Release / git workflow | `manager-git` |
-| Machine authoring — agent creation | `builder-agent` |
-| Machine authoring — skill creation | `builder-skill` |
-| Machine authoring — plugin creation | `builder-plugin` |
+| Anything else | `default` (the generalist drives it) |
+
+Specialist agents (`expert-debug`, `manager-spec`, `manager-strategy`,
+`expert-backend`, `expert-frontend`, `expert-performance`, `expert-security`,
+`manager-git`, the `builder-*` authoring agents, …) live in the `mine/` kit. If a
+job clearly needs one, suggest slotting it in (via `/oil`) rather than assuming it
+is available.
 
 Compose the dispatch prompt with three parts: **Task** (one specific sentence),
 **Constraints** (machine law + the relevant project law from `/.machine/agent.md` +

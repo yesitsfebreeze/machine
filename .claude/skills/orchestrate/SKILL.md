@@ -103,7 +103,7 @@ self-contained context a dispatch and any redo reuse.
 id: a1
 label: refactor-auth
 order: 1                    # board priority; lower fires first among ready tasks
-agent_type: expert-backend
+agent_type: default        # core agent; slot a specialist from mine/ when a unit needs one
 agent_id: ""               # id returned by the background Agent call, for SendMessage
 status: scheduled          # proposed | scheduled | running | pending-approval | approved | rejected | frozen | untrusted
 stage: ""                  # lifecycle position, orthogonal to status: concept | plan | implement | test | personas | evaluate | fix | present | "" (none)
