@@ -6,15 +6,16 @@ description: Oil the machine — re-index /.machine to specialize the portable m
 # /oil — re-index the project layer
 
 The machine ships as a Claude Code **plugin** named `machine`. `/oil` owns the
-one thing the plugin and `/assemble` do not: the per-repo **project layer**
+one thing the plugin and drill's bring-up do not: the per-repo **project layer**
 `/.machine/`, which specializes the portable machine to *this* codebase. It
 diverges per repo and is always generated locally by this skill; it is **never**
 part of the plugin.
 
-Install, dependency bootstrap, and configuration are **`/assemble`'s** job — it
-installs `kern`, `mesh`, the `git-fs` plugin, and the MCP prerequisites, wires the
-status line and API keys, then invokes this skill. Run `/assemble` first in a fresh
-repo. Run `/oil` on its own whenever the project changes shape and only the
+Install, dependency bootstrap, and configuration are **drill's bring-up** job
+(its `references/assemble.md`, which reuses `just bootstrap` / `scripts/bootstrap.sh`) —
+it installs `kern`, `mesh`, the `git-fs` plugin, and the MCP prerequisites, wires the
+status line and API keys, then invokes this skill. Drill runs that bring-up first in a
+fresh repo. Run `/oil` on its own whenever the project changes shape and only the
 project layer needs re-indexing.
 
 ## Re-index `/.machine/`
@@ -63,7 +64,7 @@ what drifted, never blow away a working layer.
      `personas.md` indexes them with `**File:** .machine/personas/<name>.md` pointers. If the
      domain is unclear, write an empty `personas.md` stub and tell the user to author it.
 
-Status line and API keys are wired by `/assemble`, not here.
+Status line and API keys are wired by drill's bring-up (references/assemble.md), not here.
 
 ### Re-run — reconcile in place
 
@@ -76,7 +77,7 @@ drifted; do **not** clear `/.machine/`:
 
 If `/.machine/` is missing or structurally stale, regenerate it (the first-run path above).
 If present and largely intact, hand-patch the specific gaps. To re-wire the status
-line or re-check API keys, run `/assemble`.
+line or re-check API keys, re-run drill's bring-up (or `just bootstrap`).
 
 ## Report
 

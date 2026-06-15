@@ -68,7 +68,7 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   spawn prompt — a single stage in the common case, or one feature's full lifecycle
   when dispatched as a factory job (target.md). Either way you never orchestrate a
   fleet or run the approval queue. See "Your role decides how proactive you are"
-  below; the dispatched-agents-never-orchestrate rule in the `orchestrate` skill is
+  below; the dispatched-agents-never-orchestrate rule in the `drill` skill is
   the binding source of truth.
 
 ## Your toolbelt — and when to reach for each
@@ -95,11 +95,12 @@ The active set is deliberately small:
 - **Quality gate:** `/gate` (fmt + lint + tests + build, pass/fail before a commit).
   The built-in `verify`, `simplify`, and `code-review` skills are also available.
 - **Review panel:** `/personas` (above) — adversarial review of finished work.
-- **Drive & set up:** `orchestrate` (async driver mode: spawn background subagents,
-  persist one state file per agent in `/.machine/sessions/`, validate via gate +
-  personas, footer the ones needing your approval); `ignite` (session bring-up);
-  `assemble` (one-shot bootstrap of daemons + dependencies); `oil` (specialize the
-  project layer in `/.machine`).
+- **Drive & set up:** `drill` (the single entry point — a grill-first driver that
+  also runs session bring-up: on a cold repo it bootstraps daemons + dependencies and
+  oils the project layer before driving; spawns background subagents, persists one
+  state file per agent in `/.machine/sessions/`, validates via gate + personas, footers
+  the ones needing your approval); `oil` (specialize the project layer in `/.machine`).
+  The former `ignite` and `assemble` skills are now reference files under `drill`.
 - If a skill *might* apply, invoke it rather than improvising the process.
 
 ### The addon kit — `mine/`
@@ -153,7 +154,7 @@ Read/Edit/Write/Grep/Glob/Bash tools.
 
 Everything below — the bias to use tools, suggesting the better method, Brainstorm
 Mode and dispatch, offering `/personas`, entering
-orchestrate mode — is **driver-role behavior**. It applies only when you are the
+drill mode — is **driver-role behavior**. It applies only when you are the
 **main-loop driver**: the user-facing session that talks to the user across turns.
 
 When you instead run as a **dispatched subagent**, your scope depends on what you
@@ -161,7 +162,7 @@ were dispatched to do:
 
 - **Stage dispatch (the common case)** — spawned to do ONE unit of work (implement a
   module, review a file, run a single stage). Do ONLY that unit and report back.
-  Every proactive habit below is suspended: you MUST NOT enter orchestrate mode,
+  Every proactive habit below is suspended: you MUST NOT enter drill mode,
   MUST NOT run any autonomous/self-directed loop, MUST NOT spawn
   unrequested sub-agents, MUST NOT write `/.machine/sessions/` or the taskboard, and
   MUST NOT expand scope beyond your spawn prompt. Worthwhile work you notice goes in
@@ -169,13 +170,13 @@ were dispatched to do:
 - **Factory-job dispatch** — spawned to OWN one feature end to end and communicable
   while you run (the subagent of `target.md`). Here you DO drive the full eight-stage
   job lifecycle below on your own `git-fs` branch, pulling in stage-specialists for
-  depth and coordinating through `mesh`. You still MUST NOT run orchestrate taskboard
-  mode, MUST NOT spawn further factory-job agents, and MUST NOT expand beyond your one
+  depth and coordinating through `mesh`. You still MUST NOT run drill
+  orchestration, MUST NOT spawn further factory-job agents, and MUST NOT expand beyond your one
   feature. You own one lifecycle, not a fleet. You also MUST NOT write your own ledger
   entry under `/.machine/sessions/` — you `post` your stage to `mesh` and the driver
   projects it onto the ledger (board trust; see "The job lifecycle").
 
-Owning one feature's lifecycle is NOT orchestrating: the `orchestrate` skill's
+Owning one feature's lifecycle is NOT orchestrating: the `drill` skill's
 "Dispatched agents never orchestrate" rule still binds both cases — neither a stage
 nor a factory agent manages a fleet or an approval queue.
 
@@ -234,7 +235,7 @@ otherwise guess at. Run these stages in order; do not skip a gate:
 5. **Persona analysis** — adversarial review of the finished work. (`personas`.)
 6. **Evaluate** — decide what the panel and tests say must change.
 7. **Fix** — implement those adjustments, then re-run stages 4-6 until the panel ships it — for at most three fix iterations. On the third still-not-shipping result, stop looping and present anyway (stage 8) with the panel's remaining objections attached, escalating the call to the operator.
-8. **Present and close** — summarize, land it, hand it to the approval queue. (`orchestrate`.)
+8. **Present and close** — summarize, land it, hand it to the approval queue. (`drill`.)
 
 **Running jobs in parallel — never build the same thing twice.** When more than
 one job is in flight, each runs in its own `git-fs` `agent/<id>` branch and

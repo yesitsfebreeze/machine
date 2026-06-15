@@ -1,9 +1,4 @@
----
-name: assemble
-description: |
-  Assemble the machine — one-shot bootstrap of everything a repo needs to run the machine: runtime daemons (kern, mesh), companion plugins (git-fs), bundled MCP prerequisites (context-mode/Node, context7 key, pdf-reader), and per-repo configuration (status line, API keys). Ends by handing off to /oil for the project layer. Idempotent. Trigger: "/assemble", "assemble the machine", "bootstrap", "install everything", "set up the machine".
-when_to_use: Run once the first time a repo has the machine plugin installed, or whenever dependencies or configuration need (re)installing. Idempotent — already-satisfied steps are skipped. For specializing the project layer only, use /oil; for a pre-session terminal installer, use `just bootstrap`.
----
+> Reference for the `drill` skill's bring-up — the one-shot bootstrap drill runs when a repo is not yet set up. Not a registered skill; drill consults it.
 
 # /assemble — bootstrap the machine
 
@@ -32,6 +27,7 @@ Division of labour:
 | `context-mode` | vendored MCP (`ctx_*`) | runs via `npx`; needs Node >=22.5.0 |
 | `context7` | vendored MCP | needs `CONTEXT7_API_KEY` |
 | `pdf-reader` | vendored MCP | runs via `npx` on demand |
+| `codex-peer-review` | optional addon | copied into project `.claude/skills/` on opt-in (needs OpenAI Codex CLI) |
 | status line | per-repo config | wired into project `.claude/settings.json` |
 | required keys | per-repo config | recorded in gitignored `settings.local.json` |
 
@@ -80,6 +76,48 @@ the user from within a session. Detect and guide:
 When `/assemble`'s work is driven from a terminal instead (via `just bootstrap`),
 the script installs git-fs directly through the `claude plugin` CLI; no manual step
 is needed there.
+
+## 3b. Optional addon — cross-model peer reviewer (codex-peer-review)
+
+`codex-peer-review` is an **opt-in** addon, not a machine dependency. It shells out
+to OpenAI's **Codex CLI** for a second opinion from a different model family on
+high-stakes architecture, security, and design decisions, then synthesizes both
+views. It is complementary to `/personas` (an intra-Claude panel), not a duplicate.
+It is gated because its prerequisite is heavy and external: the OpenAI Codex CLI
+plus OpenAI authentication.
+
+The skill ships vendored in the plugin payload at
+`${CLAUDE_PLUGIN_ROOT}/mine/skills/codex-peer-review`. Activating it copies that
+folder into the **target project's** `.claude/skills/`, where Claude Code
+auto-discovers it. `/assemble` never edits the machine plugin's own `skills/`.
+
+- If `<project>/.claude/skills/codex-peer-review` already exists, it is active —
+  say so and skip the copy.
+- Otherwise ask the user once whether to enable the cross-model reviewer. If they
+  decline, skip this step entirely.
+- On opt-in, copy the vendored folder into the project, then check the Codex CLI:
+
+```bash
+SRC="${CLAUDE_PLUGIN_ROOT}/mine/skills/codex-peer-review"
+DST="$(git rev-parse --show-toplevel)/.claude/skills/codex-peer-review"
+if [ -d "$DST" ]; then
+  echo "codex-peer-review already active at $DST"
+elif [ ! -d "$SRC" ]; then
+  echo "vendored skill not found at $SRC — is the machine plugin installed?"
+else
+  mkdir -p "$(dirname "$DST")"
+  cp -r "$SRC" "$DST"
+  echo "activated codex-peer-review into $DST"
+fi
+command -v codex >/dev/null 2>&1 \
+  && echo "codex CLI: $(codex --version 2>/dev/null | head -1)" \
+  || echo "codex CLI missing — install: npm i -g @openai/codex   then: codex auth login"
+```
+
+The `npm i -g @openai/codex` install and `codex auth login` are the user's to run
+(global npm install and an interactive OpenAI sign-in). The skill stays inert until
+the CLI is present; re-running `bootstrap.sh` then confirms the prerequisite. Note
+in the final report whether the reviewer was activated and whether the CLI is ready.
 
 ## 4. Wire per-repo configuration
 
@@ -181,9 +219,10 @@ Claude Code or `/reload-plugins` so newly installed MCP servers and plugins load
 ## Boundaries
 
 - `/assemble` installs dependencies and writes **only** harness configuration
-  (`.claude/settings.json` statusLine, `.claude/settings.local.json` env) plus the
-  project layer via `/oil`. It never edits the machine's own content
-  (`skills/`, `agents/`, `hooks/`) — that is the plugin's, updated via
-  `/plugin update machine`.
+  (`.claude/settings.json` statusLine, `.claude/settings.local.json` env), the
+  project layer via `/oil`, and — on explicit opt-in — the vendored
+  `codex-peer-review` addon into the project's own `.claude/skills/`. It never
+  edits the machine plugin's own content (`skills/`, `agents/`, `hooks/`) — that is
+  the plugin's, updated via `/plugin update machine`.
 - Dependency install logic has one source of truth: `scripts/bootstrap.sh`. Do not
   duplicate install commands here; call the script.

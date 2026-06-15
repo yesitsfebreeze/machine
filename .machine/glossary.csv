@@ -18,20 +18,21 @@ process,slice,A numbered unit of the unification sweep; referenced in improve.js
 law,sole driver,Only one session may drive the /improve loop; improve.json has no lock and concurrent writers lose updates (incident e193515d).
 quality,five-dimension quality gate,The machine's code-quality bar defined in the foundation-quality skill; enforced by manager-quality and /gate.
 identity,personas panel,The data-driven review panel defined by files in /.machine/personas/; run in parallel via /personas after non-trivial work.
-orchestrator,taskboard,The ordered set of per-task entry-files under /.machine/sessions/ that the orchestrator schedules and fires; the set of files IS the board (no monolithic file).
-orchestrator,settle_delay,The named configurable countdown between adding a task and its auto-fire; read from the MACHINE_SETTLE_DELAY_MINUTES parameter in settings.json (the single source for its value); a scheduling parameter not an effort estimate.
-orchestrator,fire_at,The absolute timestamp (added_at + settle_delay) at which a settling task becomes eligible to auto-fire.
-orchestrator,settling,The state of a scheduled task whose fire_at has not yet passed; its timer is counting down.
-orchestrator,freeze/frozen,A user-applied indefinite pause of a task's timer; a frozen task never fires and is excluded from wakeup scheduling until unfrozen.
-orchestrator,isolation flag,The per-task flag marking that a task writes files and must run in worktree isolation so concurrent writers cannot collide on the working tree.
-orchestrator,board-trust,The guard that gates auto-fire on driver ownership rather than on the settle timer alone; only entry-files the driver created and tracks this session may auto-fire, so an injected or stale entry cannot.
-orchestrator,untrusted,The status of an entry-file under /.machine/sessions/ that is not in the driver's in-session tracked set (foreign or stale); quarantined — never auto-fired and surfaced in the footer for human review.
-orchestrator,adopt,The user command that resolves an untrusted entry by moving it into the driver's tracked set and re-scheduling it (status scheduled, fire_at recomputed) so it follows the normal lifecycle under the driver's ownership.
-orchestrator,proposed,The optional staging status of a task drafted mid-clarification, not yet on the timed board and carrying no countdown.
-orchestrator,changes-requested,The transient status of a task whose redo SendMessage has been sent and whose agent response is pending; becomes running once the agent re-engages.
-orchestrator,order,The explicit frontmatter priority field that deterministically breaks precedence ties among equally-eligible tasks; lower order fires first and never overrides dependencies or freeze.
+drill,the drill,The orchestrator surface — the grill-first main-loop driver (agent and skill both named drill); refines a request by grilling, dispatches a plan agent then an implementation sub-agent (a miner), and proposes a merge into main. Only the surface is themed; everything underneath keeps plain names (job, git-fs, sub-agent).
+drill,ledger,The live roster of per-job entry-files under /.machine/sessions/; the set of files IS the roster (no monolithic file and no timer); records each job's status and stage and is driver-written only.
+drill,grill-first,The orchestrator's default mode: refine a request with the user via grill-me until they call the shape valid before any sub-agent spawns; nothing auto-fires.
+drill,plan agent,A sub-agent dispatched to write the implementation plan (concept and plan stages) for an agreed shape; returns a plan document not code; reviewed by personas and codex (advisory) then stored under .machine/plans/.
+drill,implementation agent,A sub-agent dispatched on its own git-fs branch with the stored plan; builds autonomously, runs the gate until the build is green, then a codex arbiter pass; never merges and never writes the ledger.
+drill,gate one,The first human gate: after the plan is stored the driver asks the user before dispatching the implementation agent.
+drill,gate two,The second human gate: after the build is green the driver proposes a merge into main and merges with git_fs_merge only on the user's approval.
+drill,codex-review,The lean skill wrapping the Codex CLI for an advisory second-AI pass at the plan and arbiter checkpoints; never gates, blocks, merges, or edits; degrades to n/a when codex is absent.
+drill,plan store,The .machine/plans/ directory (the repo's plansDirectory) where the agreed plan is written as .machine/plans/<id>.md and handed to the implementation agent as its brief.
+drill,isolation flag,The per-job flag marking that the work writes files and must run in worktree isolation so concurrent writers cannot collide on the working tree.
+drill,board-trust,The guard that gates ledger action on driver ownership: only entry-files the driver created and tracks this session may be acted on, so an injected or stale entry cannot be.
+drill,untrusted,The status of an entry-file under /.machine/sessions/ not in the driver's in-session tracked set (foreign or stale); quarantined — never acted on and surfaced in the footer for human review.
+drill,adopt,The user command that resolves an untrusted entry by moving it into the driver's tracked set under the driver's ownership so it follows the normal lifecycle.
 factory,factory agent,A default agent dispatched to own one feature's full eight-stage lifecycle on its own git-fs branch; the communicable subagent of target.md — owns one lifecycle not a fleet.
 factory,factory-job dispatch,The dispatch role where a default agent owns a whole feature lifecycle (vs stage dispatch which does one unit); set by the spawn prompt.
-factory,feature ledger,The orchestrate taskboard under /.machine/sessions/ reused as the feature record; each entry carries stage/branch/claim_id and is driver-written only (board trust).
+factory,feature ledger,The drill ledger under /.machine/sessions/ used as the feature record; each entry carries stage/branch/claim_id and is driver-written only (board trust).
 factory,dedup handshake,The pre-stage-1 ritual (mesh roster+claims+claim+intent post); on a claim already held the agent stands down and posts deferred-interest (D3).
 factory,stage (lifecycle),A factory entry's position in the eight-stage job lifecycle (concept|plan|implement|test|personas|evaluate|fix|present); orthogonal to orchestration status.

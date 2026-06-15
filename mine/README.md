@@ -42,6 +42,7 @@ that fit the project, for the user to slot in.
 
 ### Skills
 - caveman
+- codex-peer-review (vendored, MIT; opt-in via /assemble — needs OpenAI Codex CLI)
 - foundation-cc
 - foundation-core
 - foundation-quality

@@ -1,6 +1,6 @@
 {
   "name": "machine",
-  "description": "The machine \u2014 a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil into /.machine.",
+  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil into /.machine.",
   "version": "0.3.10",
   "author": {
     "name": "yesitsfebreeze",
@@ -22,16 +22,15 @@
     "./.claude/agents/default.md",
     "./.claude/agents/manager-ddd.md",
     "./.claude/agents/manager-tdd.md",
-    "./.claude/agents/orchestrator.md"
+    "./.claude/agents/drill.md"
   ],
   "skills": [
-    "./.claude/skills/assemble",
     "./.claude/skills/clean",
     "./.claude/skills/coder",
+    "./.claude/skills/codex-review",
+    "./.claude/skills/drill",
     "./.claude/skills/gate",
-    "./.claude/skills/ignite",
     "./.claude/skills/oil",
-    "./.claude/skills/orchestrate",
     "./.claude/skills/personas"
   ],
   "outputStyles": "./.claude/output-styles",

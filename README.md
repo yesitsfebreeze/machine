@@ -47,12 +47,12 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ## ✨ What it can do
 
 - **🤖 Bare-bones agent core.** Four agents stay loaded: the eager-generalist
-  `default`, the `orchestrator` driver, and `manager-tdd` / `manager-ddd` for
+  `default`, the `drill` driver, and `manager-tdd` / `manager-ddd` for
   greenfield and legacy implementation. The generalist drives everything else.
-- **🧰 Small skill core.** Eight skills load by default: `coder` and `clean` for
+- **🧰 Small skill core.** Seven skills load by default: `coder` and `clean` for
   building and polishing; `gate` for the quality gate; `personas` for review;
-  `orchestrate` to drive background work; and `ignite` / `assemble` / `oil` for
-  setup and the project layer.
+  `codex-review` for second-AI checks; `drill` — the single entry point that drives
+  work and runs session/bootstrap bring-up; and `oil` for the project layer.
 - **📦 The `mine/` addon kit.** The rest of the toolbelt — the `expert-*` and
   `builder-*` agents, `manager-spec` / `-strategy` / `-git` / `-docs` / etc.,
   `tool-ast-grep`, `workflow-*`, `foundation-*`, `ref-*`, `specialists`, `improve`,
@@ -77,7 +77,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   blocking the conversation.
 - **✅ Language-agnostic quality gate.** `/gate` detects the stack and runs
   format, lint, tests, and build in one pass — pass/fail before any commit.
-- **⚙️ Hooks and modes.** Session-start context injection (ignite), a live status
+- **⚙️ Hooks and modes.** Session-start context injection (drill bring-up), a live status
   line, and a post-task persona-review nudge — wired through the active Node hooks.
 - **🔁 Clean lifecycle.** Install and update are the plugin system's job
   (`/plugin install` / `/plugin update`); `/oil` re-indexes the project layer
@@ -92,16 +92,18 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
    /plugin marketplace add yesitsfebreeze/machine
    /plugin install machine@machine
    ```
-2. **Assemble.** Run `/assemble`. One idempotent pass: it bootstraps every
-   dependency (`kern`, `mesh`, the `git-fs` plugin, the MCP prerequisites), wires
-   the status line and API keys, then oils the project layer (`/oil`) — writing
-   `/.machine/` from your actual code (identity, stack, glossary, persona panel).
+2. **Bring up.** Run `/drill`. On a fresh repo its bring-up makes one idempotent
+   pass: it bootstraps every dependency (`kern`, `mesh`, the `git-fs` plugin, the MCP
+   prerequisites), wires the status line and API keys, then oils the project layer
+   (`/oil`) — writing `/.machine/` from your actual code (identity, stack, glossary,
+   persona panel) — and then drives. (`just bootstrap` runs the same deps install from
+   a terminal.)
 3. **Work.** The default generalist drives the work — slotting specialists from
    `mine/` when a domain needs one — recalls prior decisions from `kern`, gates
    quality before commits, and offers the review panel after non-trivial changes.
 
-> Pull machine updates with `/plugin update machine`. Re-run `/assemble` to
-> reinstall deps or re-wire config, or `/oil` alone to re-index `/.machine/`
+> Pull machine updates with `/plugin update machine`. Re-run `/drill` bring-up (or
+> `just bootstrap`) to reinstall deps or re-wire config, or `/oil` alone to re-index `/.machine/`
 > after the project changes shape.
 
 > **Bundled MCP servers.** The plugin ships five servers in its `.mcp.json`:
@@ -164,7 +166,7 @@ mine/                       the addon kit (curated; not loaded — slot in via /
 ├── project.md           stack, key paths, vision
 ├── glossary.csv         the repo's vocabulary
 ├── personas/            the review panel
-└── sessions/            orchestrator state board (ephemeral)
+└── sessions/            drill roster / ledger (ephemeral)
 ```
 
 ---
