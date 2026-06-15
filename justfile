@@ -15,6 +15,12 @@ default:
 bootstrap:
     @bash scripts/bootstrap.sh
 
+# Rebuild the repo capability graph (.machine/graph.json) that the default agent
+# reads. Runs automatically on every push via the .git/hooks/pre-push hook
+# (installed by `just bootstrap`); run manually here anytime.
+graphify:
+    @node scripts/graphify.mjs
+
 # Bump every version field by 0.0.1 (patch), with odometer turnover at 10
 # (x.x.9 -> x.(x+1).0, x.9.9 -> (x+1).0.0). Prints "OLD -> NEW".
 bump:

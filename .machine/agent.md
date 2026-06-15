@@ -46,6 +46,16 @@ These come from `.claude/rules/coding-standards.md` and the unification design:
 - **Commit per verified slice.** No CI exists; git history is the only safety net. The
   ongoing unification work is sliced in `.machine/improve.json`.
 
+- **Consult the capability graph first.** `.machine/graph.json` is a generated index of
+  this repo's entire surface — every agent, skill, hook, rule, output-style, the
+  unregistered `mine/` kit, and the `.machine` layer — as nodes plus `references` edges.
+  Before searching for "what exists" or "is there already a skill/agent for X", grep this
+  file. `.orphans` lists `mine/` items that are present but NOT registered in
+  `plugin.json` (discoverable, not callable — slot via `/oil`). It is repo-local and
+  regenerated on every push by `.git/hooks/pre-push` (run `scripts/graphify.mjs`); rebuild
+  manually with `just graphify`, (re)install the hook with `just bootstrap`. Mildly stale
+  between pushes — for live structure prefer Grep/Glob.
+
 ## Persona panel
 
 The review panel for this repo's real risk surfaces. Run `/personas` after any

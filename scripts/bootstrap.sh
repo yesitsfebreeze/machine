@@ -180,6 +180,26 @@ check_others() {
   if have npx; then ok "npx present — pdf-reader fetches on demand"; else warn "npx not found — pdf-reader needs Node.js"; fi
 }
 
+# --- graphify pre-push hook (repo-local; never ships) ----------------------
+install_graphify() {
+  head "graphify pre-push hook"
+  local hook=".git/hooks/pre-push"
+  if [ ! -d .git ]; then warn "no .git dir — skipping graphify hook"; return; fi
+  cat > "$hook" <<'HOOK'
+#!/usr/bin/env bash
+# machine: graphify — rebuild the repo capability graph on every push.
+# Repo-local, never travels (lives in .git/, not the plugin payload).
+# NEVER blocks the push: any failure is a warning, exit is always 0.
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+if command -v node >/dev/null 2>&1; then
+  node "$root/scripts/graphify.mjs" || echo "graphify: skipped (non-fatal)" >&2
+fi
+exit 0
+HOOK
+  chmod +x "$hook"
+  if have node; then node scripts/graphify.mjs >/dev/null 2>&1 && ok "graphify hook installed + initial graph built (.machine/graph.json)" || ok "graphify hook installed (initial build deferred)"; else warn "node not found — graphify hook installed but cannot run until node is present"; fi
+}
+
 # --- run --------------------------------------------------------------------
 echo "${bold}machine bootstrap${rst} ${dim}(idempotent — re-run anytime)${rst}"
 install_kern
@@ -188,6 +208,7 @@ install_gitfs
 ensure_gitfs_shim
 ensure_node
 check_others
+install_graphify
 
 head "summary"
 fails=0; warns=0
