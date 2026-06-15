@@ -83,6 +83,8 @@ what drifted, never blow away a working layer.
 
 4. **Wire the status line into this project** — see "Wire the status line into this project" below.
 
+5. **Collect the required API keys** — see "Collect required API keys" below.
+
 ### Re-run — reconcile in place
 
 Re-read the current repo and compare against the existing project layer. Patch only what
@@ -92,6 +94,7 @@ drifted; do **not** clear `/.machine/`:
 - `personas/` — does the updated machine expect persona slots that are missing?
 - `agent.md` — identity/domain law still matches the repo's shape?
 - status line — re-wire it; see "Wire the status line into this project" below.
+- required API keys — re-check them; see "Collect required API keys" below.
 
 If `/.machine/` is missing or structurally stale, regenerate it (the first-run path above).
 If present and largely intact, hand-patch the specific gaps.
@@ -133,6 +136,74 @@ node -e '
   s.statusLine = { type: "command", command: `node "${script}"`, refreshInterval: 10 };
   fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
 ' "$SETTINGS" "$SCRIPT"
+```
+
+## Collect required API keys
+
+Some bundled MCP servers authenticate with an API key. This step keeps a single
+list of the machine's servers and the keys they require, so future required keys
+are added in exactly one place rather than scattered across the skill. For each
+key in the list, oiling detects whether it is already available and, if not, asks
+the user once and records it in the gitignored local settings.
+
+### Required-key list
+
+The machine's bundled MCP servers and their key requirements:
+
+- **context7** (HTTP transport) — requires `CONTEXT7_API_KEY`.
+- **kern**, **mesh**, **pdf-reader**, **git-fs** — require no key.
+
+So today the only required key is `CONTEXT7_API_KEY`, and it is **optional**:
+without it, context7 simply stays unauthenticated and unavailable. Nothing else
+breaks, because the `${CONTEXT7_API_KEY:-}` default in `.mcp.json` lets the whole
+config still parse when the variable is unset. Add future keys to this list and
+to the recipe below; the rest of the step needs no other change.
+
+### Detect, ask, record
+
+For each required key, on both first run and re-run, do the following. Treat the
+key as **already available** if it is present in the process environment OR under
+`env` in `<project>/.claude/settings.local.json`. If it is already available, do
+nothing. If it is absent, ask the user for it. If the user provides it, merge it
+into `<project>/.claude/settings.local.json` under `env.CONTEXT7_API_KEY`. If the
+user declines, skip it and note that context7 will be unauthenticated.
+
+### Secrets handling
+
+These rules are non-negotiable:
+
+- Write keys **only** to `.claude/settings.local.json`, which is gitignored. Never
+  write a key into `.mcp.json` or into a committed `settings.json`.
+- Never echo or log the key value.
+- Create `settings.local.json` as `{}` if it is absent, then merge.
+- Merge without clobbering: preserve every other key (for example
+  `permissions.allow`) and every other `env` entry.
+- Keep the file valid JSON.
+- This step is idempotent: a re-run overwrites only `env.CONTEXT7_API_KEY` and
+  leaves the rest of the settings untouched.
+
+### Recipe
+
+Read the key from a shell variable that already holds it (for example an
+environment variable, or a value the user just supplied) and pass that variable
+to the node merge as an argument, so the value is never interpolated into the
+script body, printed, or logged. The node merge mirrors the status-line block: it
+loads the JSON, ensures an `env` object exists, sets the one key from `argv`, and
+writes the file back. Do **not** use `sed` for this.
+
+```bash
+SETTINGS="$(git rev-parse --show-toplevel)/.claude/settings.local.json"
+mkdir -p "$(dirname "$SETTINGS")"
+[ -f "$SETTINGS" ] || printf '{}' > "$SETTINGS"
+# $CONTEXT7_API_KEY holds the key (from the environment or the user); never printed.
+node -e '
+  const fs = require("fs");
+  const [file, value] = process.argv.slice(1);
+  const s = JSON.parse(fs.readFileSync(file, "utf8"));
+  s.env = s.env || {};
+  s.env.CONTEXT7_API_KEY = value;
+  fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
+' "$SETTINGS" "$CONTEXT7_API_KEY"
 ```
 
 ## Report
