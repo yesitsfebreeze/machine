@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# cht — cheat.sh lookup, the tmux + cht.sh + fzf tool.
+# Two modes:
+#   cht                      interactive: fzf-pick a topic, prompt for a query
+#   cht <topic> <query...>   direct:      e.g.  cht python reverse a list
+#                                                cht tar extract
+# Env:
+#   CHT_HOST   cht.sh host (default cht.sh)
+#   CHT_PAGER  pager for interactive results (default: less -R; "cat" to disable)
+set -euo pipefail
+
+CHT_HOST="${CHT_HOST:-cht.sh}"
+
+# Programming topics use  host/<lang>/<query>
+# Everything else is treated as a command and uses  host/<cmd>~<query>
+languages=$(printf '%s\n' \
+  golang python javascript typescript nodejs deno rust c cpp objc \
+  java kotlin scala swift ruby php perl lua elixir erlang clojure \
+  haskell ocaml fsharp csharp dart julia r matlab groovy zig nim \
+  bash zsh fish powershell sql solidity)
+
+utils=$(printf '%s\n' \
+  awk sed grep ripgrep find fd xargs cut sort uniq tr tee \
+  tar zip gzip rsync scp ssh curl wget \
+  git docker docker-compose kubectl helm terraform ansible \
+  jq yq make cmake systemctl journalctl ip ss netstat lsof \
+  ffmpeg imagemagick openssl tmux vim chmod chown ln mount)
+
+die() { printf 'cht: %s\n' "$*" >&2; exit 1; }
+command -v curl >/dev/null 2>&1 || die "curl not found"
+
+is_language() { printf '%s\n' "$languages" | grep -qx -- "$1"; }
+
+build_url() {
+  local topic="$1" query="$2"
+  query="${query# }"; query="${query% }"; query="${query// /+}"
+  if is_language "$topic"; then
+    printf '%s/%s/%s' "$CHT_HOST" "$topic" "$query"
+  elif [ -n "$query" ]; then
+    printf '%s/%s~%s' "$CHT_HOST" "$topic" "$query"
+  else
+    printf '%s/%s' "$CHT_HOST" "$topic"
+  fi
+}
+
+fetch() {
+  # ?qT  => q: quiet, T: no terminal colors. Add &style for themed output.
+  curl -fsS --max-time 20 "${1}?qT" \
+    || die "request failed (cht.sh may be overloaded — retry, or check network)"
+}
+
+main() {
+  local topic query interactive=0
+  if [ "$#" -ge 1 ]; then
+    topic="$1"; shift
+    query="${*:-}"
+  else
+    interactive=1
+    command -v fzf >/dev/null 2>&1 || die "fzf not found (needed for interactive mode)"
+    topic=$(printf '%s\n%s\n' "$languages" "$utils" | fzf --prompt='cht> ' --height=40% --reverse) || exit 0
+    [ -n "$topic" ] || exit 0
+    read -r -p "query: " query || exit 0
+  fi
+
+  local url result
+  url=$(build_url "$topic" "$query")
+  result=$(fetch "$url")
+
+  if [ "$interactive" -eq 1 ] && [ -t 1 ]; then
+    local pager="${CHT_PAGER:-less -R}"
+    printf '%s\n' "$result" | $pager
+  else
+    printf '%s\n' "$result"
+  fi
+}
+
+main "$@"
