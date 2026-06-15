@@ -14,6 +14,13 @@ This directory converges toward empty: a task's file is **deleted** when it is
 approved or dropped — never marked done. A clean board is an empty directory (this
 README aside).
 
+An entry also doubles as the **feature ledger** when a factory agent owns a full
+lifecycle: it carries `stage` (lifecycle position), `branch` (the git-fs
+`agent/<id>` it builds on), and `claim_id` (the mesh claim). The factory agent
+never writes here — by board trust only the driver does; the driver projects the
+agent's `mesh`-reported stage onto the entry. See the skill for the field
+definitions.
+
 See `.claude/skills/orchestrate/SKILL.md` for the entry-file schema, the status
 lifecycle, the settle countdown, the ScheduleWakeup scheduler, and the
 add / edit / freeze / approve / drop / show / redo commands. Do not duplicate that

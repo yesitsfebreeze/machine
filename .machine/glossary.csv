@@ -30,3 +30,8 @@ orchestrator,adopt,The user command that resolves an untrusted entry by moving i
 orchestrator,proposed,The optional staging status of a task drafted mid-clarification, not yet on the timed board and carrying no countdown.
 orchestrator,changes-requested,The transient status of a task whose redo SendMessage has been sent and whose agent response is pending; becomes running once the agent re-engages.
 orchestrator,order,The explicit frontmatter priority field that deterministically breaks precedence ties among equally-eligible tasks; lower order fires first and never overrides dependencies or freeze.
+factory,factory agent,A default agent dispatched to own one feature's full eight-stage lifecycle on its own git-fs branch; the communicable subagent of target.md — owns one lifecycle not a fleet.
+factory,factory-job dispatch,The dispatch role where a default agent owns a whole feature lifecycle (vs stage dispatch which does one unit); set by the spawn prompt.
+factory,feature ledger,The orchestrate taskboard under /.machine/sessions/ reused as the feature record; each entry carries stage/branch/claim_id and is driver-written only (board trust).
+factory,dedup handshake,The pre-stage-1 ritual (mesh roster+claims+claim+intent post); on a claim already held the agent stands down and posts deferred-interest (D3).
+factory,stage (lifecycle),A factory entry's position in the eight-stage job lifecycle (concept|plan|implement|test|personas|evaluate|fix|present); orthogonal to orchestration status.

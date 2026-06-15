@@ -106,6 +106,9 @@ order: 1                    # board priority; lower fires first among ready task
 agent_type: expert-backend
 agent_id: ""               # id returned by the background Agent call, for SendMessage
 status: scheduled          # proposed | scheduled | running | pending-approval | approved | rejected | frozen | untrusted
+stage: ""                  # lifecycle position, orthogonal to status: concept | plan | implement | test | personas | evaluate | fix | present | "" (none)
+branch: ""                 # git-fs agent/<id> branch this feature lives on; "" until dispatched
+claim_id: ""               # mesh claim handle held for this feature (dedup); "" if unclaimed
 isolation: true            # true => writes files => must run in worktree isolation
 dependencies: []           # ids that must reach `approved` before this may fire
 added_at: 2026-06-14T10:00:00Z
@@ -141,6 +144,24 @@ round-trips.
 `added_at`, `fire_at`, the `order` priority, the `dependencies` list, the
 `isolation` flag, and the `proposed` / `scheduled` / `frozen` states are the v2
 additions over the original one-file-per-subagent record.
+
+`stage`, `branch`, and `claim_id` are the feature-factory fields (CONCEPT-FACTORY-001
+G2). They make the board the single feature ledger: `stage` tracks where a feature
+sits in the senior-programmer lifecycle (concept through present — see the default
+agent's "The job lifecycle" section) independently of orchestration `status`;
+`branch` records the git-fs `agent/<id>` branch the work lives on; `claim_id` holds
+the `mesh` claim that stops two agents building the same feature.
+
+**Who writes these fields (SPEC-FACTORY-001 R9, amended).** A factory agent is a
+dispatched agent, so by board trust (TB-013/TB-014, "Board trust" above) it MUST
+NOT write its own entry-file. Instead it `post`s each stage transition to `mesh` as
+it crosses the lifecycle. You — the driver and sole ledger writer — reconcile those
+posts: on your turn, woken by the agent's mesh post or its background notification,
+read the agent's reported stage and write `stage` (plus `branch` and `claim_id`
+once the agent reports them) onto the entry. `mesh` is the source of truth for where
+a feature sits; the ledger is your durable projection of it, so the two may differ
+briefly between the agent's post and your next turn. Clear `claim_id` by releasing
+the `mesh` claim when the entry reaches `approved` or `rejected`.
 
 ### Isolation flag
 
