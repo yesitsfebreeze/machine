@@ -55,8 +55,8 @@ if (assistantTexts.length === 0) process.exit(0);
 
 const lastMessage = assistantTexts[assistantTexts.length - 1];
 
-// Short replies are conversational turns, not completed work — skip the
-// completion-pattern scan below. 400 chars ≈ the floor of a real wrap-up summary.
+// Short replies are conversational turns, not completed work - skip the
+// completion-pattern scan below. 400 chars ~ the floor of a real wrap-up summary.
 if (lastMessage.length < 400) process.exit(0);
 
 const patterns = [
@@ -78,7 +78,11 @@ const patterns = [
 const triggered = patterns.some((p) => p.test(lastMessage));
 if (!triggered) process.exit(0);
 
-process.stdout.write(
-  "The feature above looks complete. Running the specialist panel review automatically - /personas\n"
-);
-process.exit(2);
+// Stop hooks block-and-continue via JSON on stdout with exit 0. Exit 2 makes
+// Claude Code read STDERR (ignoring stdout) - an empty-stderr exit 2 surfaces as
+// a "No stderr output" hook error and the directive is lost.
+process.stdout.write(JSON.stringify({
+  decision: "block",
+  reason: "The feature above looks complete. Running the specialist panel review automatically - invoke the `personas` skill.",
+}));
+process.exit(0);

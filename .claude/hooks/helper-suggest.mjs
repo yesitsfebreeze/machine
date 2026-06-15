@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-// Stop hook: workflow-friction sensor → propose a helper skill.
+// Stop hook: workflow-friction sensor -> propose a helper skill.
 //
 // Scans the session transcript for friction signals (errored tool results, retry
 // flailing on the same file). When a session crosses the threshold, it forces the
 // agent to pause and consider capturing the recurring task as a helper skill
 // (.machine/skills/) so next time it goes smoothly. Nudges AT MOST ONCE per session.
 //
-// Pattern mirrors personas.mjs: read stdin JSON, read transcript, exit(2)+stdout
-// to inject a continuation directive. Disable: remove from settings.json.
+// Pattern mirrors personas.mjs: read stdin JSON, read transcript, then emit a
+// JSON block-decision on stdout (exit 0) to inject a continuation directive.
+// Disable: remove from settings.json.
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -76,9 +77,12 @@ const detail = [
   "Before wrapping up, run the helper-skill reflection:",
   "1. Name the RECURRING task that caused the repeated failures (skip one-off typos / external outages).",
   "2. If this task will recur in THIS repo and a short doc would make it go right first time,",
-  "   invoke the `helper` skill to capture it — it ASKS the user before writing anything.",
+  "   invoke the `helper` skill to capture it - it ASKS the user before writing anything.",
   "3. If it was genuinely a one-off, say so in one line and move on. Do not invent a helper for noise.",
 ].join("\n");
 
-process.stdout.write(detail + "\n");
-process.exit(2);
+// Stop hooks block-and-continue via JSON on stdout with exit 0. Exit 2 makes
+// Claude Code read STDERR (ignoring stdout) - an empty-stderr exit 2 surfaces as
+// a "No stderr output" hook error and the directive is lost.
+process.stdout.write(JSON.stringify({ decision: "block", reason: detail }));
+process.exit(0);
