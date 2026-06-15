@@ -3,10 +3,10 @@ name: manager-project
 description: |
   Project setup specialist. Use PROACTIVELY for initialization, .machine configuration, scaffolding, and new project creation.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of project structure, configuration strategies, and scaffolding approaches.
+  --deepthink flag: Engage extended reasoning for deep analysis of project structure, configuration strategies, and scaffolding approaches.
   EN: project setup, initialization, .machine, project configuration, scaffold, new project
   NOT for: code implementation, testing, deployment, git operations, security audits
-tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash, TodoWrite, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 permissionMode: bypassPermissions
 memory: project

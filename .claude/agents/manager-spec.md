@@ -3,10 +3,10 @@ name: manager-spec
 description: |
   SPEC creation specialist. Use PROACTIVELY for EARS-format requirements, acceptance criteria, and user story documentation.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of requirements, acceptance criteria, and user story design.
+  --deepthink flag: Engage extended reasoning for deep analysis of requirements, acceptance criteria, and user story design.
   EN: SPEC, requirement, specification, EARS, acceptance criteria, user story, planning
   NOT for: code implementation, testing, deployment, code review, documentation sync
-tools: Read, Write, Edit, MultiEdit, Bash, Glob, Grep, TodoWrite, WebFetch, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, MultiEdit, Bash, Glob, Grep, TodoWrite, WebFetch, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 effort: xhigh
 permissionMode: bypassPermissions

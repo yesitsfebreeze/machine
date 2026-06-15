@@ -3,10 +3,10 @@ name: builder-agent
 description: |
   Agent creation specialist. Use PROACTIVELY for creating sub-agents, agent blueprints, and custom agent definitions.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of agent design, capability boundaries, and integration patterns.
+  --deepthink flag: Engage extended reasoning for deep analysis of agent design, capability boundaries, and integration patterns.
   EN: create agent, new agent, agent blueprint, sub-agent, agent definition, custom agent
   NOT for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation
-tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 permissionMode: bypassPermissions
 memory: user

@@ -166,8 +166,8 @@
 
 ### Context7 Integration
 
-- **Library Resolution**: Use `mcp__context7__resolve-library-id` with query "ast-grep"
-- **Documentation Fetch**: Use `mcp__context7__get-library-docs` for latest docs
+- **Library Resolution**: Use `mcp__plugin_machine_context7__resolve-library-id` with query "ast-grep"
+- **Documentation Fetch**: Use `mcp__plugin_machine_context7__query-docs` for latest docs
 
 ### Module Organization
 

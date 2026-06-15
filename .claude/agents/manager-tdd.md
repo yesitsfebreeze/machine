@@ -4,10 +4,10 @@ description: |
   TDD (Test-Driven Development) implementation specialist. Use for RED-GREEN-REFACTOR
   cycle. Default methodology for new projects and feature development.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of test strategy, implementation approach, and coverage optimization.
+  --deepthink flag: Engage extended reasoning for deep analysis of test strategy, implementation approach, and coverage optimization.
   EN: TDD, test-driven development, red-green-refactor, test-first, new feature, specification test, greenfield
   NOT for: legacy code refactoring (use DDD), deployment, documentation, git operations, security audits
-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 permissionMode: bypassPermissions
 memory: project

@@ -3,10 +3,10 @@ name: builder-skill
 description: |
   Skill creation specialist. Use PROACTIVELY for creating skills, YAML frontmatter design, and knowledge organization.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of skill design, knowledge organization, and YAML frontmatter structure.
+  --deepthink flag: Engage extended reasoning for deep analysis of skill design, knowledge organization, and YAML frontmatter structure.
   EN: create skill, new skill, skill optimization, knowledge domain, YAML frontmatter
   NOT for: agent creation (use builder-agent), plugin creation (use builder-plugin), code implementation, testing
-tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 permissionMode: bypassPermissions
 memory: user

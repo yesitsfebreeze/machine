@@ -3,10 +3,10 @@ name: expert-security
 description: |
   Security analysis specialist. Use PROACTIVELY for OWASP, vulnerability assessment, XSS, CSRF, and secure code review.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of security threats, vulnerability patterns, and OWASP compliance.
+  --deepthink flag: Engage extended reasoning for deep analysis of security threats, vulnerability patterns, and OWASP compliance.
   EN: security, vulnerability, OWASP, injection, XSS, CSRF, penetration, audit, threat
   NOT for: general backend development, frontend UI, performance optimization, database design, DevOps deployment
-tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 effort: high
 permissionMode: bypassPermissions

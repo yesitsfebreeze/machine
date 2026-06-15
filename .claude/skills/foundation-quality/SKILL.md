@@ -6,7 +6,7 @@ description: >
   work is called done. Use for code review and quality-gate checks.
 license: Apache-2.0
 compatibility: Designed for Claude Code
-allowed-tools: Read, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Grep, Glob, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 user-invocable: false
 metadata:
   version: "3.0.0"
@@ -92,4 +92,4 @@ passes use `/simplify`. Coverage strategy lives in `ref-testing-pyramid`.
 - [ ] No global rule disabling in the linter config.
 
 Claim completion only after running the checks and quoting the output
-(`superpowers:verification-before-completion`).
+(the `verify` skill).

@@ -3,10 +3,10 @@ name: builder-plugin
 description: |
   Plugin creation specialist. Use PROACTIVELY for Claude Code plugins, marketplace setup, and plugin validation.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of plugin architecture, marketplace structure, and plugin validation.
+  --deepthink flag: Engage extended reasoning for deep analysis of plugin architecture, marketplace structure, and plugin validation.
   EN: create plugin, plugin, plugin validation, plugin structure, marketplace, new plugin, marketplace creation, marketplace.json, plugin distribution
   NOT for: agent creation (use builder-agent), skill creation (use builder-skill), code implementation, testing, documentation
-tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 permissionMode: bypassPermissions
 memory: user

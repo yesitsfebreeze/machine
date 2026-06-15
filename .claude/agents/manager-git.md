@@ -3,7 +3,7 @@ name: manager-git
 description: |
   Git workflow specialist. Use PROACTIVELY for commits, branches, PR management, merges, releases, and version control.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of git strategies, branch management, and version control workflows.
+  --deepthink flag: Engage extended reasoning for deep analysis of git strategies, branch management, and version control workflows.
   EN: git, commit, push, pull, branch, PR, pull request, merge, release, version control, checkout, rebase, stash
   NOT for: code implementation, testing, architecture design, documentation content, security audits
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Skill

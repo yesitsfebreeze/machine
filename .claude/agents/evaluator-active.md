@@ -6,7 +6,7 @@ description: |
   MUST INVOKE when ANY of these keywords appear in user request:
   EN: evaluate, quality assessment, independent review, code audit, defect analysis, acceptance criteria test
   NOT for: code implementation, architecture design, documentation writing, git operations
-tools: Read, Grep, Glob, Bash, mcp__sequential-thinking__sequentialthinking
+tools: Read, Grep, Glob, Bash
 model: sonnet
 effort: high
 permissionMode: plan

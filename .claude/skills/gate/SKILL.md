@@ -52,7 +52,7 @@ Bash calls in one message) and collect results.
 
 - **`--fix`** — apply safe auto-fixes first (formatter, lint `--fix`), then re-run.
   Never auto-"fix" failing tests or a broken build — those need diagnosis
-  (`superpowers:systematic-debugging`).
+  (the `expert-debug` agent).
 
 ## Report
 

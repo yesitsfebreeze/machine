@@ -3,10 +3,10 @@ name: manager-strategy
 description: |
   Implementation strategy specialist. Use PROACTIVELY for architecture decisions, technology evaluation, and implementation planning.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of architecture decisions, technology selection, and implementation strategies.
+  --deepthink flag: Engage extended reasoning for deep analysis of architecture decisions, technology selection, and implementation strategies.
   EN: strategy, implementation plan, architecture decision, technology evaluation, planning
   NOT for: code implementation, testing, deployment, documentation, git operations
-tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 effort: xhigh
 permissionMode: plan

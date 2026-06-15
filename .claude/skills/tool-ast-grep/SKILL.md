@@ -6,7 +6,7 @@ description: >
   languages. Use for structural search or codemod operations.
 license: Apache-2.0
 compatibility: Designed for Claude Code
-allowed-tools: Read, Grep, Glob, Bash(sg:*), Bash(ast-grep:*), mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Grep, Glob, Bash(sg:*), Bash(ast-grep:*), mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 user-invocable: false
 metadata:
   version: "1.2.0"
@@ -67,7 +67,7 @@ Supported languages: Python, JavaScript, TypeScript, Go, Rust, Java, Kotlin, C, 
 | Workflows, CI/CD recipes, troubleshooting | references/examples.md |
 | Official docs links, ecosystem | references/reference.md |
 
-Current upstream documentation: resolve `ast-grep` via Context7 (`mcp__context7__resolve-library-id` → `mcp__context7__get-library-docs`).
+Current upstream documentation: resolve `ast-grep` via Context7 (`mcp__plugin_machine_context7__resolve-library-id` → `mcp__plugin_machine_context7__query-docs`).
 
 ## Machine Integration
 

@@ -6,7 +6,7 @@ description: >
   skill structure. Use when creating agents/skills or deciding how to route work.
 license: Apache-2.0
 compatibility: Designed for Claude Code
-allowed-tools: Read, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Grep, Glob, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 user-invocable: false
 metadata:
   version: "3.0.0"
@@ -47,7 +47,7 @@ delegation buys an independent context and domain focus.
   `/.machine/project.md`.
 - Spawn specialists with the Agent tool. When several pieces of work are
   independent, dispatch them in one message so they run in parallel (see
-  `superpowers:dispatching-parallel-agents`).
+  the `parallel` skill).
 - Direct execution is appropriate for typo/format fixes, single-file config
   edits, result synthesis, git operations, and scratch work — anything where a
   specialist adds no independence or expertise.
@@ -61,7 +61,7 @@ runs the concrete check — it detects fmt/lint/test/build, or reads the exact
 commands from `/.machine/project.md`.
 
 Verify by evidence, not by feeling: run the check and quote the output
-(`superpowers:verification-before-completion`). In this repo "build" means
+(the `verify` skill). In this repo "build" means
 configuration integrity — hooks pass `node --check`, `settings.json` parses, and
 every agent/skill reference resolves.
 

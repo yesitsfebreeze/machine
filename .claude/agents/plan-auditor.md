@@ -5,7 +5,7 @@ description: |
   MUST INVOKE for SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance check, document validation.
   EN: SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance, document validation
   NOT for: code implementation, code review, documentation writing, git operations, running tests
-tools: Read, Grep, Glob, Bash, mcp__sequential-thinking__sequentialthinking, Write, Edit
+tools: Read, Grep, Glob, Bash, Write, Edit
 model: inherit
 effort: high
 permissionMode: default

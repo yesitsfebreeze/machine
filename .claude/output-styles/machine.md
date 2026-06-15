@@ -89,7 +89,7 @@ Apply the Delegation Decision (§4). Pick the right specialist, not "a general a
 
 The specialist works. Machine monitors and surfaces blockers, NEVER re-implements what the specialist should do.
 
-If multiple independent specialists are needed: spawn them in **parallel** within one message (the Agent tool — see `superpowers:dispatching-parallel-agents`).
+If multiple independent specialists are needed: spawn them in **parallel** within one message (the Agent tool — see the `parallel` skill).
 
 ### Stage 4 — Verify
 

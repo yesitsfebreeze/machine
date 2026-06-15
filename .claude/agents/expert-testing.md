@@ -3,10 +3,10 @@ name: expert-testing
 description: |
   Testing strategy specialist. Use PROACTIVELY for E2E, integration testing, load testing, coverage, and QA automation.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of testing strategies, coverage patterns, and QA automation approaches.
+  --deepthink flag: Engage extended reasoning for deep analysis of testing strategies, coverage patterns, and QA automation approaches.
   EN: test strategy, E2E, integration test, load test, test automation, coverage, QA
   NOT for: production code implementation, architecture design, DevOps, security audits, performance optimization
-tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__claude-in-chrome__*
+tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__claude-in-chrome__*
 model: opus
 permissionMode: bypassPermissions
 memory: project

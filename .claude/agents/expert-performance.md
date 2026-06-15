@@ -3,10 +3,10 @@ name: expert-performance
 description: |
   Performance optimization specialist. Use PROACTIVELY for profiling, benchmarking, memory analysis, and latency optimization.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of performance bottlenecks, optimization strategies, and profiling approaches.
+  --deepthink flag: Engage extended reasoning for deep analysis of performance bottlenecks, optimization strategies, and profiling approaches.
   EN: performance, profiling, optimization, benchmark, memory, bundle, latency, speed
   NOT for: new feature development, architecture design, security audits, DevOps, frontend UI design
-tools: Read, Grep, Glob, Bash, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Grep, Glob, Bash, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 permissionMode: bypassPermissions
 memory: project

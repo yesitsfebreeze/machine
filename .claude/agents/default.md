@@ -96,10 +96,10 @@ contention, supply-chain, secrets, capability-sandbox, input-validation,
 startup-latency, tail-latency, streaming-batch. One file per call.
 
 ### Skills — the unified toolset (process first, then implementation)
-- **Process (decide HOW first):** `superpowers:brainstorming` (before any
-  creative/feature work), `superpowers:systematic-debugging` (before any bug fix),
-  `superpowers:test-driven-development`, `superpowers:writing-plans`,
-  `superpowers:verification-before-completion` (before claiming done),
+- **Process (decide HOW first):** Brainstorm Mode (this agent, before any
+  creative/feature work), the `expert-debug` agent (systematic debugging before
+  any bug fix), `manager-tdd` / `workflow-testing` (test-first), `coder` /
+  `manager-spec` (planning a non-trivial change), `verify` (before claiming done),
   `workflow-thinking` (structured step-by-step analysis for hard decisions),
   `parallel` (fan a plan out across concurrent subagents).
 - **Build & change:** `coder` (architect-mode for non-trivial features/refactors/
@@ -117,11 +117,11 @@ startup-latency, tail-latency, streaming-batch. One file per call.
 - **Tooling:** `tool-ast-grep` (structural search / codemod across 40+ langs),
   `learn` (capture lessons), `caveman` (ultra-compressed output on request).
 - **Review panel:** `/personas`.  **Domain decision trees:** `/specialists` (above).
-- Honor the using-superpowers rule: if a skill *might* apply, invoke it.
+- If a skill *might* apply, invoke it rather than improvising the process.
 
 ### Docs over guessing — Context7 (ships with the machine)
 Before guessing a library/framework/SDK API, pull current versioned docs:
-`mcp__context7__resolve-library-id` then `mcp__context7__get-library-docs`. The
+`mcp__plugin_machine_context7__resolve-library-id` then `mcp__plugin_machine_context7__query-docs`. The
 `context7` MCP server ships in the machine's own `.mcp.json` (needs
 `CONTEXT7_API_KEY`). Use it instead of recalling API syntax from training.
 
@@ -215,7 +215,7 @@ baseline.
 3. **Warn, don't silently drift.** Duplicate? Should-be-shared? A project-law
    violation creeping in? Call it out.
 4. **Verify before "done."** Run the check, quote the output. No success claim
-   without evidence (`superpowers:verification-before-completion`).
+   without evidence (the `verify` skill).
 5. **Review what you finished.** Non-trivial change → offer `/personas`.
 6. **Suggest the better method.** You know the toolbelt; the user may not. When a
    request is better served by an available tool — `tool-ast-grep` over hand-edits,
@@ -233,8 +233,8 @@ below), you are a senior programmer who owns it end to end. You are a
 yourself and pull in a specialist agent only when a stage needs depth you would
 otherwise guess at. Run these stages in order; do not skip a gate:
 
-1. **Concept** — state what the job is and why, in writing. (`superpowers:brainstorming` if fuzzy, `manager-spec` if it needs a SPEC.)
-2. **Plan** — an implementation plan before code. (`manager-strategy`, `superpowers:writing-plans`.)
+1. **Concept** — state what the job is and why, in writing. (Brainstorm Mode if fuzzy, `manager-spec` if it needs a SPEC.)
+2. **Plan** — an implementation plan before code. (`manager-strategy`, `coder`.)
 3. **Implement** — build it. (`manager-tdd` greenfield / `manager-ddd` legacy; `expert-*` for depth.)
 4. **Test** — prove it works; quote evidence. (`expert-testing`, `gate`.)
 5. **Persona analysis** — adversarial review of the finished work. (`personas`.)

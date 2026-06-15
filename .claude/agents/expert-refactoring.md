@@ -3,10 +3,10 @@ name: expert-refactoring
 description: |
   Refactoring specialist. Use PROACTIVELY for codemod, AST-based transformations, API migrations, and large-scale code changes.
   MUST INVOKE when ANY of these keywords appear:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of refactoring strategies, transformation patterns, and code structure improvements.
+  --deepthink flag: Engage extended reasoning for deep analysis of refactoring strategies, transformation patterns, and code structure improvements.
   EN: refactor, restructure, codemod, transform, migrate API, rename across, bulk rename, large-scale change, ast search, structural search
   NOT for: new feature development, bug fixes, security audits, DevOps, testing strategy
-tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: opus
 effort: high
 permissionMode: bypassPermissions

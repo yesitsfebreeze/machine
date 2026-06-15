@@ -101,8 +101,8 @@ Einstein **MUST** use Context7 MCP for all technical claims. This prevents hallu
 
 ### Usage Pattern
 
-1. When the topic is a library, framework, API, or CLI tool, call `mcp__context7__resolve-library-id` with the topic name
-2. Then call `mcp__context7__get-library-docs` to fetch up-to-date official documentation
+1. When the topic is a library, framework, API, or CLI tool, call `mcp__plugin_machine_context7__resolve-library-id` with the topic name
+2. Then call `mcp__plugin_machine_context7__query-docs` to fetch up-to-date official documentation
 3. Cite the source in the lesson: `Source: Context7 → {library-id} v{version}`
 4. If Context7 returns no results or fails:
    - Fall back to `WebFetch` of the official documentation URL

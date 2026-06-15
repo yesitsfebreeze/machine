@@ -3,10 +3,10 @@ name: manager-quality
 description: |
   Code quality specialist. Use PROACTIVELY for the five-dimension quality gate, code review, quality gates, and lint compliance.
   MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Activate Sequential Thinking MCP for deep analysis of quality standards, code review strategies, and compliance patterns.
+  --deepthink flag: Engage extended reasoning for deep analysis of quality standards, code review strategies, and compliance patterns.
   EN: quality, quality gate, code review, compliance, lint, code quality, coverage
   NOT for: code implementation, architecture design, deployment, documentation writing, git operations
-tools: Read, Grep, Glob, Bash, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Read, Grep, Glob, Bash, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 model: haiku
 permissionMode: plan
 memory: project

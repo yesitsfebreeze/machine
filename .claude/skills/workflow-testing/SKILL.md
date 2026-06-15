@@ -6,7 +6,7 @@ description: >
   writing tests or measuring coverage.
 license: Apache-2.0
 compatibility: Designed for Claude Code
-allowed-tools: Read, Write, Edit, Bash(pytest:*), Bash(ruff:*), Bash(npm:*), Bash(npx:*), Bash(node:*), Bash(jest:*), Bash(vitest:*), Bash(go:*), Bash(cargo:*), Bash(mix:*), Bash(uv:*), Bash(bundle:*), Bash(php:*), Bash(phpunit:*), Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Write, Edit, Bash(pytest:*), Bash(ruff:*), Bash(npm:*), Bash(npx:*), Bash(node:*), Bash(jest:*), Bash(vitest:*), Bash(go:*), Bash(cargo:*), Bash(mix:*), Bash(uv:*), Bash(bundle:*), Bash(php:*), Bash(phpunit:*), Grep, Glob, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
 user-invocable: false
 metadata:
   version: "3.0.0"
@@ -24,8 +24,8 @@ triggers:
 
 # Workflow Testing
 
-Process skills own the method: `superpowers:test-driven-development` (red-green-refactor),
-`superpowers:systematic-debugging` (bugs). Coverage strategy: `ref-testing-pyramid`.
+Specialists own the method: `manager-tdd` (red-green-refactor),
+`expert-debug` (bugs). Coverage strategy: `ref-testing-pyramid`.
 Quality gate: `/gate`. This skill is the testing-specific checklist.
 
 ## Legacy code — characterization (PRESERVE)

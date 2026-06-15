@@ -1,6 +1,6 @@
 ---
 name: parallel
-description: Use when executing a superpowers spec or implementation plan and you want it finished as fast as possible by fanning the work across concurrent subagents instead of one task at a time. Triggers on "/parallel", "run this plan in parallel", "parallelize this execution", "do all these tasks at once".
+description: Use when executing a spec or implementation plan and you want it finished as fast as possible by fanning the work across concurrent subagents instead of one task at a time. Triggers on "/parallel", "run this plan in parallel", "parallelize this execution", "do all these tasks at once".
 ---
 
 # Parallel Plan Execution
@@ -16,14 +16,13 @@ only safe between tasks that do not share files or have ordering dependencies �
 so the whole job is building correct dependency batches, dispatching each batch
 wide, and gating each batch on a clean merge before the next.
 
-This skill REPLACES the one-task-at-a-time loop of
-superpowers:subagent-driven-development for the current execution. It does not
-replace the per-task quality bar — every parallel task still implements with
-tests and self-reviews.
+This skill REPLACES the one-task-at-a-time subagent loop for the current
+execution. It does not replace the per-task quality bar — every parallel task
+still implements with tests and self-reviews.
 
 **REQUIRED BACKGROUND:**
-- superpowers:dispatching-parallel-agents — how to scope and fan out concurrent agents
-- superpowers:using-git-worktrees — the isolation that makes parallel writes safe
+- The Agent tool — scope and fan out concurrent subagents (dispatch a batch in one message)
+- The `ref-git-workflow` skill — the worktree isolation that makes parallel writes safe
 
 ## When to Use
 
@@ -52,7 +51,7 @@ digraph parallel_exec {
     "More batches?" [shape=diamond];
     "Run /simplify ONCE over the whole change" [shape=box];
     "Run /code-review ONCE over the whole change" [shape=box];
-    "superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "manager-git: finish the development branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan once, extract ALL tasks + full text" -> "Build dependency graph (file/subsystem overlap)";
     "Build dependency graph (file/subsystem overlap)" -> "Group into batches: tasks in a batch are mutually independent";
@@ -63,7 +62,7 @@ digraph parallel_exec {
     "More batches?" -> "For each batch: dispatch one isolated subagent per task, CONCURRENTLY" [label="yes - next batch"];
     "More batches?" -> "Run /simplify ONCE over the whole change" [label="no"];
     "Run /simplify ONCE over the whole change" -> "Run /code-review ONCE over the whole change";
-    "Run /code-review ONCE over the whole change" -> "superpowers:finishing-a-development-branch";
+    "Run /code-review ONCE over the whole change" -> "manager-git: finish the development branch";
 }
 ```
 
@@ -80,7 +79,7 @@ digraph parallel_exec {
 3. **Dispatch the batch concurrently.** Send all subagent calls for a batch **in
    a single message** so they run at once. Each subagent gets:
    - Its own worktree/branch (isolation — required for parallel writes; see
-     superpowers:using-git-worktrees).
+     the `ref-git-workflow` skill).
    - Full task text + scene-setting context.
    - Constraints: touch only its assigned files; do NOT edit other tasks' files.
    - Mandate: write tests, implement, run tests, commit, self-review.
@@ -91,8 +90,8 @@ digraph parallel_exec {
    run the FULL test suite. Only then start the next batch — its tasks may depend
    on this batch's merged result.
 
-5. **Handle subagent status** exactly as superpowers:subagent-driven-development
-   prescribes (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). Re-dispatch
+5. **Handle subagent status** by the same status contract
+    (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). Re-dispatch
    with more context or a stronger model; never silently drop a blocked task.
 
 6. **Simplify once.** After the LAST batch merges clean, run `/simplify` a single
@@ -101,7 +100,7 @@ digraph parallel_exec {
 
 7. **Code-review once.** Then run `/code-review` a single time over the whole
    change. Address findings, then proceed to
-   superpowers:finishing-a-development-branch.
+   `manager-git` to finish the development branch.
 
 ## Quick Reference
 
