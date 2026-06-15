@@ -7,7 +7,7 @@ description: |
   EN: DevOps, CI/CD, Docker, Kubernetes, deployment, pipeline, infrastructure, container
   NOT for: application code, frontend UI, database schema design, security audits, performance profiling, testing strategy
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: project
 skills:

@@ -7,7 +7,7 @@ description: |
   EN: project setup, initialization, .machine, project configuration, scaffold, new project
   NOT for: code implementation, testing, deployment, git operations, security audits
 tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: project
 skills:

@@ -6,7 +6,7 @@ description: |
   EN: SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance, document validation
   NOT for: code implementation, code review, documentation writing, git operations, running tests
 tools: Read, Grep, Glob, Bash, Write, Edit
-model: inherit
+model: sonnet
 effort: high
 permissionMode: default
 ---

@@ -7,7 +7,7 @@ description: |
   EN: create agent, new agent, agent blueprint, sub-agent, agent definition, custom agent
   NOT for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: user
 skills:

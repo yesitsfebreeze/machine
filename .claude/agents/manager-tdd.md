@@ -8,7 +8,7 @@ description: |
   EN: TDD, test-driven development, red-green-refactor, test-first, new feature, specification test, greenfield
   NOT for: legacy code refactoring (use DDD), deployment, documentation, git operations, security audits
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: project
 skills:

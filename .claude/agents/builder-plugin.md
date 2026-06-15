@@ -7,7 +7,7 @@ description: |
   EN: create plugin, plugin, plugin validation, plugin structure, marketplace, new plugin, marketplace creation, marketplace.json, plugin distribution
   NOT for: agent creation (use builder-agent), skill creation (use builder-skill), code implementation, testing, documentation
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: user
 skills:

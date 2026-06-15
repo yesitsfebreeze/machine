@@ -7,7 +7,7 @@ description: |
   EN: documentation, README, API docs, Nextra, markdown, technical writing, docs
   NOT for: code implementation, testing, architecture design, git branch management, security audits
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch, WebSearch, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: sonnet
+model: haiku
 permissionMode: bypassPermissions
 memory: project
 skills:

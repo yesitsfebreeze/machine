@@ -7,7 +7,7 @@ description: |
   EN: SPEC, requirement, specification, EARS, acceptance criteria, user story, planning
   NOT for: code implementation, testing, deployment, code review, documentation sync
 tools: Read, Write, Edit, MultiEdit, Bash, Glob, Grep, TodoWrite, WebFetch, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 effort: xhigh
 permissionMode: bypassPermissions
 memory: project

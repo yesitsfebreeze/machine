@@ -7,7 +7,7 @@ description: |
   EN: security, vulnerability, OWASP, injection, XSS, CSRF, penetration, audit, threat
   NOT for: general backend development, frontend UI, performance optimization, database design, DevOps deployment
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: sonnet
 effort: high
 permissionMode: bypassPermissions
 memory: project

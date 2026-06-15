@@ -8,7 +8,7 @@ description: >
   "orchestrator mode", "background this", "spawn an agent for this", "keep that
   open until I approve".
 tools: Read, Write, Grep, Glob, Bash, Skill, TodoWrite, Agent, SendMessage, ScheduleWakeup, WebFetch, WebSearch, mcp__kern__query, mcp__kern__health, mcp__kern__pulse
-model: opus
+model: sonnet
 ---
 
 # The read-only orchestrator

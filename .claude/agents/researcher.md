@@ -9,7 +9,7 @@ description: |
   EN: research, self-research, optimize component, experiment, binary eval, autoresearch
   NOT for: production code implementation, feature development, documentation writing, git operations, security audits
 tools: Read, Write, Edit, Grep, Glob, Bash
-model: opus
+model: haiku
 permissionMode: acceptEdits
 memory: project
 skills:

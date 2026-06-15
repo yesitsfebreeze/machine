@@ -7,7 +7,7 @@ description: |
   EN: test strategy, E2E, integration test, load test, test automation, coverage, QA
   NOT for: production code implementation, architecture design, DevOps, security audits, performance optimization
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__claude-in-chrome__*
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: project
 skills:

@@ -7,7 +7,7 @@ description: |
   EN: performance, profiling, optimization, benchmark, memory, bundle, latency, speed
   NOT for: new feature development, architecture design, security audits, DevOps, frontend UI design
 tools: Read, Grep, Glob, Bash, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 memory: project
 skills:

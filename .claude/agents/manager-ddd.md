@@ -8,7 +8,7 @@ description: |
   EN: DDD, refactoring, legacy code, behavior preservation, characterization test, domain-driven refactoring
   NOT for: greenfield development (use TDD), deployment, documentation, git operations, security audits
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: project
 skills:

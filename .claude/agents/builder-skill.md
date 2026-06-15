@@ -7,7 +7,7 @@ description: |
   EN: create skill, new skill, skill optimization, knowledge domain, YAML frontmatter
   NOT for: agent creation (use builder-agent), plugin creation (use builder-plugin), code implementation, testing
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: haiku
 permissionMode: bypassPermissions
 memory: user
 skills:

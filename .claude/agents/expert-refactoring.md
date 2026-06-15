@@ -7,7 +7,7 @@ description: |
   EN: refactor, restructure, codemod, transform, migrate API, rename across, bulk rename, large-scale change, ast search, structural search
   NOT for: new feature development, bug fixes, security audits, DevOps, testing strategy
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs
-model: opus
+model: sonnet
 effort: high
 permissionMode: bypassPermissions
 memory: project
