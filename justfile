@@ -10,6 +10,11 @@ marketplace := ".claude-plugin/marketplace.json"
 default:
     @just --list
 
+# Install and verify every machine dependency (kern, mesh, git-fs, MCP servers).
+# Idempotent — skips what is already present. Safe to re-run.
+bootstrap:
+    @bash scripts/bootstrap.sh
+
 # Bump every version field by 0.0.1 (patch), with odometer turnover at 10
 # (x.x.9 -> x.(x+1).0, x.9.9 -> (x+1).0.0). Prints "OLD -> NEW".
 bump:

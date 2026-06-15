@@ -1,11 +1,11 @@
 # Project facts — the machine
 
 - **Name:** the machine
-- **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/oil-me`.
+- **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/oil`.
 - **Stack:** Markdown instruction documents (agents, skills, commands, rules, output-styles); Node ESM hooks (`*.mjs`); JSON config (`settings.json`); CSV/Markdown glossary.
 - **Platform:** Windows, PowerShell 7+ shell, git-backed.
 - **Target:** Claude Code plugin named `machine` (manifest in `.claude-plugin/`); also usable vendored as `<project>/.claude/`. This repo root *is* the machine source; `/.machine/` is the project layer (never shipped).
-- **Authoritative spec:** `.claude-plugin/plugin.json` (plugin manifest) + `.claude/skills/oil-me/SKILL.md` (re-index protocol) + `.claude/agents/default.md` (machine law) are the canonical truth.
+- **Authoritative spec:** `.claude-plugin/plugin.json` (plugin manifest) + `.claude/skills/oil/SKILL.md` (re-index protocol) + `.claude/agents/default.md` (machine law) are the canonical truth.
 
 ## Key paths
 - `.claude/agents/default.md` — the eager-generalist default agent (reads `/.machine`)
@@ -13,7 +13,7 @@
 - `.claude/skills/` — 21 skill dirs; `name:` frontmatter must match dir name
 - `.claude/rules/coding-standards.md` + `.claude/rules/languages/*` (16 language rules)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
-- `.claude/skills/oil-me/` — `/oil-me`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)
+- `.claude/skills/oil/` — `/oil`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)
 - `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` — plugin + marketplace manifests (plugin.json lists agent files + skill dirs explicitly; regenerate when adding/removing agents or skills)
 - `.claude/hooks/hooks.json` — plugin hook manifest (`${CLAUDE_PLUGIN_ROOT}` paths); plugin `settings` are inline in plugin.json
 - `.claude/settings.json` — self-host hook wiring, env, `agent: default` (NOT shipped by the plugin — keeps `bypassPermissions` out of installs)

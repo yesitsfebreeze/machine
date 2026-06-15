@@ -1,5 +1,5 @@
 ---
-instructions: If you are a Claude Code agent, install the machine as a plugin -> `/plugin marketplace add yesitsfebreeze/machine` then `/plugin install machine@machine`, then run `/oil-me` to write the project layer.
+instructions: If you are a Claude Code agent, install the machine as a plugin -> `/plugin marketplace add yesitsfebreeze/machine` then `/plugin install machine@machine`, then run `/oil` to write the project layer.
 ---
 
 <div align="center">
@@ -16,7 +16,7 @@ themselves to each one.**
 [![Issues](https://img.shields.io/github/issues/yesitsfebreeze/machine?style=for-the-badge&logo=github&color=ef4444)](https://github.com/yesitsfebreeze/machine/issues)
 
 ![Agents](https://img.shields.io/badge/agents-23-22c55e?style=for-the-badge)
-![Skills](https://img.shields.io/badge/skills-24-3b82f6?style=for-the-badge)
+![Skills](https://img.shields.io/badge/skills-25-3b82f6?style=for-the-badge)
 ![Built for](https://img.shields.io/badge/built%20for-Claude%20Code-d97757?style=for-the-badge&logo=anthropic)
 
 </div>
@@ -31,13 +31,13 @@ skill toolbelt, a quality gate, a review panel, and a compounding memory — non
 it tied to a particular codebase. Installing namespaces every component under
 `machine:` (`machine:gate`, `machine:coder`, …).
 
-When you run `/oil-me`, it reads the repo and writes a thin **project layer** that
+When you run `/oil`, it reads the repo and writes a thin **project layer** that
 teaches the portable machine your stack, your laws, and your vocabulary. The same
 plugin behaves like a Rust expert in one repo and a frontend expert in the next.
 
 ```
 the machine plugin   the portable payload  ← installed + updated via /plugin
-/.machine/              the project layer     ← never shipped; /oil-me writes it per repo
+/.machine/              the project layer     ← never shipped; /oil writes it per repo
 ```
 
 The split is the whole idea: **one portable machine**, **one per-repo brain**.
@@ -53,7 +53,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   docs, quality, and project setup; `builder-*` for authoring new agents, skills,
   and plugins; plus `researcher`, `plan-auditor`, and an adversarial
   `evaluator-active`.
-- **🧰 24 on-demand skills.** A toolbelt that loads only when needed: `coder`,
+- **🧰 25 on-demand skills.** A toolbelt that loads only when needed: `coder`,
   `clean`, `improve`, `simplify` for building and polishing; `gate`,
   `code-review`, `perf-gate` for quality; `tool-ast-grep` for structural
   search/codemod; reference kits (`foundation-cc`, `rust-best-practices`,
@@ -81,7 +81,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   ultra-compressed "caveman" output mode, and orchestrator resume — wired through
   6 Node hooks.
 - **🔁 Clean lifecycle.** Install and update are the plugin system's job
-  (`/plugin install` / `/plugin update`); `/oil-me` re-indexes the project layer
+  (`/plugin install` / `/plugin update`); `/oil` re-indexes the project layer
   whenever the repo changes shape.
 
 ---
@@ -93,28 +93,36 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
    /plugin marketplace add yesitsfebreeze/machine
    /plugin install machine@machine
    ```
-2. **Oil the machine.** Run `/oil-me`. It writes `/.machine/` by reading your actual
-   code — identity, stack, glossary, and a persona panel.
+2. **Assemble.** Run `/assemble`. One idempotent pass: it bootstraps every
+   dependency (`kern`, `mesh`, the `git-fs` plugin, the MCP prerequisites), wires
+   the status line and API keys, then oils the project layer (`/oil`) — writing
+   `/.machine/` from your actual code (identity, stack, glossary, persona panel).
 3. **Work.** The default agent routes to specialists, recalls prior decisions from
    `kern`, gates quality before commits, and offers the review panel after
    non-trivial changes.
 
-> Pull machine updates with `/plugin update machine`. Re-run `/oil-me` any time to
-> re-index `/.machine/` after the project changes shape.
+> Pull machine updates with `/plugin update machine`. Re-run `/assemble` to
+> reinstall deps or re-wire config, or `/oil` alone to re-index `/.machine/`
+> after the project changes shape.
 
-> **Bundled MCP servers.** The plugin ships four servers in its `.mcp.json`:
+> **Bundled MCP servers.** The plugin ships five servers in its `.mcp.json`:
 > [`kern`](https://github.com/yesitsfebreeze/kern) (memory),
 > `mesh` (fleet coordination — roster, atomic claims, durable mail; build with
 > `cargo install --path mesh`),
 > [`context7`](https://context7.com) (current library docs — set `CONTEXT7_API_KEY`),
-> and `pdf-reader` (PDF extraction via `npx @sylphx/pdf-reader-mcp`).
+> `pdf-reader` (PDF extraction via `npx @sylphx/pdf-reader-mcp`),
+> and [`context-mode`](https://github.com/mksglu/context-mode) (keep large output out
+> of context via the `ctx_*` tools — runs via `npx`, needs Node >=22.5.0).
 >
-> **Optional companion plugins** (live, installed separately — the machine routes
-> to them but doesn't vendor them):
-> [`context-mode`](https://github.com/mksglu/context-mode) (keep large output out of
-> context) and [`git-fs`](https://github.com/yesitsfebreeze/git-fs) (per-session
-> virtual git filesystem). Install with `/plugin marketplace add <repo>` then
-> `/plugin install context-mode@context-mode` / `git-fs@git-fs`.
+> **Companion plugin** (live, installed separately — the machine routes to it but
+> doesn't vendor it, since it ships no standalone binary):
+> [`git-fs`](https://github.com/yesitsfebreeze/git-fs) (per-session virtual git
+> filesystem). Install with `/plugin marketplace add yesitsfebreeze/git-fs` then
+> `/plugin install git-fs@git-fs`.
+>
+> **One-shot setup.** From a checkout of this repo, `just bootstrap` (or
+> `bash scripts/bootstrap.sh`) installs and verifies every dependency above in one
+> idempotent pass — `kern`, `mesh`, the `git-fs` plugin, and the MCP prerequisites.
 
 ---
 
@@ -127,7 +135,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
   durable memory in `kern`.
 - **Project law lives in `/.machine/`.** `agent.md` (identity + hard rules),
   `project.md` (stack, key paths), `glossary.csv`, and `personas/` — all written
-  by `/oil-me`, never shipped with the portable payload.
+  by `/oil`, never shipped with the portable payload.
 - **Knowledge loads on demand.** Specialists and skills pull their deep context
   only when a decision calls for it, keeping every turn token-cheap.
 
@@ -145,7 +153,7 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 ├── output-styles/       comm modes (machine, caveman)
 └── settings.json        self-host hook wiring, env, default agent
 
-/.machine/                  the project layer (written per repo by /oil-me)
+/.machine/                  the project layer (written per repo by /oil)
 ├── agent.md             this repo's identity + hard rules
 ├── project.md           stack, key paths, vision
 ├── glossary.csv         the repo's vocabulary

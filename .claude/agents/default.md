@@ -13,10 +13,10 @@ You are the default agent. This file is the **portable machine**: project-agnost
 workflow, integrations, and dispatch. Nothing here names a specific codebase.
 
 **Read `/.machine/agent.md` first.** It defines THIS repo's identity, domain, laws,
-and idioms — written by `/oil-me` from the current project. Also available:
+and idioms — written by `/oil` from the current project. Also available:
 `/.machine/project.md` (facts: stack, key paths, vision summary), `/.machine/glossary.csv`
 (vocabulary), `/.machine/personas/` (the review panel). If `/.machine/agent.md` is
-missing, tell the user to run `/oil-me`.
+missing, tell the user to run `/oil`.
 
 You have the **whole toolbelt** and a bias to use it. Working blind when a tool
 could give ground truth is the failure mode to avoid. Default to *checking*, not
@@ -25,7 +25,7 @@ guessing.
 ## What we do — and why
 
 The machine is a portable `.claude` payload (agents, skills, hooks, rules) that
-travels between repos and is specialized per-repo by `/oil-me` into `/.machine`.
+travels between repos and is specialized per-repo by `/oil` into `/.machine`.
 Know the intent behind its design, not just its rules:
 
 - **Ground truth over recall** — broad toolbelt, bias-to-verify: a checked fact
@@ -130,24 +130,26 @@ Extract text, images, metadata, or page ranges from PDFs via the `pdf-reader` MC
 server (also in the machine's `.mcp.json`; runs `@sylphx/pdf-reader-mcp` via npx).
 Reach for it instead of dumping a PDF's raw bytes into context.
 
-### Context-mode — keep raw bytes out of context (companion plugin)
+### Context-mode — keep raw bytes out of context (vendored MCP server)
 When you'd PROCESS large output (filter/count/parse/aggregate logs, test runs, git
 log, build output), use `ctx_batch_execute` / `ctx_execute` / `ctx_execute_file`
 so only the derived answer enters context. Plain Bash/PS stays right for short
-fixed observations and state mutations (git, mkdir, rm). Provided by the live
-`context-mode` companion plugin — see "Companion plugins" below.
+fixed observations and state mutations (git, mkdir, rm). The `ctx_*` toolset comes
+from the `context-mode` MCP server, vendored in the machine's `.mcp.json`
+(`npx context-mode@latest`) — it requires Node >=22.5.0 on PATH at launch.
+Vendoring exposes the `ctx_*` tools the machine routes to; the upstream plugin's
+auto-routing hooks (PreToolUse/PostToolUse) are NOT registered this way, which the
+machine does not rely on.
 
 ### Companion plugins — live, installed alongside the machine
-Two capabilities are live third-party plugins the machine routes to but does NOT
-vendor (they ship their own runtime + hooks, and are maintained upstream):
-- **`context-mode`** (`mksglu/context-mode`) — the `ctx_*` toolset above.
-- **`git-fs`** (`yesitsfebreeze/git-fs`) — virtual filesystem over a bare git
-  object store: each session works on an `agent/<id>` branch, every edit is a
-  commit, and a Stop hook merges to main. Opt-in per repo; it owns its own
-  Read/Edit/Write hooks. When active, treat edits as commits, not raw writes.
-
-If either tool is missing, install it: `/plugin marketplace add <repo>` then
-`/plugin install context-mode@context-mode` / `git-fs@git-fs`.
+**`git-fs`** (`yesitsfebreeze/git-fs`) is a live third-party plugin the machine
+routes to but does NOT vendor (it ships its own runtime + hooks, maintained
+upstream): a virtual filesystem over a bare git object store — each session works
+on an `agent/<id>` branch, every edit is a commit, and a Stop hook merges to main.
+Opt-in per repo; it owns its own Read/Edit/Write hooks. When active, treat edits as
+commits, not raw writes. It publishes no standalone binary, so it cannot be vendored
+in `.mcp.json` — install it as a plugin: `/plugin marketplace add yesitsfebreeze/git-fs`
+then `/plugin install git-fs@git-fs`.
 
 ### Everything else
 Trello (`/trello`, board binding in `/.machine/trello.json`), the Agent tool for

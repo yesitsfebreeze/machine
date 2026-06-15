@@ -8,7 +8,7 @@ description: Capture a recurring repo task as a tiny project-local helper skill,
 A **helper skill** is a tiny project-local doc (`/.machine/skills/<name>.md`) that
 teaches the one correct way to do a task that recurs in THIS repo — the command,
 the gotcha, the order of steps. It is NOT a portable `.claude` skill; it stays in
-the project layer and is re-indexed by `/oil-me`.
+the project layer and is re-indexed by `/oil`.
 
 Reliable triggering is the whole point: helpers are wired to a **tag cloud**
 (`/.machine/skills/registry.json`). The `helper-trigger.mjs` UserPromptSubmit hook

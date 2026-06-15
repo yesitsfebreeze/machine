@@ -1,7 +1,7 @@
 {
   "name": "machine",
-  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil-me into /.machine.",
-  "version": "0.3.2",
+  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil into /.machine.",
+  "version": "0.3.3",
   "author": {
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"
@@ -45,6 +45,7 @@
     "./.claude/agents/researcher.md"
   ],
   "skills": [
+    "./.claude/skills/assemble",
     "./.claude/skills/caveman",
     "./.claude/skills/clean",
     "./.claude/skills/coder",
@@ -56,7 +57,7 @@
     "./.claude/skills/ignite",
     "./.claude/skills/improve",
     "./.claude/skills/learn",
-    "./.claude/skills/oil-me",
+    "./.claude/skills/oil",
     "./.claude/skills/orchestrate",
     "./.claude/skills/parallel",
     "./.claude/skills/perf-gate",

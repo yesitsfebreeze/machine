@@ -1,0 +1,189 @@
+---
+name: assemble
+description: |
+  Assemble the machine — one-shot bootstrap of everything a repo needs to run the machine: runtime daemons (kern, mesh), companion plugins (git-fs), bundled MCP prerequisites (context-mode/Node, context7 key, pdf-reader), and per-repo configuration (status line, API keys). Ends by handing off to /oil for the project layer. Idempotent. Trigger: "/assemble", "assemble the machine", "bootstrap", "install everything", "set up the machine".
+when_to_use: Run once the first time a repo has the machine plugin installed, or whenever dependencies or configuration need (re)installing. Idempotent — already-satisfied steps are skipped. For specializing the project layer only, use /oil; for a pre-session terminal installer, use `just bootstrap`.
+---
+
+# /assemble — bootstrap the machine
+
+The machine ships as a Claude Code **plugin** named `machine`. Installing the
+plugin gives you its agents, skills, hooks, and `.mcp.json`, but the plugin alone
+cannot make a repo fully operational: the runtime daemons, the companion plugin,
+and the per-repo configuration still have to be installed and wired. `/assemble`
+is the single entry point that does all of that in one idempotent pass, then hands
+off to `/oil` to specialize the project layer.
+
+Division of labour:
+
+- **`/assemble`** — install + configure everything (this skill).
+- **`/oil`** — write `/.machine/`, the per-repo project layer (invoked at the end here).
+- **`just bootstrap`** — the same dependency install, run from a terminal *outside*
+  a Claude Code session. `/assemble` reuses its script (`scripts/bootstrap.sh`);
+  there is one source of truth for what gets installed.
+
+## What assemble brings up
+
+| Component | Kind | How |
+|---|---|---|
+| `kern` | memory daemon | release installer / cargo (via `bootstrap.sh`) |
+| `mesh` | coordination daemon | `cargo install --path mesh` (via `bootstrap.sh`) |
+| `git-fs` | companion plugin | `/plugin install git-fs@git-fs` |
+| `context-mode` | vendored MCP (`ctx_*`) | runs via `npx`; needs Node >=22.5.0 |
+| `context7` | vendored MCP | needs `CONTEXT7_API_KEY` |
+| `pdf-reader` | vendored MCP | runs via `npx` on demand |
+| status line | per-repo config | wired into project `.claude/settings.json` |
+| required keys | per-repo config | recorded in gitignored `settings.local.json` |
+
+## 1. Resolve the machine root
+
+The dependency installer and the `mesh` source ship inside the plugin payload.
+Resolve the root once; `${CLAUDE_PLUGIN_ROOT}` expands in skill content to the
+installed plugin directory, and falls back to the repo root when developing the
+machine itself.
+
+```bash
+ROOT="${CLAUDE_PLUGIN_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+echo "machine root: $ROOT"
+```
+
+## 2. Install runtime dependencies
+
+Run the bootstrap script. It is idempotent, detects and skips what is already
+present, verifies the MCP prerequisites (Node version for context-mode,
+`CONTEXT7_API_KEY` for context7, `npx` for pdf-reader), and prints a per-component
+summary.
+
+```bash
+bash "$ROOT/scripts/bootstrap.sh"
+```
+
+Read the summary it prints. Two items the script cannot complete from inside a
+running session it will flag as warnings — handle them in steps 3 (git-fs) and 4
+(keys). Everything else (kern, mesh, Node/npx checks) it resolves directly.
+
+## 3. Install the companion plugin (git-fs)
+
+`git-fs` is a live plugin that ships no standalone binary, so it is installed
+through the plugin system, not vendored in `.mcp.json`. The `claude` CLI cannot be
+nested inside a running Claude Code session, so `/assemble` cannot install it for
+the user from within a session. Detect and guide:
+
+- If `git-fs` already appears in the installed plugins, say so and move on.
+- Otherwise present these two commands for the user to run, then `/reload-plugins`:
+
+```
+/plugin marketplace add yesitsfebreeze/git-fs
+/plugin install git-fs@git-fs
+```
+
+When `/assemble`'s work is driven from a terminal instead (via `just bootstrap`),
+the script installs git-fs directly through the `claude plugin` CLI; no manual step
+is needed there.
+
+## 4. Wire per-repo configuration
+
+These two steps were previously part of `/oil`; they are configuration, not
+project-layer indexing, so they live here. Both are idempotent: a re-run overwrites
+only the keys it owns and leaves the rest of the settings untouched.
+
+### Status line
+
+A plugin cannot contribute a main `statusLine`, so the machine's status line only
+appears once it is wired into the target repo. Resolve the installed plugin's
+status line script at `${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs` and
+capture the RESOLVED absolute path. Write that resolved path as a LITERAL string
+into the project settings, because the `${CLAUDE_PLUGIN_ROOT}` token does NOT
+expand inside a project `settings.json`.
+
+Merge a `statusLine` block into `<project>/.claude/settings.json` without
+clobbering any other keys. If the file is absent, create it as `{}` first, then
+merge. The block sets `statusLine.type` to `"command"`, `statusLine.command` to
+`node "<resolved-abs-path>"`, and `statusLine.refreshInterval` to `10`. Overwriting
+rather than skipping means a plugin update that moves the install directory
+self-heals the recorded path on the next run.
+
+```bash
+SETTINGS="$(git rev-parse --show-toplevel)/.claude/settings.json"
+SCRIPT="${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs"
+mkdir -p "$(dirname "$SETTINGS")"
+[ -f "$SETTINGS" ] || printf '{}' > "$SETTINGS"
+node -e '
+  const fs = require("fs");
+  const [file, script] = process.argv.slice(1);
+  const s = JSON.parse(fs.readFileSync(file, "utf8"));
+  s.statusLine = { type: "command", command: `node "${script}"`, refreshInterval: 10 };
+  fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
+' "$SETTINGS" "$SCRIPT"
+```
+
+### Required API keys
+
+Some bundled MCP servers authenticate with an API key. This keeps a single list of
+the machine's servers and the keys they require, so future required keys are added
+in exactly one place.
+
+**Required-key list:**
+
+- **context7** (HTTP transport) — requires `CONTEXT7_API_KEY`.
+- **kern**, **mesh**, **pdf-reader**, **context-mode** — require no key.
+
+So today the only required key is `CONTEXT7_API_KEY`, and it is **optional**:
+without it, context7 simply stays unauthenticated. Nothing else breaks, because the
+`${CONTEXT7_API_KEY:-}` default in `.mcp.json` lets the whole config still parse
+when the variable is unset.
+
+For each required key: treat it as **already available** if it is present in the
+process environment OR under `env` in `<project>/.claude/settings.local.json`. If
+available, do nothing. If absent, ask the user once. If they provide it, merge it
+into `settings.local.json` under `env`. If they decline, skip it and note that
+context7 will be unauthenticated.
+
+**Secrets handling — non-negotiable:**
+
+- Write keys **only** to `.claude/settings.local.json`, which is gitignored. Never
+  write a key into `.mcp.json` or a committed `settings.json`.
+- Never echo or log the key value. Read it from a shell variable and pass that
+  variable to the node merge as an argument — never interpolate it into the script
+  body. Do **not** use `sed`.
+- Create `settings.local.json` as `{}` if absent, then merge without clobbering any
+  other key or `env` entry. Keep the file valid JSON.
+
+```bash
+SETTINGS="$(git rev-parse --show-toplevel)/.claude/settings.local.json"
+mkdir -p "$(dirname "$SETTINGS")"
+[ -f "$SETTINGS" ] || printf '{}' > "$SETTINGS"
+# $CONTEXT7_API_KEY holds the key (from the environment or the user); never printed.
+node -e '
+  const fs = require("fs");
+  const [file, value] = process.argv.slice(1);
+  const s = JSON.parse(fs.readFileSync(file, "utf8"));
+  s.env = s.env || {};
+  s.env.CONTEXT7_API_KEY = value;
+  fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
+' "$SETTINGS" "$CONTEXT7_API_KEY"
+```
+
+## 5. Specialize the project layer
+
+Hand off to `/oil` to write `/.machine/` — the per-repo identity, project facts,
+glossary, and persona panel. Invoke the `oil` skill now. If the user only wants
+the install and config and not the project layer yet, they can stop before this
+step; otherwise assemble is not finished until the layer exists.
+
+## 6. Report
+
+Give one compact status: which dependencies were installed vs already present, any
+user-run plugin commands still pending, whether the status line and keys were
+wired, and that `/oil` ran (or is the next step). Remind the user to restart
+Claude Code or `/reload-plugins` so newly installed MCP servers and plugins load.
+
+## Boundaries
+
+- `/assemble` installs dependencies and writes **only** harness configuration
+  (`.claude/settings.json` statusLine, `.claude/settings.local.json` env) plus the
+  project layer via `/oil`. It never edits the machine's own content
+  (`skills/`, `agents/`, `hooks/`) — that is the plugin's, updated via
+  `/plugin update machine`.
+- Dependency install logic has one source of truth: `scripts/bootstrap.sh`. Do not
+  duplicate install commands here; call the script.

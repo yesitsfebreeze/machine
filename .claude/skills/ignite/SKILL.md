@@ -1,7 +1,7 @@
 ---
 name: ignite
 description: |
-  Machine bring-up at session start. Idempotent: brings up caveman comms, verifies the repo is oiled (/.machine present), nudges /oil-me when it is not, and enters orchestration mode when it is. Invoked automatically by the ignite SessionStart hook; also runs on "ignite", "/ignite", "bring up the machine", "start machine mode".
+  Machine bring-up at session start. Idempotent: brings up caveman comms, verifies the repo is oiled (/.machine present), nudges /oil when it is not, and enters orchestration mode when it is. Invoked automatically by the ignite SessionStart hook; also runs on "ignite", "/ignite", "bring up the machine", "start machine mode".
 when_to_use: Fired by the ignite SessionStart hook every session, or on explicit "ignite" / "/ignite" / "start machine mode". Run once per session. Skip the orchestration step when /.machine is absent.
 ---
 
@@ -21,10 +21,12 @@ full) and follow it for all responses. Off only on explicit user request:
 
 Check whether `/.machine` exists in the project root.
 
-- **Absent (not oiled):** this repo has the machine plugin but no project layer.
-  Tell the user once, briefly, that the repo is not oiled and offer to run the
-  `oil-me` skill. Do **not** enter orchestration. Stop here.
-- **Present (oiled):** continue to step 3. Do not re-run oil-me; setup is done.
+- **Absent (not oiled):** this repo has the machine plugin but is not set up yet.
+  Tell the user once, briefly, and offer to run the `assemble` skill — it
+  bootstraps dependencies and configuration, then oils the project layer. (If only
+  the project layer needs writing, `oil` alone suffices.) Do **not** enter
+  orchestration. Stop here.
+- **Present (oiled):** continue to step 3. Do not re-run oil; setup is done.
 
 The statusbar, output style, and env are supplied by the plugin settings file —
 ignite does not touch them. If the statusbar is missing, that is a plugin-settings
@@ -50,4 +52,4 @@ on.
 Close with one compact line, e.g.:
 `machine: oiled · caveman full · orchestration on · 2 open tasks`
 or when unoiled:
-`machine: not oiled — run /oil-me to specialize this repo`
+`machine: not set up — run /assemble to bootstrap this repo`

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SessionStart hook: ignite machine mode.
 // Detects per-repo state and hands the model a single instruction: invoke the
-// `ignite` skill. The skill owns the playbook (caveman comms, oil-me nudge when
+// `ignite` skill. The skill owns the playbook (caveman comms, oil nudge when
 // unoiled, orchestration resume when oiled). This hook only gathers state and
 // emits additionalContext. It never blocks or errors the session.
 //
@@ -71,7 +71,7 @@ try {
     "Invoke the `ignite` skill now to bring up machine mode and follow it.",
     machineReady
       ? "Machine state: OILED (/.machine present)."
-      : "Machine state: NOT OILED (/.machine absent) — ignite will nudge /oil-me; do not enter orchestration.",
+      : "Machine state: NOT OILED (/.machine absent) — ignite will nudge /oil; do not enter orchestration.",
   ];
 
   if (machineReady) {

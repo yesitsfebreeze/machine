@@ -23,7 +23,7 @@ here, so it stays in sync as personas are added or revised.
    `{WORK_DESCRIPTION}` — include the files touched and the user-visible effect.
 
 If `.machine/personas/` is empty or `/.machine/` is missing, tell the user to run
-`/oil-me` (or author personas) and stop — do not invent personas.
+`/oil` (or author personas) and stop — do not invent personas.
 
 ## Step 2: Spawn one subagent per persona, in parallel
 

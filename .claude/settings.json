@@ -23,7 +23,9 @@
     "command": "node .claude/hooks/statusline.mjs",
     "refreshInterval": 10
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "git-fs@git-fs": true
+  },
   "outputStyle": "machine",
   "effortLevel": "medium",
   "agent": "default",

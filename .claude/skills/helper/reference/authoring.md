@@ -63,7 +63,7 @@ prompt hits those tags.
 
 ## Lifecycle notes
 
-- Helpers are project data under `/.machine`; `/oil-me` re-indexes the project layer
+- Helpers are project data under `/.machine`; `/oil` re-indexes the project layer
   but leaves authored helpers in place.
 - Retire a stale helper by deleting its doc AND its registry entry in the same
   change — never leave an orphan entry pointing at a missing file.
