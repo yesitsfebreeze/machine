@@ -8,9 +8,11 @@ bare-bones. Nothing here is registered with or loaded by Claude Code.
 2. Add its path to the matching array (`agents` / `skills`) in `.claude-plugin/plugin.json`.
 3. For a hook, restore its entry in `.claude/hooks/hooks.json`.
 
-## /oil integration (intended)
-`/oil` can scan this folder when specializing a repo and suggest agents/skills
-that fit the project, for the user to slot in.
+## /mine — slot the right tools
+`/mine` surveys this kit (the mine graph) and the current repo, matches the
+best-fit agents/skills/hooks, and slots them in (copy out + register in
+`.claude-plugin/plugin.json` / `hooks.json`), recording each decision in kern so
+sessions compound. `/oil` owns the project layer; `/mine` equips the machine.
 
 ## Layout
 - `agents/` - extracted sub-agent definitions

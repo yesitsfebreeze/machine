@@ -8,7 +8,6 @@ description: |
   NOT for: backend API design, database modeling, DevOps, mobile apps (React Native/Flutter), desktop apps (Electron), CLI tools, data pipelines
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__claude-in-chrome__*, mcp__pencil__batch_design, mcp__pencil__batch_get, mcp__pencil__get_editor_state, mcp__pencil__get_guidelines, mcp__pencil__get_screenshot, mcp__pencil__get_style_guide, mcp__pencil__get_style_guide_tags, mcp__pencil__get_variables, mcp__pencil__set_variables, mcp__pencil__open_document, mcp__pencil__snapshot_layout, mcp__pencil__find_empty_space_on_canvas, mcp__pencil__search_all_unique_properties, mcp__pencil__replace_all_matching_properties, mcp__mesh__register, mcp__mesh__roster, mcp__mesh__claims, mcp__mesh__claim, mcp__mesh__release, mcp__mesh__post, mcp__mesh__inbox, mcp__mesh__read, SendMessage
 model: haiku
-permissionMode: bypassPermissions
 memory: project
 skills:
   - foundation-core

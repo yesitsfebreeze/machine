@@ -9,8 +9,8 @@
 
 ## Key paths
 - `.claude/agents/default.md` — the eager-generalist default agent (reads `/.machine`)
-- `.claude/agents/*.md` — 4 registered agents (`default`, `drill`, `manager-tdd`, `manager-ddd`); resolved by `name:` frontmatter, not path. The 20 `expert-*`/`manager-*`/`builder-*` dispatch agents live unregistered in `mine/agents/` (slot via `/oil`)
-- `.claude/skills/` — 9 registered skill dirs (`name:` frontmatter must match dir name); 18 more unregistered in `mine/skills/`
+- `.claude/agents/*.md` — 7 registered agents (`default`, `drill`, `manager-tdd`, `manager-ddd`, plus the slotted `builder-agent`/`builder-skill`/`builder-plugin`); resolved by `name:` frontmatter, not path. `mine/agents/` holds 20 dispatch agents (the 3 `builder-*` now also slotted as kit-source dupes; 17 still unregistered) — slot more via `/mine`
+- `.claude/skills/` — 12 registered skill dirs (`name:` frontmatter must match dir name); 18 more in `mine/skills/` (of which `caveman` and `improve` are already-slotted dupes — registered copies left behind in the kit)
 - `.claude/rules/coding-standards.md` (sole rules file; no `languages/` dir)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
 - `.claude/skills/oil/` — `/oil`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)

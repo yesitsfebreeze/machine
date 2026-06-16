@@ -9,7 +9,6 @@ description: |
 tools: Read, Write, Edit, MultiEdit, Bash, Glob, Grep, TodoWrite, WebFetch, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__mesh__register, mcp__mesh__roster, mcp__mesh__claims, mcp__mesh__claim, mcp__mesh__release, mcp__mesh__post, mcp__mesh__inbox, mcp__mesh__read, SendMessage
 model: haiku
 effort: xhigh
-permissionMode: bypassPermissions
 memory: project
 skills:
   - foundation-core

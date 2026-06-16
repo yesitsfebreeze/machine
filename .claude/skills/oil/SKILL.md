@@ -1,6 +1,6 @@
 ---
 name: oil
-description: Oil the machine — re-index /.machine to specialize the portable machine to THIS codebase. Install and update are handled by the Claude Code plugin system (`/plugin`); this skill owns the per-repo project layer. Run after installing the machine plugin in a new repo, or whenever the project changes shape. Trigger: "/oil", "oil the machine", "re-index", "update the machine", "init the machine", "re-index /.machine".
+description: Oil the machine — re-index /.machine to specialize the portable machine to THIS codebase, then fire /mine to equip it with best-fit tools. Install and update are handled by the Claude Code plugin system (`/plugin`); this skill owns the per-repo project layer. Run after installing the machine plugin in a new repo, or whenever the project changes shape. Trigger: "/oil", "oil the machine", "re-index", "update the machine", "init the machine", "re-index /.machine".
 ---
 
 # /oil — re-index the project layer
@@ -78,6 +78,17 @@ drifted; do **not** clear `/.machine/`:
 If `/.machine/` is missing or structurally stale, regenerate it (the first-run path above).
 If present and largely intact, hand-patch the specific gaps. To re-wire the status
 line or re-check API keys, re-run drill's bring-up (or `just bootstrap`).
+
+## Then mine — equip the machine
+
+The project layer is now current, so `/oil` knows what this repo is. Hand off to
+`/mine` to act on it: once the re-index above is done, invoke the `mine` skill.
+`/oil` scrapes and updates the **project**; `/mine` scrapes and updates the
+**tools** — it surveys the mine graph against the freshly-indexed `/.machine/` and
+slots in the best-fit addons. They are one motion: oil specializes, mine equips.
+
+Skip the hand-off only if the user scoped `/oil` to the project layer alone, or
+`mine/` is absent.
 
 ## Report
 

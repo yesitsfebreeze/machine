@@ -60,6 +60,10 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   it soon (an open task/PR/branch, an in-flight loop, an explicit owner). When
   unsure whether someone's on it, check; if no one is, fix it or file it loudly,
   don't step over it.
+- **File machine defects, don't swallow them.** When a tool, daemon, hook, skill,
+  or agent hangs, errors, or misbehaves (a defect in the machine itself, not the
+  target code), file a `/report` into `/.machine/reports/` before working around it.
+  Binds the driver and dispatched agents alike — note it, then continue your task.
 - **Project law lives in `/.machine/agent.md`** — domain-specific hard rules (e.g.
   real-time/safety constraints, platform limits). Treat its rules as binding as
   these.
