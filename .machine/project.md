@@ -3,14 +3,14 @@
 - **Name:** the machine
 - **Domain (one line):** a portable, project-agnostic Claude Code agent setup — agents, skills, hooks, rules, settings — that installs as `<project>/.claude/` and specializes itself per repo via `/oil`.
 - **Stack:** Markdown instruction documents (agents, skills, commands, rules, output-styles); Node ESM hooks (`*.mjs`); JSON config (`settings.json`); CSV/Markdown glossary.
-- **Platform:** Windows, PowerShell 7+ shell, git-backed.
+- **Platform:** Linux, bash shell, git-backed (node 24+ on PATH). Authored cross-platform; verify commands below are bash.
 - **Target:** Claude Code plugin named `machine` (manifest in `.claude-plugin/`); also usable vendored as `<project>/.claude/`. This repo root *is* the machine source; `/.machine/` is the project layer (never shipped).
 - **Authoritative spec:** `.claude-plugin/plugin.json` (plugin manifest) + `.claude/skills/oil/SKILL.md` (re-index protocol) + `.claude/agents/default.md` (machine law) are the canonical truth.
 
 ## Key paths
 - `.claude/agents/default.md` — the eager-generalist default agent (reads `/.machine`)
 - `.claude/agents/*.md` — 7 registered agents (`default`, `drill`, `manager-tdd`, `manager-ddd`, plus the slotted `builder-agent`/`builder-skill`/`builder-plugin`); resolved by `name:` frontmatter, not path. `mine/agents/` holds 20 dispatch agents (the 3 `builder-*` now also slotted as kit-source dupes; 17 still unregistered) — slot more via `/mine`
-- `.claude/skills/` — 12 registered skill dirs (`name:` frontmatter must match dir name); 18 more in `mine/skills/` (of which `caveman` and `improve` are already-slotted dupes — registered copies left behind in the kit)
+- `.claude/skills/` — 13 registered skill dirs (`name:` frontmatter must match dir name; includes `mcp-plugin`, the install-anywhere MCP-plugin authoring skill); 18 more in `mine/skills/` (of which `caveman` and `improve` are already-slotted dupes — registered copies left behind in the kit)
 - `.claude/rules/coding-standards.md` (sole rules file; no `languages/` dir)
 - `.claude/hooks/personas.mjs` (Stop hook), `.claude/hooks/statusline.mjs`
 - `.claude/skills/oil/` — `/oil`, re-indexes `/.machine` from the current repo (install/update via `/plugin`)
@@ -22,7 +22,8 @@
 ## Build / test / quality gate
 There is no compile step. "Build" = configuration integrity:
 - **Hooks parse:** `node --check .claude/hooks/personas.mjs` and `.claude/hooks/statusline.mjs`
-- **Settings parse:** `Get-Content .claude/settings.json | ConvertFrom-Json` (must not throw)
+- **Settings parse:** `python3 -m json.tool .claude/settings.json >/dev/null` (or `node -e "require('./.claude/settings.json')"`) — must not throw
+- **Manifests parse:** `python3 -m json.tool .claude-plugin/plugin.json >/dev/null` and `.claude-plugin/marketplace.json`; or `claude plugin validate . --strict`
 - **Dispatch integrity:** every agent `name:` is unique; every agent `skills:` ref resolves to a `.claude/skills/<name>/` dir
 - **Standards:** `.claude/rules/coding-standards.md` (English-only instructions, no emoji, CLAUDE.md ≤ 40k chars, thin-command pattern < 20 LOC)
 - **Gate skill:** `/gate` detects the stack; for this repo it runs the parse + integrity checks above.

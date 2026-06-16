@@ -70,5 +70,6 @@ non-trivial change to instruction files.
 ## Build / verify commands
 
 - `node --check .claude/hooks/personas.mjs` / `node --check .claude/hooks/statusline.mjs`
-- `Get-Content .claude/settings.json | ConvertFrom-Json` (must not throw)
+- `python3 -m json.tool .claude/settings.json >/dev/null` (or `node -e "require('./.claude/settings.json')"`) — must not throw
+- `claude plugin validate . --strict` — manifest + marketplace integrity
 - `/gate` — runs the parse + dispatch-integrity + standards checks for this repo
