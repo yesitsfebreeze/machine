@@ -27,7 +27,6 @@ Division of labour:
 | `context-mode` | vendored MCP (`ctx_*`) | runs via `npx`; needs Node >=22.5.0 |
 | `context7` | vendored MCP | needs `CONTEXT7_API_KEY` |
 | `pdf-reader` | vendored MCP | runs via `npx` on demand |
-| `taskboard` | addon: kanban MCP + web board | `bootstrap.sh` downloads the pinned prebuilt release binary (no Go/Node for the common path); falls back to a source build (Go 1.24 + Node 22) only if the download fails; skips with a warning if neither path works |
 | `codex-peer-review` | optional addon | copied into project `.claude/skills/` on opt-in (needs OpenAI Codex CLI) |
 | status line | per-repo config | wired into project `.claude/settings.json` |
 | required keys | per-repo config | recorded in gitignored `settings.local.json` |
@@ -166,8 +165,6 @@ in exactly one place.
 
 - **context7** (HTTP transport) — requires `CONTEXT7_API_KEY`.
 - **kern**, **mesh**, **pdf-reader**, **context-mode** — require no key.
-- Local services (no key required): **taskboard** — a local daemon over a local
-  SQLite database; it authenticates nothing and is never sent a key.
 
 So today the only required key is `CONTEXT7_API_KEY`, and it is **optional**:
 without it, context7 simply stays unauthenticated. Nothing else breaks, because the

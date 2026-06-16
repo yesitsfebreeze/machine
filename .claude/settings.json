@@ -18,7 +18,9 @@
     ]
   },
   "enableAllProjectMcpServers": false,
-  "skillOverrides": {},
+  "skillOverrides": {
+    "trello": "off"
+  },
   "statusLine": {
     "type": "command",
     "command": "node .claude/hooks/statusline.mjs",

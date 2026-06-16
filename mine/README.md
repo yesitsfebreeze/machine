@@ -57,8 +57,8 @@ sessions compound. `/oil` owns the project layer; `/mine` equips the machine.
 - ref-owasp-checklist
 - ref-testing-pyramid
 - specialists
-- taskboard
 - tool-ast-grep
+- trello
 - workflow-testing
 - workflow-thinking
 

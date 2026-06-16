@@ -59,10 +59,9 @@ natural next validation is a single-feature end-to-end factory run.
 ## Deferred (pre-existing, out of factory scope -- separate cleanup pass)
 
 context7 `get-library-docs` renamed to `query-docs` (default.md stale); `superpowers:*`
-skills are an undeclared external dependency; the old board addon was retired and
-replaced by the local taskboard addon (`.machine/taskboard.json`, resolved per-cwd at
-runtime); `glossary.csv` rows 10/11/26-30 have unquoted commas (non-blocking);
-`settle_delay` double-defined. All logged to kern.
+skills are an undeclared external dependency; `/.machine/trello.json` missing;
+`glossary.csv` rows 10/11/26-30 have unquoted commas (non-blocking); `settle_delay`
+double-defined. All logged to kern.
 
 ## Verdict
 

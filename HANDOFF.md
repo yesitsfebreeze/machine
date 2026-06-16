@@ -19,26 +19,19 @@ the driver, all merging into git-fs, with a live roster of running agents.
 
 ## The drill flow (drill skill)
 
-Only the surface is themed: the orchestrator is the **drill**; subagents are spoken
-of as **miners**. Everything underneath keeps plain names (job, git-fs, subagent).
-1. **Grill (default).** Refine with the user via `grill-me` until they call it valid.
-2. **Plan agent.** Dispatch one subagent to write the implementation plan.
-3. **Review (advisory).** `/personas` + `codex-review` (plan mode). Codex never gates.
-4. **Store.** Plan written to `.machine/plans/<id>.md`.
-5. **Gate one.** Ask the user before dispatching implementation.
-6. **Implementation agent.** Own git-fs branch, worktree-isolated, given the stored
-   plan, builds autonomously, runs `gate` until green, then `codex-review` (arbiter).
-7. **Gate two.** Build green and stable → present diff + verdicts, propose merge.
-8. **Merge and close.** On approval, `git_fs_merge` into `main`, release mesh claim,
-   delete the ledger entry.
+Canonical flow and step detail live in `.claude/skills/drill/SKILL.md`; the vocabulary
+(the drill, miner, grill-first, plan agent, implementation agent, gate one, gate two,
+ledger) is defined once in `/.machine/glossary.csv`. In short:
+grill → plan agent → review (personas + codex, advisory) → store → **gate one** →
+implementation agent (own git-fs branch, gate-green, codex arbiter) → **gate two** →
+`git_fs_merge` into `main` + release mesh claim + delete the ledger entry.
 
 No settle timer, no auto-fire, no ScheduleWakeup-driven launch. The two human gates
 (dispatch, merge) are the only points where real cost or a change to `main` is
-incurred. Codex and personas are advisory throughout; the hard merge blocker is a
-green build plus approval.
+incurred; codex and personas are advisory throughout.
 
 ## State — done
-- **git-fs v3.0.1 adopted** (clean rewrite): `gitfs/<sid>` branches, Stop hook
+- **git-fs v3.1.2 adopted** (clean rewrite): `gitfs/<sid>` branches, Stop hook
   materializes touched files to disk (no auto-merge to main), never hard-fails.
 - **drill skill written** (merge of the orchestrate flow + grill-me) (grill-first, gated dispatch, ledger-as-roster);
   all settle-timer / auto-fire / ScheduleWakeup machinery stripped.
