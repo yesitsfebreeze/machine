@@ -106,7 +106,8 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 > `just bootstrap`) to reinstall deps or re-wire config, or `/oil` alone to re-index `/.machine/`
 > after the project changes shape.
 
-> **Bundled MCP servers.** The plugin ships five servers in its `.mcp.json`:
+> **Bundled MCP servers.** The plugin ships five servers via `plugin.json` `mcpServers`
+> (so they travel to any repo where the plugin is installed):
 > [`kern`](https://github.com/yesitsfebreeze/kern) (memory),
 > `mesh` (fleet coordination — roster, atomic claims, durable mail; a
 > zero-dependency Node script — no build),

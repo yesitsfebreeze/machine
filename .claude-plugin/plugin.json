@@ -1,7 +1,7 @@
 {
   "name": "machine",
   "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil into /.machine.",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "author": {
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"
@@ -25,6 +25,7 @@
     "./.claude/agents/drill.md"
   ],
   "skills": [
+    "./.claude/skills/caveman",
     "./.claude/skills/cheat",
     "./.claude/skills/clean",
     "./.claude/skills/coder",
@@ -36,5 +37,41 @@
     "./.claude/skills/personas"
   ],
   "outputStyles": "./.claude/output-styles",
-  "hooks": "./.claude/hooks/hooks.json"
+  "hooks": "./.claude/hooks/hooks.json",
+  "mcpServers": {
+    "kern": {
+      "command": "kern",
+      "args": [
+        "mcp"
+      ]
+    },
+    "mesh": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mesh/mesh.mjs",
+        "mcp"
+      ]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+      }
+    },
+    "pdf-reader": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@sylphx/pdf-reader-mcp"
+      ]
+    },
+    "context-mode": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "context-mode@latest"
+      ]
+    }
+  }
 }

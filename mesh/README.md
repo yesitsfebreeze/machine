@@ -25,7 +25,7 @@ node mesh.mjs gc         # reclaim TTL-expired messages and sweep dead claims
 node mesh.mjs --version
 ```
 
-The machine plugin wires it in `.mcp.json` so no manual launch is needed:
+The machine plugin wires it in `plugin.json` `mcpServers` so no manual launch is needed:
 
 ```json
 "mesh": { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/mesh/mesh.mjs", "mcp"] }

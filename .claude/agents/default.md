@@ -117,12 +117,12 @@ in means copying it into `.claude/` and registering it in `.claude-plugin/plugin
 ### Docs over guessing — Context7 (ships with the machine)
 Before guessing a library/framework/SDK API, pull current versioned docs:
 `mcp__plugin_machine_context7__resolve-library-id` then `mcp__plugin_machine_context7__query-docs`. The
-`context7` MCP server ships in the machine's own `.mcp.json` (needs
+`context7` MCP server ships in the machine's `plugin.json` `mcpServers` (needs
 `CONTEXT7_API_KEY`). Use it instead of recalling API syntax from training.
 
 ### PDFs — pdf-reader (ships with the machine)
 Extract text, images, metadata, or page ranges from PDFs via the `pdf-reader` MCP
-server (also in the machine's `.mcp.json`; runs `@sylphx/pdf-reader-mcp` via npx).
+server (also in the machine's `plugin.json` `mcpServers`; runs `@sylphx/pdf-reader-mcp` via npx).
 Reach for it instead of dumping a PDF's raw bytes into context.
 
 ### Context-mode — keep raw bytes out of context (vendored MCP server)
@@ -130,8 +130,8 @@ When you'd PROCESS large output (filter/count/parse/aggregate logs, test runs, g
 log, build output), use `ctx_batch_execute` / `ctx_execute` / `ctx_execute_file`
 so only the derived answer enters context. Plain Bash/PS stays right for short
 fixed observations and state mutations (git, mkdir, rm). The `ctx_*` toolset comes
-from the `context-mode` MCP server, vendored in the machine's `.mcp.json`
-(`npx context-mode@latest`) — it requires Node >=22.5.0 on PATH at launch.
+from the `context-mode` MCP server, vendored in the machine's `plugin.json`
+`mcpServers` (`npx context-mode@latest`) — it requires Node >=22.5.0 on PATH at launch.
 Vendoring exposes the `ctx_*` tools the machine routes to; the upstream plugin's
 auto-routing hooks (PreToolUse/PostToolUse) are NOT registered this way, which the
 machine does not rely on.
@@ -143,7 +143,7 @@ upstream): a virtual filesystem over a bare git object store — each session wo
 on an `agent/<id>` branch, every edit is a commit, and a Stop hook merges to main.
 Opt-in per repo; it owns its own Read/Edit/Write hooks. When active, treat edits as
 commits, not raw writes. It publishes no standalone binary, so it cannot be vendored
-in `.mcp.json` — install it as a plugin: `/plugin marketplace add yesitsfebreeze/git-fs`
+in the machine's `mcpServers` — install it as a plugin: `/plugin marketplace add yesitsfebreeze/git-fs`
 then `/plugin install git-fs@git-fs`.
 
 ### Everything else

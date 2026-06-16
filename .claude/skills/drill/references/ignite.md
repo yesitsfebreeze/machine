@@ -27,14 +27,20 @@ does not touch them.
 
 ## 3. Drill mode (only when oiled)
 
-Enter drill mode: invoke the `drill` skill. If the hook listed an open roster from a
-prior session (any non-terminal status: grilling / planning / plan-review / plan-ready
-/ implementing / arbiter / merge-proposed), rebuild the roster footer from
-`/.machine/sessions/`. Reconcile every pre-existing entry-file through the `drill`
-skill's board-trust model — that skill is the single source of truth for how a
-pre-existing entry is handled (untrusted until the user adopts it). Nothing auto-fires;
-enter ready and await user commands. If there were none, enter drill mode ready but
-idle — do not invent work.
+Enter drill mode: invoke the `drill` skill. The drill creates its own worktree off
+`main` (`git worktree add /.machine/worktrees/drill-<sid> -b drill/<sid> main`) and
+operates from it — it never works in or `checkout`s the human's main checkout. If the
+hook listed an open roster from a prior session (any non-terminal status: grilling /
+planning / plan-review / plan-ready / implementing / arbiter / merge-proposed), rebuild
+the roster footer from `/.machine/sessions/`. Reconcile every pre-existing entry-file
+through the `drill` skill's board-trust model — that skill is the single source of
+truth for how a pre-existing entry is handled (untrusted until the user adopts it).
+
+Then scan `/.machine/worktrees/` for stale worktrees left by dead sessions (a `drill-*`
+with no live session, an `agent-*` with no open ledger entry) and offer to remove them
+(`git worktree remove` + prune the branch) — only on explicit user approval. Nothing
+auto-fires; enter ready and await user commands. If there were none, enter drill mode
+ready but idle — do not invent work.
 
 ## 4. Status line
 

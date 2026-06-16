@@ -3,7 +3,7 @@
 # /assemble — bootstrap the machine
 
 The machine ships as a Claude Code **plugin** named `machine`. Installing the
-plugin gives you its agents, skills, hooks, and `.mcp.json`, but the plugin alone
+plugin gives you its agents, skills, hooks, and `plugin.json` `mcpServers`, but the plugin alone
 cannot make a repo fully operational: the runtime daemons, the companion plugin,
 and the per-repo configuration still have to be installed and wired. `/assemble`
 is the single entry point that does all of that in one idempotent pass, then hands
@@ -61,7 +61,7 @@ running session it will flag as warnings — handle them in steps 3 (git-fs) and
 ## 3. Install the companion plugin (git-fs)
 
 `git-fs` is a live plugin that ships no standalone binary, so it is installed
-through the plugin system, not vendored in `.mcp.json`. The `claude` CLI cannot be
+through the plugin system, not vendored in the machine's `mcpServers`. The `claude` CLI cannot be
 nested inside a running Claude Code session, so `/assemble` cannot install it for
 the user from within a session. Detect and guide:
 
@@ -168,8 +168,8 @@ in exactly one place.
 
 So today the only required key is `CONTEXT7_API_KEY`, and it is **optional**:
 without it, context7 simply stays unauthenticated. Nothing else breaks, because the
-`${CONTEXT7_API_KEY:-}` default in `.mcp.json` lets the whole config still parse
-when the variable is unset.
+`${CONTEXT7_API_KEY:-}` default in `plugin.json` `mcpServers` lets the whole config
+still parse when the variable is unset.
 
 For each required key: treat it as **already available** if it is present in the
 process environment OR under `env` in `<project>/.claude/settings.local.json`. If
@@ -180,7 +180,7 @@ context7 will be unauthenticated.
 **Secrets handling — non-negotiable:**
 
 - Write keys **only** to `.claude/settings.local.json`, which is gitignored. Never
-  write a key into `.mcp.json` or a committed `settings.json`.
+  write a key into `plugin.json` or a committed `settings.json`.
 - Never echo or log the key value. Read it from a shell variable and pass that
   variable to the node merge as an argument — never interpolate it into the script
   body. Do **not** use `sed`.
