@@ -26,7 +26,7 @@ old name.
 |------|------|------|----------|
 | the drill | surface | Grill-first main-loop driver (agent + skill) | `.claude/skills/drill/`, `.claude/agents/drill.md` |
 | grill-first | mode | Refine a request one question at a time until valid before any spawn | `.claude/skills/drill/` |
-| miner | surface | Spoken name for a dispatched implementation sub-agent | `.claude/skills/drill/` |
+| miner | surface | Spoken name for a dispatched implementation subagent | `.claude/skills/drill/` |
 | plan agent | role | Sub-agent that writes the implementation plan | `.claude/skills/drill/` |
 | implementation agent | role | Sub-agent that builds on its own git-fs branch | `.claude/skills/drill/` |
 | ledger | artifact | Live roster of per-job entry-files (the set of files IS the roster) | `/.machine/sessions/` |
@@ -66,3 +66,7 @@ Term divergences found across the docs — each must be unified before any renam
   branches (rename to `gitfs/<sid>`) or a distinct main-repo namespace (keep, but document
   the distinction). HANDOFF.md treats them as one renamed `agent/<id>` → `gitfs/<sid>`.
 - **git-fs version drift.** HANDOFF.md says v3.0.1; installed plugin is v3.1.2.
+- **subagent spelling.** Canonical is one word **`subagent`** (matches Claude Code's
+  official term; the law source `default.md` already prefers it). Source files
+  (glossary, TERMS, default.md) are unified. ~320 `sub-agent` occurrences remain
+  across `.claude/**` and `.machine/**` docs — repo-wide sweep queued in improve.json.

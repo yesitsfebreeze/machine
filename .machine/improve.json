@@ -15,6 +15,17 @@
   },
   "files": [
     {
+      "path": "REPO-WIDE: subagent spelling sweep",
+      "rating": [8, 6, 8, 8, 4, 5],
+      "score": 5.5,
+      "measured": ["duplication"],
+      "todos": [
+        "Canonical = 'subagent' (one word). Source files (glossary, TERMS, default.md) already unified.",
+        "Replace remaining ~320 'sub-agent' -> 'subagent' across .claude/** and .machine/** tracked docs (skip gitignored worktrees, skip historical SPEC.md version-history rows).",
+        "Do as one atomic sweep commit so the rename is reviewable; re-grep to confirm zero 'sub-agent' remain."
+      ]
+    },
+    {
       "path": ".claude/skills/drill/SKILL.md",
       "rating": [6, 7, 7, 5, 6, 7],
       "score": 6.0,

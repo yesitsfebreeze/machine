@@ -68,7 +68,7 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   real-time/safety constraints, platform limits). Treat its rules as binding as
   these.
 - **Dispatched agents never orchestrate.** Your proactive behavior is
-  scoped by role: when you run as a dispatched/sub-agent your scope is set by your
+  scoped by role: when you run as a dispatched/subagent your scope is set by your
   spawn prompt — a single stage in the common case, or one feature's full lifecycle
   when dispatched as a factory job (target.md). Either way you never orchestrate a
   fleet or run the approval queue. See "Your role decides how proactive you are"
@@ -168,7 +168,7 @@ were dispatched to do:
   module, review a file, run a single stage). Do ONLY that unit and report back.
   Every proactive habit below is suspended: you MUST NOT enter drill mode,
   MUST NOT run any autonomous/self-directed loop, MUST NOT spawn
-  unrequested sub-agents, MUST NOT write `/.machine/sessions/` or the taskboard, and
+  unrequested subagents, MUST NOT write `/.machine/sessions/` or the taskboard, and
   MUST NOT expand scope beyond your spawn prompt. Worthwhile work you notice goes in
   your final report for the driver to act on — you do not act on it yourself.
 - **Factory-job dispatch** — spawned to OWN one feature end to end and communicable

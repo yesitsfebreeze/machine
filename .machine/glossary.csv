@@ -18,11 +18,11 @@ process,slice,A numbered unit of the unification sweep; referenced in improve.js
 law,sole driver,Only one session may drive the /improve loop; improve.json has no lock and concurrent writers lose updates (incident e193515d).
 quality,five-dimension quality gate,The machine's code-quality bar defined in the foundation-quality skill; enforced by manager-quality and /gate.
 identity,personas panel,The data-driven review panel defined by files in /.machine/personas/; run in parallel via /personas after non-trivial work.
-drill,the drill,The orchestrator surface — the grill-first main-loop driver (agent and skill both named drill); refines a request by grilling, dispatches a plan agent then an implementation sub-agent (a miner), and proposes a merge into main. Only the surface is themed; everything underneath keeps plain names (job, git-fs, sub-agent).
+drill,the drill,The orchestrator surface — the grill-first main-loop driver (agent and skill both named drill); refines a request by grilling, dispatches a plan agent then an implementation subagent (a miner), and proposes a merge into main. Only the surface is themed; everything underneath keeps plain names (job, git-fs, subagent).
 drill,ledger,The live roster of per-job entry-files under /.machine/sessions/; the set of files IS the roster (no monolithic file and no timer); records each job's status and stage and is driver-written only.
-drill,grill-first,The orchestrator's default mode: refine a request with the user via grill-me until they call the shape valid before any sub-agent spawns; nothing auto-fires.
-drill,plan agent,A sub-agent dispatched to write the implementation plan (concept and plan stages) for an agreed shape; returns a plan document not code; reviewed by personas and codex (advisory) then stored under .machine/plans/.
-drill,implementation agent,A sub-agent dispatched on its own git-fs branch with the stored plan; builds autonomously, runs the gate until the build is green, then a codex arbiter pass; never merges and never writes the ledger.
+drill,grill-first,The orchestrator's default mode: refine a request with the user via grill-me until they call the shape valid before any subagent spawns; nothing auto-fires.
+drill,plan agent,A subagent dispatched to write the implementation plan (concept and plan stages) for an agreed shape; returns a plan document not code; reviewed by personas and codex (advisory) then stored under .machine/plans/.
+drill,implementation agent,A subagent dispatched on its own git-fs branch with the stored plan; builds autonomously, runs the gate until the build is green, then a codex arbiter pass; never merges and never writes the ledger.
 drill,gate one,The first human gate: after the plan is stored the driver asks the user before dispatching the implementation agent.
 drill,gate two,The second human gate: after the build is green the driver proposes a merge into main and merges with git_fs_merge only on the user's approval.
 drill,codex-review,The lean skill wrapping the Codex CLI for an advisory second-AI pass at the plan and arbiter checkpoints; never gates, blocks, merges, or edits; degrades to n/a when codex is absent.
