@@ -11,6 +11,7 @@
 use crate::board::{self, Board};
 use crate::error::Result;
 use crate::mesh::Mesh;
+use crate::mine::{self, HubTomlConfig, MineType};
 use crate::registry::Registry;
 use crate::server::{PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -40,11 +41,31 @@ struct HubState {
     board_tx: broadcast::Sender<()>,
     /// fires a token on every mesh mutation (WS push trigger)
     mesh_tx: broadcast::Sender<()>,
+    /// resolved plugin root (contains `mine/`); None disables mine tools
+    plugin_root: Option<PathBuf>,
+    /// project cwd used as the install/restore target for mine ops
+    project_cwd: PathBuf,
+    /// hub.toml proxy config (load-only; reserved for a future proxy layer)
+    #[allow(dead_code)]
+    hub_toml: Arc<HubTomlConfig>,
+}
+
+impl HubState {
+    fn plugin_root(&self) -> std::result::Result<&PathBuf, crate::error::HubError> {
+        self.plugin_root
+            .as_ref()
+            .ok_or_else(|| crate::error::HubError::new("plugin root not resolved — mine catalog unavailable"))
+    }
 }
 
 // ---- serve entry -----------------------------------------------------------
 
-pub async fn serve_http(mesh: Mesh, board_dir: PathBuf, port: u16) -> Result<()> {
+pub async fn serve_http(
+    mesh: Mesh,
+    board_dir: PathBuf,
+    port: u16,
+    plugin_root: Option<PathBuf>,
+) -> Result<()> {
     // Check if port is already bound
     if std::net::TcpListener::bind(format!("0.0.0.0:{port}")).is_err() {
         eprintln!("hub: port {port} already in use — daemon is already running");
@@ -56,6 +77,26 @@ pub async fn serve_http(mesh: Mesh, board_dir: PathBuf, port: u16) -> Result<()>
 
     let board = Board::open(board_dir, board::system_clock())?;
 
+    let project_cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+
+    // Startup restore: if a manifest exists and the plugin root is known,
+    // restore missing items. Failures log to stderr but never abort startup.
+    if project_cwd.join(".machine").join("install.toml").exists() {
+        match &plugin_root {
+            Some(root) => match mine::mine_restore(root, &project_cwd) {
+                Ok(r) => eprintln!("hub mine: restore {r}"),
+                Err(e) => eprintln!("hub mine: restore failed: {e}"),
+            },
+            None => eprintln!("hub mine: install.toml present but plugin root unresolved — restore skipped"),
+        }
+    }
+
+    // Load hub.toml proxy config (load-only). Empty on missing/malformed file.
+    let hub_toml = match &plugin_root {
+        Some(root) => mine::load_hub_toml(root, &project_cwd),
+        None => mine::load_hub_toml(&project_cwd, &project_cwd),
+    };
+
     let state = HubState {
         mesh: Arc::new(mesh),
         board: Arc::new(board),
@@ -63,6 +104,9 @@ pub async fn serve_http(mesh: Mesh, board_dir: PathBuf, port: u16) -> Result<()>
         sessions: Arc::new(RwLock::new(HashMap::new())),
         board_tx,
         mesh_tx,
+        plugin_root,
+        project_cwd,
+        hub_toml: Arc::new(hub_toml),
     };
 
     let app = Router::new()
@@ -71,6 +115,8 @@ pub async fn serve_http(mesh: Mesh, board_dir: PathBuf, port: u16) -> Result<()>
         .route("/mcp", post(mcp_post))
         .route("/mcp", get(mcp_sse))
         .route("/ws", get(ws_handler))
+        .route("/api/mine/list", get(api_mine_list))
+        .route("/api/mine/install", post(api_mine_install))
         .route("/api/{verb}", post(api_verb))
         .with_state(state);
 
@@ -303,6 +349,36 @@ async fn api_verb(
     }
 }
 
+// GET /api/mine/list — mine catalog with install status
+async fn api_mine_list(State(st): State<HubState>) -> Response {
+    match st.plugin_root() {
+        Ok(root) => Json(mine::list_json(root, &st.project_cwd)).into_response(),
+        Err(e) => (StatusCode::SERVICE_UNAVAILABLE, Json(json!({ "error": e.to_string() }))).into_response(),
+    }
+}
+
+// POST /api/mine/install — { "type": "skill"|"agent", "name": "..." }
+async fn api_mine_install(State(st): State<HubState>, body: axum::body::Bytes) -> Response {
+    let args: Value = match serde_json::from_slice(&body) {
+        Ok(v) => v,
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(json!({ "error": e.to_string() }))).into_response(),
+    };
+    let Some(ty) = args.get("type").and_then(|v| v.as_str()).and_then(MineType::parse) else {
+        return (StatusCode::BAD_REQUEST, Json(json!({ "error": "type must be 'skill' or 'agent'" }))).into_response();
+    };
+    let Some(name) = args.get("name").and_then(|v| v.as_str()) else {
+        return (StatusCode::BAD_REQUEST, Json(json!({ "error": "name is required" }))).into_response();
+    };
+    let root = match st.plugin_root() {
+        Ok(r) => r,
+        Err(e) => return (StatusCode::SERVICE_UNAVAILABLE, Json(json!({ "error": e.to_string() }))).into_response(),
+    };
+    match mine::install_item(root, &st.project_cwd, ty, name) {
+        Ok(result) => Json(result).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, Json(json!({ "error": e.to_string() }))).into_response(),
+    }
+}
+
 // ---- MCP dispatch (HTTP) ---------------------------------------------------
 
 async fn dispatch_http(
@@ -391,6 +467,28 @@ async fn dispatch_http(
                     }
                     board_result
                 }
+                "hub_mine_list" => match st.plugin_root() {
+                    Ok(root) => Ok(mine::list_json(root, &st.project_cwd)),
+                    Err(e) => Err(e),
+                },
+                "hub_mine_install" => {
+                    let ty = match args.get("type").and_then(|v| v.as_str()).and_then(MineType::parse) {
+                        Some(t) => t,
+                        None => return (Err(HubError::new("type must be 'skill' or 'agent'")), None),
+                    };
+                    let n = match args.get("name").and_then(|v| v.as_str()) {
+                        Some(s) => s.to_string(),
+                        None => return (Err(HubError::new("name is required")), None),
+                    };
+                    match st.plugin_root() {
+                        Ok(root) => mine::install_item(root, &st.project_cwd, ty, &n),
+                        Err(e) => Err(e),
+                    }
+                }
+                "hub_mine_restore" => match st.plugin_root() {
+                    Ok(root) => mine::mine_restore(root, &st.project_cwd),
+                    Err(e) => Err(e),
+                },
                 other => Err(HubError::new(format!("unknown verb '{other}'"))),
             };
 

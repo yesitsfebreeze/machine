@@ -8,8 +8,10 @@
 use crate::board::Board;
 use crate::error::{HubError, Result};
 use crate::mesh::Mesh;
+use crate::mine::{self, MineType};
 use crate::registry::Registry;
 use serde_json::{json, Value};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::Mutex as AsyncMutex;
@@ -36,7 +38,15 @@ fn invoke_mesh_verb(mesh: &Mesh, name: &str, args: &Value) -> Result<Value> {
 }
 
 /// Dispatch a JSON-RPC method. `Ok(None)` means a notification with no reply.
-fn dispatch(mesh: &Mesh, board: &Board, registry: &Registry, method: &str, params: Option<&Value>) -> Result<Option<Value>> {
+fn dispatch(
+    mesh: &Mesh,
+    board: &Board,
+    registry: &Registry,
+    plugin_root: Option<&Path>,
+    project_cwd: &Path,
+    method: &str,
+    params: Option<&Value>,
+) -> Result<Option<Value>> {
     match method {
         "initialize" => Ok(Some(json!({
             "protocolVersion": PROTOCOL_VERSION,
@@ -77,6 +87,25 @@ fn dispatch(mesh: &Mesh, board: &Board, registry: &Registry, method: &str, param
                 verb if crate::board::BOARD_VERBS.contains(&verb) => {
                     board.invoke(verb, &args)?
                 }
+                "hub_mine_list" => {
+                    let root = plugin_root
+                        .ok_or_else(|| HubError::new("plugin root not resolved — mine catalog unavailable"))?;
+                    mine::list_json(root, project_cwd)
+                }
+                "hub_mine_install" => {
+                    let ty = args.get("type").and_then(|v| v.as_str()).and_then(MineType::parse)
+                        .ok_or_else(|| HubError::new("type must be 'skill' or 'agent'"))?;
+                    let n = args.get("name").and_then(|v| v.as_str())
+                        .ok_or_else(|| HubError::new("name is required"))?;
+                    let root = plugin_root
+                        .ok_or_else(|| HubError::new("plugin root not resolved — mine catalog unavailable"))?;
+                    mine::install_item(root, project_cwd, ty, n)?
+                }
+                "hub_mine_restore" => {
+                    let root = plugin_root
+                        .ok_or_else(|| HubError::new("plugin root not resolved — mine catalog unavailable"))?;
+                    mine::mine_restore(root, project_cwd)?
+                }
                 other => return Err(HubError::new(format!("unknown verb '{other}'"))),
             };
 
@@ -90,7 +119,15 @@ fn dispatch(mesh: &Mesh, board: &Board, registry: &Registry, method: &str, param
 }
 
 /// Handle one JSON-RPC line; return the response line (if any) to write.
-fn handle_line(mesh: &Mesh, board: &Board, registry: &Registry, line: &str) -> Option<String> {
+#[allow(clippy::too_many_arguments)]
+fn handle_line(
+    mesh: &Mesh,
+    board: &Board,
+    registry: &Registry,
+    plugin_root: Option<&Path>,
+    project_cwd: &Path,
+    line: &str,
+) -> Option<String> {
     let req: Value = match serde_json::from_str(line) {
         Ok(v) => v,
         Err(_) => {
@@ -109,7 +146,7 @@ fn handle_line(mesh: &Mesh, board: &Board, registry: &Registry, line: &str) -> O
     let method = req.get("method").and_then(|v| v.as_str()).unwrap_or("");
     let params = req.get("params");
 
-    match dispatch(mesh, board, registry, method, params) {
+    match dispatch(mesh, board, registry, plugin_root, project_cwd, method, params) {
         Ok(None) => {
             if is_notification {
                 None
@@ -167,7 +204,13 @@ fn spawn_notification_pump(
 // ---- stdio loop -------------------------------------------------------------
 
 /// Serve the MCP protocol over stdio until EOF.
-pub async fn serve(mesh: Mesh, board: Board, registry: Registry) -> Result<()> {
+pub async fn serve(
+    mesh: Mesh,
+    board: Board,
+    registry: Registry,
+    plugin_root: Option<PathBuf>,
+    project_cwd: PathBuf,
+) -> Result<()> {
     let stdin = tokio::io::stdin();
     let stdout = Arc::new(AsyncMutex::new(tokio::io::stdout()));
 
@@ -186,7 +229,14 @@ pub async fn serve(mesh: Mesh, board: Board, registry: Registry) -> Result<()> {
         if trimmed.is_empty() {
             continue;
         }
-        if let Some(resp) = handle_line(&mesh, &board, &registry, &trimmed) {
+        if let Some(resp) = handle_line(
+            &mesh,
+            &board,
+            &registry,
+            plugin_root.as_deref(),
+            &project_cwd,
+            &trimmed,
+        ) {
             let mut out = stdout.lock().await;
             out.write_all(resp.as_bytes()).await?;
             out.write_all(b"\n").await?;
@@ -207,7 +257,7 @@ mod tests {
 
     static COUNTER: AtomicU64 = AtomicU64::new(0);
 
-    fn setup() -> (Mesh, Board, Registry) {
+    fn setup() -> (Mesh, Board, Registry, PathBuf) {
         let mut tmp = std::env::temp_dir();
         tmp.push(format!(
             "hub-srv-{}-{}",
@@ -217,13 +267,17 @@ mod tests {
         let mesh = Mesh::open(tmp.join(".mesh")).unwrap();
         let board = Board::open(tmp.join(".board"), Arc::new(|| 1_000_000)).unwrap();
         let registry = Registry::new();
-        (mesh, board, registry)
+        (mesh, board, registry, tmp)
+    }
+
+    fn call(m: &Mesh, b: &Board, r: &Registry, cwd: &Path, line: &str) -> Option<String> {
+        handle_line(m, b, r, None, cwd, line)
     }
 
     #[test]
     fn initialize_reports_hub_identity_and_list_changed() {
-        let (m, b, r) = setup();
-        let resp = handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#).unwrap();
+        let (m, b, r, cwd) = setup();
+        let resp = call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert_eq!(v["result"]["serverInfo"]["name"], "hub");
         assert_eq!(v["result"]["serverInfo"]["version"], "0.8.0");
@@ -231,16 +285,16 @@ mod tests {
     }
 
     #[test]
-    fn tools_list_has_twenty_one_tools() {
-        let (m, b, r) = setup();
-        let resp = handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#).unwrap();
+    fn tools_list_has_twenty_four_tools() {
+        let (m, b, r, cwd) = setup();
+        let resp = call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
-        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 21);
+        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 24);
     }
 
     #[test]
     fn hub_register_tool_adds_entry() {
-        let (m, b, r) = setup();
+        let (m, b, r, cwd) = setup();
         let req = json!({
             "jsonrpc": "2.0", "id": 3, "method": "tools/call",
             "params": {
@@ -252,47 +306,105 @@ mod tests {
                 }
             }
         }).to_string();
-        let resp = handle_line(&m, &b, &r, &req).unwrap();
+        let resp = call(&m, &b, &r, &cwd, &req).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         // Should succeed (no error key)
         assert!(v.get("error").is_none());
 
-        // tools/list should now have 22 entries
-        let resp2 = handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","id":4,"method":"tools/list"}"#).unwrap();
+        // tools/list should now have 25 entries
+        let resp2 = call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","id":4,"method":"tools/list"}"#).unwrap();
         let v2: Value = serde_json::from_str(&resp2).unwrap();
-        assert_eq!(v2["result"]["tools"].as_array().unwrap().len(), 22);
+        assert_eq!(v2["result"]["tools"].as_array().unwrap().len(), 25);
     }
 
     #[test]
     fn hub_unregister_tool_removes_entry() {
-        let (m, b, r) = setup();
+        let (m, b, r, cwd) = setup();
         r.register("temp".into(), "desc".into(), json!({}));
-        assert_eq!(r.list().len(), 22);
+        assert_eq!(r.list().len(), 25);
 
         let req = json!({
             "jsonrpc": "2.0", "id": 5, "method": "tools/call",
             "params": { "name": "hub_unregister_tool", "arguments": { "name": "temp" } }
         }).to_string();
-        let resp = handle_line(&m, &b, &r, &req).unwrap();
+        let resp = call(&m, &b, &r, &cwd, &req).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert!(v.get("error").is_none());
-        assert_eq!(r.list().len(), 21);
+        assert_eq!(r.list().len(), 24);
     }
 
     #[test]
     fn notification_yields_no_reply() {
-        let (m, b, r) = setup();
+        let (m, b, r, cwd) = setup();
         assert!(
-            handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+            call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
                 .is_none()
         );
     }
 
     #[test]
     fn parse_error_returns_minus_32700() {
-        let (m, b, r) = setup();
-        let resp = handle_line(&m, &b, &r, "not json").unwrap();
+        let (m, b, r, cwd) = setup();
+        let resp = call(&m, &b, &r, &cwd, "not json").unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert_eq!(v["error"]["code"], -32700);
+    }
+
+    #[test]
+    fn mine_list_via_handle_line_returns_items() {
+        let (m, b, r, _cwd) = setup();
+        let plugin = tempfile::tempdir().unwrap();
+        let proj = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(plugin.path().join("mine/agents")).unwrap();
+        std::fs::write(
+            plugin.path().join("mine/agents/alpha.md"),
+            "---\nname: alpha\ndescription: A.\n---\nbody",
+        )
+        .unwrap();
+
+        let resp = handle_line(
+            &m,
+            &b,
+            &r,
+            Some(plugin.path()),
+            proj.path(),
+            r#"{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"hub_mine_list","arguments":{}}}"#,
+        )
+        .unwrap();
+        let v: Value = serde_json::from_str(&resp).unwrap();
+        let items = v["result"]["structuredContent"]["items"].as_array().unwrap();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0]["name"], "alpha");
+        assert_eq!(items[0]["installed"], false);
+    }
+
+    #[test]
+    fn mine_install_via_handle_line_copies_and_flips_installed() {
+        let (m, b, r, _cwd) = setup();
+        let plugin = tempfile::tempdir().unwrap();
+        let proj = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(plugin.path().join("mine/agents")).unwrap();
+        std::fs::write(
+            plugin.path().join("mine/agents/alpha.md"),
+            "---\nname: alpha\ndescription: A.\n---\nbody",
+        )
+        .unwrap();
+
+        let install = handle_line(
+            &m, &b, &r, Some(plugin.path()), proj.path(),
+            r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"hub_mine_install","arguments":{"type":"agent","name":"alpha"}}}"#,
+        ).unwrap();
+        let v: Value = serde_json::from_str(&install).unwrap();
+        assert_eq!(v["result"]["structuredContent"]["status"], "installed");
+        assert!(proj.path().join(".claude/agents/alpha.md").is_file());
+        assert!(proj.path().join(".machine/install.toml").is_file());
+
+        let list = handle_line(
+            &m, &b, &r, Some(plugin.path()), proj.path(),
+            r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"hub_mine_list","arguments":{}}}"#,
+        ).unwrap();
+        let lv: Value = serde_json::from_str(&list).unwrap();
+        let items = lv["result"]["structuredContent"]["items"].as_array().unwrap();
+        assert_eq!(items[0]["installed"], true);
     }
 }

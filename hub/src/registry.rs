@@ -105,7 +105,7 @@ impl Registry {
         removed
     }
 
-    /// Pre-load the built-in hub verbs (8 mesh + 11 board + 2 registry tools).
+    /// Pre-load the built-in hub verbs (8 mesh + 11 board + 2 registry + 3 mine tools).
     fn preload_verbs(&self) {
         let verbs: &[(&str, &str, Value)] = &[
             // 8 mesh verbs
@@ -194,6 +194,17 @@ impl Registry {
                 "type":"object","required":["cardId"],
                 "properties":{"cardId":{"type":"string"}}
             })),
+            // 3 mine verbs
+            ("hub_mine_list", "List the mine catalog (unregistered agents and skills) with install status.", json!({
+                "type":"object","properties":{}
+            })),
+            ("hub_mine_install", "Install a mine catalog item into the project's .claude/ and record it in install.toml.", json!({
+                "type":"object","required":["type","name"],
+                "properties":{"type":{"type":"string","enum":["skill","agent"]},"name":{"type":"string"}}
+            })),
+            ("hub_mine_restore", "Idempotently restore every install.toml-listed item missing from the project's .claude/.", json!({
+                "type":"object","properties":{}
+            })),
         ];
 
         let mut entries = self.entries.lock().unwrap();
@@ -217,9 +228,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn preloads_twenty_one_tools() {
+    fn preloads_twenty_four_tools() {
         let reg = Registry::new();
-        assert_eq!(reg.list().len(), 21); // 8 mesh + 11 board + 2 registry tools
+        assert_eq!(reg.list().len(), 24); // 8 mesh + 11 board + 2 registry + 3 mine tools
     }
 
     #[test]
@@ -237,10 +248,10 @@ mod tests {
         let reg = Registry::new();
         let was_new = reg.register("my_tool".into(), "desc".into(), json!({"type":"object"}));
         assert!(was_new);
-        assert_eq!(reg.list().len(), 22);
+        assert_eq!(reg.list().len(), 25);
         let removed = reg.unregister("my_tool");
         assert!(removed);
-        assert_eq!(reg.list().len(), 21);
+        assert_eq!(reg.list().len(), 24);
     }
 
     #[test]
@@ -248,7 +259,7 @@ mod tests {
         let reg = Registry::new();
         let removed = reg.unregister("register");
         assert!(!removed);
-        assert_eq!(reg.list().len(), 21);
+        assert_eq!(reg.list().len(), 24);
     }
 
     #[test]
@@ -257,7 +268,7 @@ mod tests {
         reg.register("dupe".into(), "v1".into(), json!({}));
         let was_new = reg.register("dupe".into(), "v2".into(), json!({}));
         assert!(!was_new); // replacement, not new
-        assert_eq!(reg.list().len(), 22); // count unchanged
+        assert_eq!(reg.list().len(), 25); // count unchanged
     }
 
     #[test]

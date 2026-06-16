@@ -30,6 +30,22 @@ header h1 { font-size: 14px; font-weight: 600; color: #fff; }
 .card-title { font-size: 12px; line-height: 1.4; color: #ddd; }
 .card-meta { display: flex; gap: 8px; margin-top: 4px; font-size: 10px; color: #555; }
 .card-body { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; max-height: 60px; overflow: hidden; }
+.tabs { display: flex; gap: 4px; margin-left: 16px; }
+.tab { background: #1a1a1a; color: #999; border: 1px solid #2a2a2a; border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+.tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.mine-view { overflow: auto; padding: 16px; }
+#mine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; width: 100%; }
+.mine-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; }
+.mine-head { display: flex; align-items: center; gap: 8px; }
+.mine-name { font-size: 14px; font-weight: 600; color: #e0e0e0; }
+.badge { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 4px; }
+.badge-agent { background: #3b2f63; color: #c4b5fd; }
+.badge-skill { background: #14532d; color: #86efac; }
+.badge-installed { background: #1f2937; color: #9ca3af; margin-left: auto; }
+.mine-desc { font-size: 12px; color: #888; margin-top: 8px; line-height: 1.4; }
+.mine-install { margin-top: 10px; background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+.mine-install:disabled { opacity: 0.5; cursor: default; }
+.mine-err { color: #f87171; font-size: 11px; margin-top: 6px; }
 .drop-target { border: 1px dashed #4caf5088; background: #4caf5010; min-height: 40px; border-radius: 4px; }
 .col-empty { font-size: 11px; color: #444; text-align: center; padding: 12px 0; }
 
@@ -54,15 +70,22 @@ header h1 { font-size: 14px; font-weight: 600; color: #fff; }
     <select id="proj-sel" onchange="selectProject(this.value)"></select>
   </div>
   <span id="project-name"></span>
+  <div class="tabs">
+    <button class="tab active" id="tab-board" onclick="switchTab('board')">Board</button>
+    <button class="tab" id="tab-mine" onclick="switchTab('mine')">Mine</button>
+  </div>
   <span style="flex:1"></span>
   <span id="status-label">connecting...</span>
 </header>
-<div class="main">
+<div class="main" id="view-board">
   <div id="kanban"></div>
   <div id="roster">
     <h2>Roster</h2>
     <div id="roster-list"><span class="roster-empty">empty</span></div>
   </div>
+</div>
+<div class="main mine-view" id="view-mine" style="display:none">
+  <div id="mine-grid"><span class="roster-empty">loading...</span></div>
 </div>
 
 <script>
@@ -246,6 +269,67 @@ function apiCall(verb, body) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   }).catch(console.error);
+}
+
+// ---- Mine tab ----
+function switchTab(tab) {
+  const isBoard = tab === 'board';
+  document.getElementById('view-board').style.display = isBoard ? '' : 'none';
+  document.getElementById('view-mine').style.display = isBoard ? 'none' : '';
+  document.getElementById('tab-board').className = 'tab' + (isBoard ? ' active' : '');
+  document.getElementById('tab-mine').className = 'tab' + (isBoard ? '' : ' active');
+  if (!isBoard) loadMine();
+}
+
+function loadMine() {
+  const grid = document.getElementById('mine-grid');
+  grid.innerHTML = '<span class="roster-empty">loading...</span>';
+  fetch('/api/mine/list')
+    .then(r => r.json())
+    .then(data => renderMine(data.items || []))
+    .catch(() => { grid.innerHTML = '<span class="mine-err">failed to load catalog</span>'; });
+}
+
+function renderMine(items) {
+  const grid = document.getElementById('mine-grid');
+  if (!items.length) { grid.innerHTML = '<span class="roster-empty">catalog empty</span>'; return; }
+  grid.innerHTML = items.map(it => {
+    const badge = it.type === 'agent' ? 'badge-agent' : 'badge-skill';
+    const action = it.installed
+      ? `<span class="badge badge-installed">installed</span>`
+      : `<button class="mine-install" onclick="installMine('${esc(it.type)}','${esc(it.name)}',this)">Install</button>`;
+    const installedBadge = it.installed ? `<span class="badge badge-installed">installed</span>` : '';
+    return `<div class="mine-card">
+      <div class="mine-head"><span class="mine-name">${esc(it.name)}</span><span class="badge ${badge}">${esc(it.type)}</span>${installedBadge}</div>
+      <div class="mine-desc">${esc(it.description || '')}</div>
+      ${it.installed ? '' : action}
+    </div>`;
+  }).join('');
+}
+
+function installMine(type, name, btn) {
+  btn.disabled = true;
+  btn.textContent = 'installing...';
+  fetch('/api/mine/install', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ type, name }),
+  })
+    .then(async r => {
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({ error: 'install failed' }));
+        throw new Error(e.error || 'install failed');
+      }
+      loadMine();
+    })
+    .catch(err => {
+      const card = btn.closest('.mine-card');
+      btn.disabled = false;
+      btn.textContent = 'Install';
+      let el = card.querySelector('.mine-err');
+      if (!el) { el = document.createElement('div'); el.className = 'mine-err'; card.appendChild(el); }
+      el.textContent = err.message;
+    });
 }
 
 connect();

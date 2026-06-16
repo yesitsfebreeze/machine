@@ -12,6 +12,7 @@ mod board;
 mod board_http;
 mod error;
 mod mesh;
+mod mine;
 mod registry;
 mod server;
 mod state;
@@ -99,13 +100,16 @@ async fn run(cmd: &str, rest: &[String]) -> Result<()> {
             let port = parse_port(rest).unwrap_or(DEFAULT_PORT);
             let mesh = Mesh::open(data_dir())?;
             let board_dir = board_data_dir();
-            board_http::serve_http(mesh, board_dir, port).await
+            let plugin_root = mine::resolve_plugin_root(None);
+            board_http::serve_http(mesh, board_dir, port, plugin_root).await
         }
         "mcp" => {
             let mesh = Mesh::open(data_dir())?;
             let board = board::Board::open(board_data_dir(), board::system_clock())?;
             let registry = registry::Registry::new();
-            server::serve(mesh, board, registry).await
+            let plugin_root = mine::resolve_plugin_root(None);
+            let project_cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            server::serve(mesh, board, registry, plugin_root, project_cwd).await
         }
         "gc" | "compact" => {
             let mesh = Mesh::open(data_dir())?;
