@@ -2,39 +2,13 @@
 // SubagentStop hook: a subagent that joined the mesh must post a final report
 // and release its claims before it stops. Agents that never registered on the
 // mesh (read-only Explore/Plan/etc.) are left untouched.
-import { readFileSync } from "fs";
+import { loadStopHook } from "./stop-input.mjs";
 
-let raw = "";
-try {
-  raw = readFileSync(0, "utf8"); // fd 0 = stdin
-} catch {
-  process.exit(0);
-}
-if (!raw.trim()) process.exit(0);
-
-let data;
-try {
-  data = JSON.parse(raw);
-} catch {
-  process.exit(0);
-}
-
-// Already asked once this stop cycle - do not loop.
-if (data.stop_hook_active === true) process.exit(0);
-
-const transcriptPath = data.transcript_path;
-if (!transcriptPath) process.exit(0);
-
-let lines;
-try {
-  lines = readFileSync(transcriptPath, "utf8");
-} catch {
-  process.exit(0);
-}
+const { transcript } = loadStopHook();
 
 // Collect every tool_use name from the assistant turns.
 const toolNames = [];
-for (const line of lines.split("\n")) {
+for (const line of transcript.split("\n")) {
   const trimmed = line.trim();
   if (!trimmed) continue;
   let obj;

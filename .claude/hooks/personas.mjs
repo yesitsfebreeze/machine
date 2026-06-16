@@ -1,37 +1,11 @@
 #!/usr/bin/env node
 // Stop hook: fires persona panel when feature completion is detected.
-import { readFileSync } from "fs";
+import { loadStopHook } from "./stop-input.mjs";
 
-let raw = "";
-try {
-  raw = readFileSync(0, "utf8"); // fd 0 = stdin, works on all platforms
-} catch {
-  process.exit(0);
-}
-
-if (!raw.trim()) process.exit(0);
-
-let data;
-try {
-  data = JSON.parse(raw);
-} catch {
-  process.exit(0);
-}
-
-if (data.stop_hook_active === true) process.exit(0);
-
-const transcriptPath = data.transcript_path;
-if (!transcriptPath) process.exit(0);
-
-let lines;
-try {
-  lines = readFileSync(transcriptPath, "utf8");
-} catch {
-  process.exit(0);
-}
+const { transcript } = loadStopHook();
 
 const assistantTexts = [];
-for (const line of lines.split("\n")) {
+for (const line of transcript.split("\n")) {
   const trimmed = line.trim();
   if (!trimmed) continue;
   try {
