@@ -243,10 +243,11 @@ for where a feature sits; the ledger is your durable projection of it, so the tw
 differ briefly between the agent's post and your next turn.
 
 When the `board` addon is slotted, also project each ledger entry's status onto a
-board card per @mine/skills/board/SKILL.md (the single source for the
-stage-to-column mapping), moving the card to the `Merged` column on merge (kept as
-the completed-pipeline record) and removing it with `card_delete` only when the
-feature is dropped.
+board card per `$MACHINE_MINE/skills/board/SKILL.md` (from `/.machine/ENV.md`; the single
+source for the stage-to-column mapping; once the addon is slotted, its working copy
+lives at `.claude/skills/board/`), moving the card to the `Merged` column on merge
+(kept as the completed-pipeline record) and removing it with `card_delete` only when
+the feature is dropped.
 
 ## Dispatched agents never drive
 

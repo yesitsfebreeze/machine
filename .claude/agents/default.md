@@ -105,7 +105,7 @@ The active set is deliberately small:
 - **Quality gate:** `/gate` (fmt + lint + tests + build, pass/fail before a commit).
   The built-in `verify`, `simplify`, and `code-review` skills are also available.
 - **Review panel:** `/personas` (above) — adversarial review of finished work.
-- **Drive & set up:** `drill` (the single entry point — a grill-first driver that
+- **Drive & set up:** `drill` (the single entry point — a drill-first driver that
   also runs session bring-up: on a cold repo it bootstraps daemons + dependencies and
   oils the project layer before driving; spawns background subagents, persists one
   state file per agent in `/.machine/sessions/`, validates via gate + personas, footers
@@ -114,8 +114,14 @@ The active set is deliberately small:
 - If a skill *might* apply, invoke it rather than improvising the process.
 
 ### The addon kit — `mine/`
-Most agents and skills are NOT loaded by default — they live in the `mine/` kit at
-the repo root: a curated collection (the `expert-*` and `builder-*` agents;
+Most agents and skills are NOT loaded by default — they live in the **mine kit**,
+part of the machine **plugin payload**, not the target project. Its real absolute
+path is recorded as `MACHINE_MINE` in `/.machine/ENV.md` (auto-written every session
+by the SessionStart hook with the install-correct paths — `source` it or read the
+value). Use that; never guess the kit from the project CWD or a git root — a repo
+that merely installed the machine has no `mine/` of its own. Remote source:
+`github.com/yesitsfebreeze/machine` under `/mine/`. The
+kit is a curated collection (the `expert-*` and `builder-*` agents;
 `manager-spec` / `-strategy` / `-git` / `-docs` / `-project` / `-quality`;
 `evaluator-active`, `plan-auditor`, `researcher`; and skills like `tool-ast-grep`,
 `workflow-testing`, `workflow-thinking`, `foundation-*`, `ref-*`, `specialists`,

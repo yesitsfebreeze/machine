@@ -7,7 +7,7 @@ exposes every useful plugin. Reference-only (github sources) — no vendoring, z
 duplication. `kern` stays solo (its own marketplace, not folded in). The legacy
 `stack` hub is retired by deleting the repo.
 
-## Decisions (agreed in grill)
+## Decisions (agreed in drill)
 - Hub model: **reference by github source** (no code copied into machine).
 - Plugins listed in the hub: `machine` (self), `git-fs`, `split`. `kern` excluded
   (stays solo). `vicky`, `wiki` excluded.

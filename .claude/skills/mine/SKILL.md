@@ -5,12 +5,31 @@ description: Mine the addon graph for this repo — survey the `mine/` kit (the 
 
 # /mine — slot the best-fit addons into this repo
 
-The machine ships bare-bones. The good stuff lives unregistered in the `mine/`
-kit at the repo root — the **mine graph**: extracted agents, skills, and hooks
-nothing loads by default. `/mine` realizes the "/oil integration (intended)" note
-in `mine/README.md` as its own skill: it reads the graph, reads *this* repo, and
-slots in the tools that fit — incrementally and idempotently. Run it across a few
-sessions and the active toolset converges on exactly what this repo needs.
+The machine ships bare-bones. The good stuff lives unregistered in the **mine kit**
+(the machine plugin payload — exact path in `/.machine/ENV.md`, see *Where the mine
+graph lives* below) — the **mine graph**: extracted agents, skills, and hooks nothing
+loads by default. `/mine` realizes the "/oil integration (intended)"
+note in the kit's `README.md` as its own skill: it reads the graph, reads *this*
+repo, and slots in the tools that fit — incrementally and idempotently. Run it
+across a few sessions and the active toolset converges on exactly what this repo
+needs.
+
+## Where the mine graph lives — resolve this first
+
+The kit ships inside the machine **plugin payload**, not the target project. Every
+`$MINE/…` path below is the kit root, which you resolve from `/.machine/ENV.md` — the
+env cache the SessionStart hook writes each session with the install-correct absolute
+paths. Do **not** guess it from the project CWD or a git root: when the machine is
+installed as a plugin, neither contains `mine/`.
+
+```bash
+source .machine/ENV.md   # sets MACHINE_PLUGIN_ROOT / MACHINE_PROJECT_DIR / MACHINE_MINE / MACHINE_MESH
+MINE="$MACHINE_MINE"
+```
+
+Remote source: `github.com/yesitsfebreeze/machine` under `/mine/`. Slot targets
+(`.claude/`, `.claude-plugin/plugin.json`) are the **machine** side — under
+`$MACHINE_PLUGIN_ROOT`, never the target project's CWD.
 
 `/mine` writes the **machine** side (registers addons in `.claude/` + manifests).
 `/oil` owns the **project layer** (`/.machine/`). They are siblings, not rivals:
@@ -23,11 +42,11 @@ runs standalone too, whenever you want to re-survey the graph without re-indexin
 Catalog what is available to slot. Do **not** read whole files — read the
 frontmatter (`name` + `description`) only:
 
-1. Read `mine/README.md` for the current inventory and the slotting protocol.
+1. Read `$MINE/README.md` for the current inventory and the slotting protocol.
 2. Collect each candidate's `name` + `description`:
-   - `mine/agents/*.md` — frontmatter `name` + `description`.
-   - `mine/skills/*/SKILL.md` — frontmatter `name` + `description`.
-   - `mine/hooks/*.mjs` — the leading comment / purpose.
+   - `$MINE/agents/*.md` — frontmatter `name` + `description`.
+   - `$MINE/skills/*/SKILL.md` — frontmatter `name` + `description`.
+   - `$MINE/hooks/*.mjs` — the leading comment / purpose.
 
 Use the Explore agent or `ctx_*` if the graph is large, so only the catalog
 (not raw bodies) enters context.
@@ -72,15 +91,17 @@ reason for Phase 6.
 
 ## Phase 5 — slot it in
 
-For each approved addon, follow `mine/README.md`'s protocol exactly:
+For each approved addon, follow `$MINE/README.md`'s protocol exactly (the `.claude/`
+and `.claude-plugin/` slot targets are the machine plugin's own payload — the same
+root `$MINE` came from — not the target project's CWD):
 
-1. **Agent:** copy `mine/agents/<name>.md` → `.claude/agents/<name>.md`. Add
+1. **Agent:** copy `$MINE/agents/<name>.md` → `.claude/agents/<name>.md`. Add
    `"./.claude/agents/<name>.md"` to the `agents` array in `.claude-plugin/plugin.json`.
    **Sanitize on slot:** strip any `permissionMode: bypassPermissions` line from the
    copied frontmatter — the machine deliberately keeps `bypassPermissions` out of
    installs (see `settings.json`). An agent that needs it is a red flag to raise with
    the user, never a silent slot.
-2. **Skill:** copy the folder `mine/skills/<name>/` → `.claude/skills/<name>/`. Add
+2. **Skill:** copy the folder `$MINE/skills/<name>/` → `.claude/skills/<name>/`. Add
    `"./.claude/skills/<name>"` to the `skills` array in `.claude-plugin/plugin.json`.
 3. **Hook:** copy the script into `.claude/hooks/` and restore its entry in
    `.claude/hooks/hooks.json`.

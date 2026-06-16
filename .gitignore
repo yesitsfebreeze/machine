@@ -39,5 +39,8 @@ version.log
 # board project identity (resolved per-cwd at runtime via project_resolve)
 .machine/board.json
 
+# machine env cache (absolute install paths, written each session by ignite.mjs)
+.machine/ENV.md
+
 .env
 .env.*

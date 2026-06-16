@@ -30,7 +30,7 @@ does not touch them.
 Enter drill mode: invoke the `drill` skill. The drill creates its own worktree off
 `main` (`git worktree add /.machine/worktrees/drill-<sid> -b drill/<sid> main`) and
 operates from it — it never works in or `checkout`s the human's main checkout. If the
-hook listed an open roster from a prior session (any non-terminal status: grilling /
+hook listed an open roster from a prior session (any non-terminal status: drilling /
 planning / plan-review / plan-ready / implementing / arbiter / merge-proposed), rebuild
 the roster footer from `/.machine/sessions/`. Reconcile every pre-existing entry-file
 through the `drill` skill's board-trust model — that skill is the single source of

@@ -87,8 +87,8 @@ views. It is complementary to `/personas` (an intra-Claude panel), not a duplica
 It is gated because its prerequisite is heavy and external: the OpenAI Codex CLI
 plus OpenAI authentication.
 
-The skill ships vendored in the plugin payload at
-`${CLAUDE_PLUGIN_ROOT}/mine/skills/codex-peer-review`. Activating it copies that
+The skill ships vendored in the plugin payload at `$ROOT/mine/skills/codex-peer-review`
+(`$ROOT` is the machine root resolved in step 1). Activating it copies that
 folder into the **target project's** `.claude/skills/`, where Claude Code
 auto-discovers it. `/assemble` never edits the machine plugin's own `skills/`.
 
@@ -99,7 +99,7 @@ auto-discovers it. `/assemble` never edits the machine plugin's own `skills/`.
 - On opt-in, copy the vendored folder into the project, then check the Codex CLI:
 
 ```bash
-SRC="${CLAUDE_PLUGIN_ROOT}/mine/skills/codex-peer-review"
+SRC="$ROOT/mine/skills/codex-peer-review"   # $ROOT from step 1
 DST="$(git rev-parse --show-toplevel)/.claude/skills/codex-peer-review"
 if [ -d "$DST" ]; then
   echo "codex-peer-review already active at $DST"
