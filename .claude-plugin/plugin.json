@@ -40,6 +40,7 @@
     "./.claude/skills/mine",
     "./.claude/skills/oil",
     "./.claude/skills/personas",
+    "./.claude/skills/promote",
     "./.claude/skills/report"
   ],
   "outputStyles": "./.claude/output-styles",
