@@ -10,6 +10,13 @@
     "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1"
   },
   "includeGitInstructions": true,
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash"
+    ]
+  },
   "enableAllProjectMcpServers": false,
   "skillOverrides": {
     "trello": "off"
@@ -20,7 +27,8 @@
     "refreshInterval": 10
   },
   "enabledPlugins": {
-    "git-fs@git-fs": true
+    "git-fs@git-fs": true,
+    "machine@machine": true
   },
   "outputStyle": "machine",
   "effortLevel": "medium",
@@ -29,12 +37,5 @@
   "showThinkingSummaries": false,
   "theme": "dark-ansi",
   "teammateMode": "auto",
-  "disableBypassPermissionsMode": false,
-  "permissions": {
-    "allow": [
-      "Edit",
-      "Write",
-      "Bash"
-    ]
-  }
+  "disableBypassPermissionsMode": false
 }
