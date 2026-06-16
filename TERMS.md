@@ -24,12 +24,12 @@ tracked-file occurrences (gitignored worktrees excluded). Leave a row blank to k
 | New name | Term | Hits | Files | What it is |
 |----------|------|------|-------|------------|
 |          | mesh | 306 | 53 | coordination daemon |
-|          | drill | 241 | 27 | orchestrator surface |
+|          | drill | 263 | 27 | orchestrator surface (absorbs former `grill` vocabulary) |
 |          | ledger | 146 | 41 | `.machine/sessions/` roster |
 |          | git-fs / gitfs | 135 / 52 | 25 / 17 | branch-isolation layer (two spellings) |
 |          | kern | 109 | 29 | memory daemon |
 |          | personas | 96 | 31 | review panel |
-|          | grill-first / grill | 20 / 56 | — | driver mode |
+|          | drill-first / drilling | 13 / 17 | — | driver mode (drill sub-vocabulary) |
 |          | miner | 17 | 5 | spoken name for the implementation subagent |
 
 ### Collision-prone — sweep needs word-boundary/context review (common English words)
@@ -59,8 +59,8 @@ tracked-file occurrences (gitignored worktrees excluded). Leave a row blank to k
 
 | Term | Kind | Role | Lives in |
 |------|------|------|----------|
-| the drill | surface | Grill-first main-loop driver (agent + skill) | `.claude/skills/drill/`, `.claude/agents/drill.md` |
-| grill-first | mode | Refine a request one question at a time until valid before any spawn | `.claude/skills/drill/` |
+| the drill | surface | Drill-first main-loop driver (agent + skill) | `.claude/skills/drill/`, `.claude/agents/drill.md` |
+| drill-first | mode | Refine a request one question at a time until valid before any spawn | `.claude/skills/drill/` |
 | miner | surface | Spoken name for a dispatched implementation subagent | `.claude/skills/drill/` |
 | plan agent | role | Sub-agent that writes the implementation plan | `.claude/skills/drill/` |
 | implementation agent | role | Sub-agent that builds on its own git-fs branch | `.claude/skills/drill/` |

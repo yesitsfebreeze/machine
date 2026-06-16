@@ -5,7 +5,7 @@ files ARE the roster of running agents — there is no separate board file. Writ
 and read by the `drill` skill, and read at session start to resume open work.
 
 There is no timer. An entry carries no `fire_at`, no settle countdown, and nothing
-auto-fires. Each entry records where a job sits — grilling, planning, plan-review,
+auto-fires. Each entry records where a job sits — drilling, planning, plan-review,
 implementing, arbiter, or awaiting one of the two human gates (dispatch, merge).
 Work starts only when the user chooses to start it; `main` changes only on an
 approved `git_fs_merge`.

@@ -102,6 +102,21 @@ If present and largely intact, hand-patch the specific gaps. Re-run the status-l
 self-heal step above (it is idempotent); to re-check API keys, re-run drill's bring-up
 (or `just bootstrap`).
 
+## Refresh the env cache
+
+Materialize `/.machine/ENV.md` now so this same session can resolve machine paths
+(it is otherwise written at the next SessionStart). Run the hook directly — it
+derives the install-correct plugin root from its own location and writes the cache:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}/.claude/hooks/ignite.mjs" >/dev/null 2>&1 || true
+```
+
+That fallback is valid only *here* (where the plugin root equals the repo root, or
+`${CLAUDE_PLUGIN_ROOT}` is set) and only to *locate the hook* — the hook self-corrects
+the path it records. Everything downstream reads `MACHINE_MINE` / `MACHINE_PLUGIN_ROOT`
+from the cache, never a git guess.
+
 ## Then mine — equip the machine
 
 The project layer is now current, so `/oil` knows what this repo is. Hand off to
@@ -110,8 +125,11 @@ The project layer is now current, so `/oil` knows what this repo is. Hand off to
 **tools** — it surveys the mine graph against the freshly-indexed `/.machine/` and
 slots in the best-fit addons. They are one motion: oil specializes, mine equips.
 
-Skip the hand-off only if the user scoped `/oil` to the project layer alone, or
-`mine/` is absent.
+Skip the hand-off only if the user scoped `/oil` to the project layer alone, or the
+mine kit is genuinely absent — and check the right place before declaring it absent:
+`$MACHINE_MINE` from `/.machine/ENV.md` (the plugin payload), **not** the target
+project's CWD. A repo that only installed the machine has no `mine/` at its own root,
+which is not the same as the kit being absent.
 
 ## Report
 

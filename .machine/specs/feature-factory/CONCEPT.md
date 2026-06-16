@@ -47,7 +47,7 @@ infrastructure.
 | Live coordination, awareness, chat | `mesh` daemon (SPEC-COMM-001) |
 | Atomic dedup — "don't build it twice" | `mesh` `claim` / `claims` / `roster` |
 | Per-job isolation, edit-as-commit, merge-on-stop | `git-fs` companion plugin |
-| Grill-first dispatch + two human gates | `drill` skill + ledger (roster) |
+| Drill-first dispatch + two human gates | `drill` skill + ledger (roster) |
 | Stage 1 — concept | `superpowers:brainstorming`, `manager-spec` |
 | Stage 2 — plan | `manager-strategy`, `superpowers:writing-plans` |
 | Stage 3 — implement | `manager-tdd` / `manager-ddd` + `expert-*` |
@@ -65,7 +65,7 @@ self-driving lifecycle. Three concrete pieces are missing:
 
 - **G1 — the lifecycle runner.** A skill/agent that, given a one-line job, walks
   all eight stages itself, dispatching the right specialist per stage and gating
-  each handoff. The drill skill is the grill-first driver but does not encode
+  each handoff. The drill skill is the drill-first driver but does not encode
   this fixed 8-stage chain.
 - **G2 — the feature ledger.** RESOLVED (D2): the drill's roster under
   `/.machine/sessions/` IS the ledger, extended with `stage`, `branch`, and

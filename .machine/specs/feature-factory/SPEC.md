@@ -50,7 +50,7 @@ let the agents talk so two of them never build the same thing twice.
 
 Per `CONCEPT-FACTORY-001` section 2, every primitive exists: `kern` (memory),
 `mesh` (awareness/claims/chat), `git-fs` (per-job isolation + merge-on-stop), the
-`drill` ledger (grill-first dispatch with two human gates -- dispatch and merge --
+`drill` ledger (drill-first dispatch with two human gates -- dispatch and merge --
 and a live roster, replacing the old settle queue + auto-fire), and one specialist
 per lifecycle stage. The factory is wiring, not new infrastructure.
 
@@ -78,7 +78,7 @@ the gap:
   `stage` (lifecycle position, orthogonal to the drill's `status`), `branch`
   (`git-fs` `gitfs/<sid>`), and `claim_id` (mesh claim handle). No parallel
   structure, no new directory. The drill model has no settle queue and no
-  auto-fire: dispatch is grill-first, gated by the two human gates (dispatch,
+  auto-fire: dispatch is drill-first, gated by the two human gates (dispatch,
   merge). Originally resolved (v1.0.0) against the `orchestrate` taskboard, since
   replaced by the `drill`; the ledger-as-roster substance carries over unchanged
   -- only the timed-dispatch framing is dropped.

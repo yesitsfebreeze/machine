@@ -36,5 +36,8 @@ version.log
 # taskboard project identity (resolved per-cwd at runtime by taskboard-resolve.sh)
 .machine/taskboard.json
 
+# machine env cache (absolute install paths, written each session by ignite.mjs)
+.machine/ENV.md
+
 .env
 .env.*

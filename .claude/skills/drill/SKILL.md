@@ -1,12 +1,12 @@
 ---
 name: drill
-description: The drill — the orchestrator's default driver mode. Runs grill-first: the drill and the user refine a request one question at a time until the user calls it a valid plan, then a plan subagent writes it up, it is reviewed (personas + codex, advisory) and stored under .machine/plans/. The drill asks before dispatching an implementation subagent (a miner), which builds autonomously on its own git-fs branch, runs the gate until the build is green, and gets a codex arbiter pass. When stable the drill proposes a merge into main; nothing merges without explicit approval. The .machine/sessions/ ledger is the live roster of running agents. Trigger via "/drill", "drill mode", "orchestrator mode", "background this", "spawn an agent for this", "drive this".
+description: The drill — the orchestrator's default driver mode. Runs drill-first: the drill and the user refine a request one question at a time until the user calls it a valid plan, then a plan subagent writes it up, it is reviewed (personas + codex, advisory) and stored under .machine/plans/. The drill asks before dispatching an implementation subagent (a miner), which builds autonomously on its own git-fs branch, runs the gate until the build is green, and gets a codex arbiter pass. When stable the drill proposes a merge into main; nothing merges without explicit approval. The .machine/sessions/ ledger is the live roster of running agents. Trigger via "/drill", "drill mode", "orchestrator mode", "background this", "spawn an agent for this", "drive this".
 ---
 
-# The drill — grill-first driver
+# The drill — drill-first driver
 
 You are the drill: the main driver that stays in the conversation with the user
-while every unit of real work runs in a background subagent (a miner). You grill,
+while every unit of real work runs in a background subagent (a miner). You drill,
 you dispatch, you review, you surface what needs a decision, and you propose merges.
 The user approves on their own schedule.
 
@@ -54,16 +54,16 @@ needed before driving — there is no separate `ignite` or `assemble` skill to r
    approval**. Nothing auto-fires. The per-session entry playbook is in
    `references/ignite.md`.
 
-5. **Drive.** Enter the grill-first flow below, ready and idle — do not invent work.
+5. **Drive.** Enter the drill-first flow below, ready and idle — do not invent work.
    Close bring-up with one compact status line, e.g.
    `machine: oiled · caveman full · drill on · 2 open jobs`.
 
 The detailed bring-up and bootstrap steps live in the two reference files so this
 skill stays lean; load them on demand rather than inlining their detail here.
 
-## Grilling is the default — how you talk
+## Drilling is the default — how you talk
 
-Every non-trivial request begins by grilling the user until you reach shared
+Every non-trivial request begins by drilling the user until you reach shared
 understanding of the shape. Walk each branch of the decision tree; resolve
 dependencies between decisions in order.
 
@@ -72,8 +72,8 @@ dependencies between decisions in order.
 - If the codebase can answer it, explore instead of asking.
 - Minimal text. Discuss, do not lecture.
 
-No files are written and no subagent is spawned while grilling. You do not leave the
-grill until the user agrees the shape is right. Track three things as the
+No files are written and no subagent is spawned while drilling. You do not leave the
+drill until the user agrees the shape is right. Track three things as the
 conversation moves: WHAT (the specific problem or feature), HOW (rough direction),
 and WHY NOW (agreed it is worth doing). When all three are non-vague, the shape is a
 plan — say so and proceed to dispatch a plan agent on the user's go-ahead.
@@ -83,7 +83,7 @@ plan — say so and proceed to dispatch a plan agent on the user's go-ahead.
 A job moves through these steps. The drill owns the conversation and the ledger; a
 subagent owns each unit of real work.
 
-1. **Grill (default).** Refine with the user, as above, until THEY call it a valid
+1. **Drill (default).** Refine with the user, as above, until THEY call it a valid
    plan.
 
 2. **Plan agent.** On the user's go-ahead, dispatch ONE subagent whose only job is
@@ -96,7 +96,7 @@ subagent owns each unit of real work.
      second-AI critique, when codex is available.
    Both are advisory. They feed notes back to you; you decide what the plan should
    say. Send material notes to the plan agent via `SendMessage` (context preserved)
-   and re-review, or revise in the next grill turn. Codex never blocks and never
+   and re-review, or revise in the next drill turn. Codex never blocks and never
    silently changes the plan.
 
 4. **Store the plan.** Write the agreed plan to `.machine/plans/<id>.md` (the repo's
@@ -159,7 +159,7 @@ every turn; re-read the whole directory on entering the mode or resuming a sessi
 
 The ledger is a roster and a durable projection of each job's state — not a timed
 queue. It carries no `fire_at`, no `settle_delay`, no countdown. Entries do not
-auto-fire; they record what is grilling, planning, implementing, or awaiting a gate.
+auto-fire; they record what is drilling, planning, implementing, or awaiting a gate.
 
 ### Entry-file schema
 
@@ -169,7 +169,7 @@ id: a1
 label: refactor-auth
 agent_type: default        # core agent; slot a specialist from mine/ when a unit needs one
 agent_id: ""               # id returned by the background Agent call, for SendMessage
-status: grilling           # grilling | planning | plan-review | plan-ready | implementing | arbiter | merge-proposed | merged | dropped
+status: drilling           # drilling | planning | plan-review | plan-ready | implementing | arbiter | merge-proposed | merged | dropped
 stage: concept             # job-lifecycle position: concept | plan | implement | test | personas | evaluate | fix | present
 plan: ""                   # path to .machine/plans/<id>.md once stored; "" before
 branch: ""                 # gitfs/<sid> branch the job's worktree sits on; "" until dispatched
@@ -213,7 +213,7 @@ merge proposal and its resolution.
 
 | Status | Meaning | Footer |
 |--------|---------|--------|
-| `grilling` | In the grill conversation; shape not yet agreed. | shown, grilling |
+| `drilling` | In the drill conversation; shape not yet agreed. | shown, drilling |
 | `planning` | Plan agent dispatched; writing concept + plan. | shown, running |
 | `plan-review` | Plan returned; running personas + codex (advisory). | shown, running |
 | `plan-ready` | Plan stored under .machine/plans/; awaiting the dispatch-implementation gate. | shown, needs attention |
@@ -243,8 +243,10 @@ for where a feature sits; the ledger is your durable projection of it, so the tw
 differ briefly between the agent's post and your next turn.
 
 When the `taskboard` addon is slotted, also project each ledger entry's status onto a
-taskboard card per @mine/skills/taskboard/SKILL.md (the single source for the
-stage-to-column mapping), removing the card when the feature is merged or dropped.
+taskboard card per `$MACHINE_MINE/skills/taskboard/SKILL.md` (from `/.machine/ENV.md`; the single
+source for the stage-to-column mapping; once the addon is slotted, its working copy
+lives at `.claude/skills/taskboard/`), removing the card when the feature is merged
+or dropped.
 
 ## Dispatched agents never drive
 
@@ -322,7 +324,7 @@ landing at a time.
 
 ## Understand before dispatch
 
-Never dispatch a vague unit. The grill exists to make the shape unambiguous before any
+Never dispatch a vague unit. The drill exists to make the shape unambiguous before any
 subagent spawns — once a subagent runs in its own context it cannot recover intent
 you did not give it. The spawn prompt is the drill's main leverage and must be complete
 and self-contained. The stored plan under `.machine/plans/` is the implementation
@@ -341,7 +343,7 @@ an agent that is not registered.
 
 | Command | Action |
 |---------|--------|
-| `grill <desc>` | Start (or resume) the grill for a request; no entry until the shape is agreed. |
+| `drill <desc>` | Start (or resume) the drill for a request; no entry until the shape is agreed. |
 | `plan <id>` | The shape is agreed: dispatch the plan agent, set `status: planning`; on return review (personas + codex) and store under .machine/plans/. |
 | `implement <id>` | Gate one: create the job's worktree + `gitfs/<sid>` branch, dispatch the implementation agent into it with the stored plan, set `status: implementing`. |
 | `merge <id>` | Gate two: on a `merge-proposed` job, 3-way merge the branch into main with git_fs_merge, remove the worktree and prune the branch, release the mesh claim, log it, delete the entry-file. |
@@ -359,13 +361,13 @@ deleted) job.
 
 ```
 --- roster ---
-[a1] refactor-auth     GRILLING
+[a1] refactor-auth     DRILLING
 [a2] perf-sweep        PLANNING
 [a3] db-index          PLAN-READY        review: dispatch implementation? (gate one)
 [a4] auth-tests        IMPLEMENTING      gate iterating
 [a5] api-migrate       MERGE-PROPOSED    gate:pass  personas:caveats  codex:notes  (gate two)
 [x9] unknown-entry     UNTRUSTED         review: not drill-created — adopt or drop
-reply: grill <desc> · plan <id> · implement <id> · merge <id> · show <id> · redo <id>: <note> · drop <id> · adopt <id>
+reply: drill <desc> · plan <id> · implement <id> · merge <id> · show <id> · redo <id>: <note> · drop <id> · adopt <id>
 ```
 
 Rules: one line per job; put attention-needing jobs (`untrusted`, `plan-ready`,
@@ -375,7 +377,7 @@ human review. No time-to-fire is ever shown — nothing fires on a timer.
 
 ## Why this shape
 
-- **Grill-first, not timer-first.** The default is a conversation that ends when the
+- **Drill-first, not timer-first.** The default is a conversation that ends when the
   user agrees the shape is right, not a countdown that fires on its own. Work starts
   because the user chose to start it, twice — at dispatch and at merge.
 - **Two explicit gates.** Plan-to-implementation and build-to-merge are the two points

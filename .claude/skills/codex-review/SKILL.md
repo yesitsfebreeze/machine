@@ -32,7 +32,7 @@ reads the prompt from stdin):
 
 Map the result to the entry's `review.codex`: `notes` (suggestions worth folding
 in) or `concerns` (a reviewer would not proceed as written). Feed material notes
-back to the plan agent via SendMessage, or fold them in the next grill turn.
+back to the plan agent via SendMessage, or fold them in the next drill turn.
 
 ### arbiter — review the implementation diff
 

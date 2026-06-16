@@ -129,7 +129,7 @@ the single source of truth for that mapping.
 
 | Drill status | taskboard column |
 |---|---|
-| grilling, planning, plan-review, plan-ready | `todo` |
+| drilling, planning, plan-review, plan-ready | `todo` |
 | implementing, arbiter | `in_progress` |
 | merge-proposed | `done` |
 | merged, dropped | card removed (`delete_ticket`) |

@@ -117,8 +117,11 @@ Before writing any code yourself, answer:
 
 Specialist agents (`expert-*`, `manager-spec` / `-strategy` / `-git` / `-docs`,
 `builder-*`, `evaluator-active`, `plan-auditor`) are not loaded by default; they
-live in the `mine/` kit. When a task clearly needs one, slot it in (via `/oil`)
-rather than dispatching to an unregistered agent.
+live in the **mine kit** (the machine plugin payload) — its path is `MACHINE_MINE` in
+`/.machine/ENV.md`, the env cache the SessionStart hook writes each session; never a
+target project's CWD or git root. Remote source `github.com/yesitsfebreeze/machine`
+under `/mine/`. When a task clearly needs one, slot it in (via `/oil`) rather than
+dispatching to an unregistered agent.
 
 ### Volume Triggers
 
