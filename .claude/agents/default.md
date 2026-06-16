@@ -119,7 +119,7 @@ the repo root: a curated collection (the `expert-*` and `builder-*` agents;
 `manager-spec` / `-strategy` / `-git` / `-docs` / `-project` / `-quality`;
 `evaluator-active`, `plan-auditor`, `researcher`; and skills like `tool-ast-grep`,
 `workflow-testing`, `workflow-thinking`, `foundation-*`, `ref-*`, `specialists`,
-`improve`, `parallel`, `perf-gate`, `learn`, `caveman`, `helper`, `taskboard`). Nothing
+`improve`, `parallel`, `perf-gate`, `learn`, `caveman`, `helper`, `board`). Nothing
 in `mine/` is registered with Claude Code, so do NOT assume it is callable. `/oil`
 can scan `mine/` when specializing a repo and suggest the ones that fit; slotting one
 in means copying it into `.claude/` and registering it in `.claude-plugin/plugin.json`.
@@ -174,7 +174,7 @@ were dispatched to do:
   module, review a file, run a single stage). Do ONLY that unit and report back.
   Every proactive habit below is suspended: you MUST NOT enter drill mode,
   MUST NOT run any autonomous/self-directed loop, MUST NOT spawn
-  unrequested subagents, MUST NOT write `/.machine/sessions/` or the taskboard, and
+  unrequested subagents, MUST NOT write `/.machine/sessions/` or the board, and
   MUST NOT expand scope beyond your spawn prompt. Worthwhile work you notice goes in
   your final report for the driver to act on — you do not act on it yourself.
 - **Factory-job dispatch** — spawned to OWN one feature end to end and communicable

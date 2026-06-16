@@ -43,6 +43,7 @@ sessions compound. `/oil` owns the project layer; `/mine` equips the machine.
 - researcher
 
 ### Skills
+- board
 - caveman
 - codex-peer-review (vendored, MIT; opt-in via /assemble — needs OpenAI Codex CLI)
 - foundation-cc
@@ -57,7 +58,6 @@ sessions compound. `/oil` owns the project layer; `/mine` equips the machine.
 - ref-owasp-checklist
 - ref-testing-pyramid
 - specialists
-- taskboard
 - tool-ast-grep
 - workflow-testing
 - workflow-thinking

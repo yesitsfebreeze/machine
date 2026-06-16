@@ -75,7 +75,7 @@ Add it once, then install each plugin from the same hub:
 - **📦 The `mine/` addon kit.** The rest of the toolbelt — the `expert-*` and
   `builder-*` agents, `manager-spec` / `-strategy` / `-git` / `-docs` / etc.,
   `tool-ast-grep`, `workflow-*`, `foundation-*`, `ref-*`, `specialists`, `improve`,
-  `parallel`, `perf-gate`, `learn`, `caveman`, `taskboard`, and more — lives in
+  `parallel`, `perf-gate`, `learn`, `caveman`, `board`, and more — lives in
   `mine/` at the repo root. Nothing there is loaded until you slot it in; `/oil`
   can scan it and suggest the pieces that fit a given repo.
 - **🧠 Compounding memory ([`kern`](https://github.com/yesitsfebreeze/kern)).** A

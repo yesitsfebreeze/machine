@@ -30,7 +30,7 @@ what drifted, never blow away a working layer.
    ```bash
    cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
    mkdir -p .machine/personas .machine/skills
-   rm -f .machine/agent.md .machine/project.md .machine/taskboard.json .machine/improve.json
+   rm -f .machine/agent.md .machine/project.md .machine/board.json .machine/improve.json
    rm -f .machine/*.lock .machine/*.lock.json
    rm -f .machine/personas/*.md
    printf 'category,term,definition\n' > .machine/glossary.csv

@@ -41,7 +41,7 @@ tracked-file occurrences (gitignored worktrees excluded). Leave a row blank to k
 |          | oil / /oil | 75 / 64 | 22 / 21 | "oil"/"oiled" verbs; target `/oil` to be safe |
 
 ### Not recommended to rename (platform/upstream/structural, not project brand)
-`subagent` (Claude Code term) · `taskboard`/`kanban` (upstream addon) · `glossary` ·
+`subagent` (Claude Code term) · `board`/`kanban` (in-plugin addon) · `glossary` ·
 `improve.json` · `gate` (partly generic).
 
 ## Core identity

@@ -8,10 +8,12 @@
 #   context-mode vendored MCP server    (npx on demand; needs Node >=22.5.0)
 #   context7     vendored MCP server    (needs CONTEXT7_API_KEY)
 #   pdf-reader   vendored MCP server    (npx on demand)
-#   taskboard    addon: kanban MCP+web  (build from source; needs Go 1.24 + Node 22)
+#   board        addon: kanban MCP+web  (ships in-plugin; needs only Node)
 #
-# taskboard is an optional addon, not a core daemon: if Go or Node is missing it
-# warns and skips (board projection disabled this session) — it never aborts the run.
+# board is an optional addon, not a core daemon: it ships in-plugin (a single
+# zero-dep Node file), so there is nothing to install — bring-up only starts its
+# web daemon. If Node is missing or the daemon fails to bind it warns and skips
+# (the web view is off, MCP card ops still work) — it never aborts the run.
 #
 # Idempotent: already-satisfied dependencies are skipped. Safe to re-run.
 # Usage: scripts/bootstrap.sh   (or: just bootstrap)
@@ -226,42 +228,20 @@ HOOK
   if have node; then node scripts/graphify.mjs >/dev/null 2>&1 && ok "graphify hook installed + initial graph built (.machine/graph.json)" || ok "graphify hook installed (initial build deferred)"; else warn "node not found — graphify hook installed but cannot run until node is present"; fi
 }
 
-# --- taskboard (addon: local kanban MCP + web) -----------------------------
-# Provisioning is prebuilt-first: upstream ships statically-linked release binaries
-# with the web frontend embedded, so the common path needs neither Go nor Node. The
-# source build is a fallback only when the download fails. Both paths pin a version
-# (never track latest); bump TASKBOARD_VERSION / TASKBOARD_REF deliberately to upgrade.
-# Rollback: remove the plugin.json `taskboard` mcpServers entry and
-# mine/skills/taskboard/; optionally `taskboard stop`; the SQLite DB at
-# ~/.config/taskboard/taskboard.db is left untouched.
-# Pinned version, platform detection, the prebuilt download/install, binary
-# resolution, and the version marker all live in the single-source installer that is
-# shared with taskboard/launch.sh — so a foreign-repo MCP launch self-heals with the
-# exact same logic bring-up uses. Source it here rather than re-defining any of it.
-. "$REPO_ROOT/taskboard/install.sh"
-TASKBOARD_REF="$TASKBOARD_VERSION"   # source-build fallback checks out this ref
-TASKBOARD_PORT="3010"
+# --- board (addon: local kanban MCP + web) ---------------------------------
+# board ships in-plugin as a single zero-dependency Node file (board/board.mjs),
+# so there is nothing to install — bring-up only starts its web daemon. The MCP
+# surface is launched on demand by the harness (plugin.json), independent of this
+# daemon. Rollback: remove the plugin.json `board` mcpServers entry and
+# mine/skills/board/, delete board/, optionally `node board/board.mjs stop`.
+BOARD_PORT="3010"
 
-# Go >= 1.24 ?  (taskboard go.mod requires 1.24.0)
-go_ok() {
-  have go || return 1
-  local v major minor
-  v="$(go env GOVERSION 2>/dev/null | sed 's/^go//')"
-  [ -n "$v" ] || v="$(go version 2>/dev/null | sed -n 's/.*go\([0-9.]*\).*/\1/p')"
-  major="${v%%.*}"; minor="$(echo "$v" | cut -d. -f2)"
-  [ "${major:-0}" -gt 1 ] && return 0
-  [ "${major:-0}" -eq 1 ] && [ "${minor:-0}" -ge 24 ] && return 0
-  return 1
-}
-
-# Poll the pidfile + web API until the daemon is listening (bounded). daemonize
-# returns before the server binds, so confirm readiness before declaring it up.
-taskboard_ready() {
-  local pidfile="${XDG_CONFIG_HOME:-$HOME/.config}/taskboard/taskboard.pid"
+# Poll the web API until the daemon is listening (bounded). The backgrounded
+# `serve` binds asynchronously, so confirm readiness before declaring it up.
+board_ready() {
   local i
   for i in 1 2 3 4 5 6 7 8 9 10; do
-    if [ -f "$pidfile" ] && have curl \
-       && curl -fsS "http://localhost:${TASKBOARD_PORT}/api/board" >/dev/null 2>&1; then
+    if have curl && curl -fsS "http://localhost:${BOARD_PORT}/api/board" >/dev/null 2>&1; then
       return 0
     fi
     sleep 1
@@ -269,75 +249,23 @@ taskboard_ready() {
   return 1
 }
 
-# taskboard_platform and taskboard_install_prebuilt are provided by the sourced
-# taskboard/install.sh (single source, shared with launch.sh).
-
-# Source build (fallback only). The //go:embed web/dist makes the frontend a hard
-# build dependency, so a bare `go install` cannot work — needs Go + Node + make + git.
-taskboard_build_source() {
-  go_ok || return 1
-  node_ok || return 1
-  have make || return 1
-  have git  || return 1
-  local src="${XDG_CACHE_HOME:-$HOME/.cache}/machine/taskboard"
-  echo "  building taskboard from $TASKBOARD_REPO @ $TASKBOARD_REF ..."
-  if [ -d "$src/.git" ]; then
-    git -C "$src" fetch --quiet origin 2>/dev/null || true
-  else
-    mkdir -p "$(dirname "$src")"
-    git clone --quiet "$TASKBOARD_REPO" "$src" 2>/dev/null || return 1
+start_board() {
+  head "board (addon: kanban MCP + web board)"
+  if ! node_ok; then
+    warn "Node >=22.5.0 not resolvable — board web view off (MCP card ops still work)"
+    return
   fi
-  git -C "$src" checkout --quiet "$TASKBOARD_REF" 2>/dev/null || return 1
-  ( cd "$src" && make build >/dev/null 2>&1 ) || return 1
-  mkdir -p "$LOCAL_BIN"
-  cp "$src/taskboard" "$LOCAL_BIN/taskboard" 2>/dev/null || return 1
-  chmod +x "$LOCAL_BIN/taskboard"
-  return 0
-}
-
-install_taskboard() {
-  head "taskboard (addon: kanban MCP + web board)"
-
-  # 1. Already installed → skip straight to the daemon.
-  if have taskboard; then
-    ok "taskboard present ($(command -v taskboard))"
-  else
-    # 2. Primary: pinned prebuilt binary (no Go, no Node).
-    # 3. Fallback: source build, only if the download failed.
-    local how=""
-    if taskboard_install_prebuilt; then
-      how="prebuilt $TASKBOARD_VERSION"
-    elif taskboard_build_source; then
-      how="source build"
-    else
-      warn "taskboard install skipped (prebuilt download failed; source build needs Go 1.24 + Node 22) — board projection off"
-      return
-    fi
-    if ! on_path "$LOCAL_BIN"; then
-      warn "taskboard installed to $LOCAL_BIN but it is not on PATH — add it and re-run"
-      return
-    fi
-    if ! have taskboard; then
-      warn "taskboard installed to $LOCAL_BIN but not resolvable on PATH"
-      return
-    fi
-    if ! taskboard --help >/dev/null 2>&1; then
-      warn "taskboard binary installed but does not run — board projection off"
-      return
-    fi
-    did "taskboard installed via $how ($LOCAL_BIN/taskboard)"
+  # Already up? `curl /api/board` confirms a live daemon; treat it as ok.
+  if board_ready; then
+    ok "board daemon already running (http://localhost:$BOARD_PORT)"
+    return
   fi
-
-  # 4. Daemon start ("one server if not up"). `taskboard start` daemonizes and
-  #    refuses a double-start, so treat "already running" as ok.
-  local out
-  out="$(taskboard start 2>&1)" || true
-  if printf '%s' "$out" | grep -qi 'already running'; then
-    ok "taskboard daemon already running (:$TASKBOARD_PORT)"
-  elif taskboard_ready; then
-    did "taskboard daemon up (http://localhost:$TASKBOARD_PORT)"
+  echo "  starting board web daemon on :$BOARD_PORT ..."
+  ( cd "$REPO_ROOT" && nohup node board/board.mjs serve >/dev/null 2>&1 & )
+  if board_ready; then
+    did "board daemon up (http://localhost:$BOARD_PORT)"
   else
-    warn "taskboard daemon did not become ready on :$TASKBOARD_PORT — MCP card ops still work without the web UI"
+    warn "board daemon did not become ready on :$BOARD_PORT — MCP card ops still work without the web UI"
   fi
 }
 
@@ -350,7 +278,7 @@ ensure_gitfs_shim
 ensure_statusline_shim
 ensure_node
 check_others
-install_taskboard
+start_board
 install_graphify
 
 head "summary"
