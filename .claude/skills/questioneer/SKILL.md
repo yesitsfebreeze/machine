@@ -37,7 +37,7 @@ Two sources, both read-only to gather:
 
 - **mesh** — agents `post` their questions to `topic:questions` (or directly to the
   questioneer's `agent_id`). Each post names the asking `agent_id` and the ticket it
-  blocks. Pull them with `mcp__mesh__inbox`, then `mcp__mesh__read` to advance the
+  blocks. Pull them with `mcp__hub__inbox`, then `mcp__hub__read` to advance the
   cursor once handled.
 - **board** — durable, ticket-anchored questions live as card comments. Walk the
   active tickets with `board_get`, then `comment_list` per card; an open question is
@@ -64,12 +64,12 @@ For each question, in priority order:
    vague, send it back for sharpening rather than guessing a decision out of it.
 2. **Get the operator's call.** One clear answer. Capture any reasoning they give.
 3. **Write the answer back, both channels:**
-   - `mcp__mesh__post` to the asking `agent_id` so the waiting agent unblocks now.
+   - `mcp__hub__post` to the asking `agent_id` so the waiting agent unblocks now.
    - `comment_add` on the ticket's card so the decision is durable on the board.
 4. **Persist durable decisions.** If the answer is a lasting design or scope
    decision, `mcp__kern__ingest` it so future sessions inherit the rationale, not
    just the outcome.
-5. `mcp__mesh__read` to acknowledge the mesh item, then move to the next.
+5. `mcp__hub__read` to acknowledge the mesh item, then move to the next.
 
 ## Ongoing context
 

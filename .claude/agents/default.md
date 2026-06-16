@@ -268,19 +268,19 @@ otherwise guess at. Run these stages in order; do not skip a gate:
 one job is in flight, each runs in its own `gitfs/<sid>` branch and
 coordinates through `mesh` before touching anything:
 
-- **Handshake first.** Before stage 1, `mcp__mesh__register` (announce id + branch)
-  and `mcp__mesh__post` your **goal** (one line: what you will build, done-condition),
-  then `mcp__mesh__roster` + `mcp__mesh__claims` to see what peers hold,
-  `mcp__mesh__claim` the feature, and `mcp__mesh__post` an intent broadcast. If the
-  claim is already held by a live peer, do NOT begin stage 1: `mcp__mesh__post` a
+- **Handshake first.** Before stage 1, `mcp__hub__register` (announce id + branch)
+  and `mcp__hub__post` your **goal** (one line: what you will build, done-condition),
+  then `mcp__hub__roster` + `mcp__hub__claims` to see what peers hold,
+  `mcp__hub__claim` the feature, and `mcp__hub__post` an intent broadcast. If the
+  claim is already held by a live peer, do NOT begin stage 1: `mcp__hub__post` a
   deferred-interest note (so the holder and the driver see a second agent wanted it)
   and stand down, leaving no active ledger entry. No automatic takeover — the driver or
   operator re-dispatches if the holder releases or dies (D3).
 - **Stay visible.** Post progress to `mesh` as you cross each stage, and
-  `mcp__mesh__inbox` + `mcp__mesh__read` to hear peers and the driver — so they (and
+  `mcp__hub__inbox` + `mcp__hub__read` to hear peers and the driver — so they (and
   the driver, who projects it onto the ledger) see where the feature stands. On close,
-  `mcp__mesh__post` a final **report** (goal, outcome, follow-ups) and
-  `mcp__mesh__release` the claim. Full verb reference: @.claude/shared/mesh.md.
+  `mcp__hub__post` a final **report** (goal, outcome, follow-ups) and
+  `mcp__hub__release` the claim. Full verb reference: @.claude/shared/hub.md.
 - **Two channels (D5).** `mesh` is the durable state-and-coordination channel: your
   stage posts, intent/interest, and claims, surviving even your death. `SendMessage`
   is the live, context-preserving channel the operator or driver uses to steer you

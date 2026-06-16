@@ -21,6 +21,7 @@
 
 ## Build / test / quality gate
 There is no compile step. "Build" = configuration integrity:
+- **Hub binary exists:** `hub/target/release/hub` must exist and be executable; if missing run `cargo build --release --manifest-path hub/Cargo.toml`
 - **Hooks parse:** `node --check .claude/hooks/personas.mjs` and `.claude/hooks/statusline.mjs`
 - **Settings parse:** `python3 -m json.tool .claude/settings.json >/dev/null` (or `node -e "require('./.claude/settings.json')"`) — must not throw
 - **Manifests parse:** `python3 -m json.tool .claude-plugin/plugin.json >/dev/null` and `.claude-plugin/marketplace.json`; or `claude plugin validate . --strict`

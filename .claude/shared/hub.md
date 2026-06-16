@@ -1,27 +1,27 @@
-# Mesh — the agent coordination bus
+# Hub — the agent coordination bus
 
-Every agent in a session shares one mesh bus (the `mesh` MCP server). It is how
+Every agent in a session shares one hub bus (the `hub` MCP server). It is how
 parallel agents avoid building the same thing twice, and how they talk to each
 other and to the driver. Your `agent_id` is your spawn / git-fs branch id.
 
 ## The eight verbs
 
-- `mcp__mesh__register` — announce your id, branch, and prompt pointer; refreshes
+- `mcp__hub__register` — announce your id, branch, and prompt pointer; refreshes
   your liveness heartbeat. Call once on start, and again on long runs to stay live.
-- `mcp__mesh__roster` — list known agents and who is currently live.
-- `mcp__mesh__claims` — inspect current resource locks and their queues.
-- `mcp__mesh__claim` — atomically lock (or queue for) a feature or file set so no
+- `mcp__hub__roster` — list known agents and who is currently live.
+- `mcp__hub__claims` — inspect current resource locks and their queues.
+- `mcp__hub__claim` — atomically lock (or queue for) a feature or file set so no
   peer touches it concurrently.
-- `mcp__mesh__release` — relinquish a held claim, or cancel a queued ticket.
-- `mcp__mesh__post` — send a durable message to a peer's `agent_id`, to `*`
+- `mcp__hub__release` — relinquish a held claim, or cancel a queued ticket.
+- `mcp__hub__post` — send a durable message to a peer's `agent_id`, to `*`
   (broadcast), or to `topic:<name>`.
-- `mcp__mesh__inbox` — peek pending messages without consuming them.
-- `mcp__mesh__read` — advance your read cursor to acknowledge what you have consumed.
+- `mcp__hub__inbox` — peek pending messages without consuming them.
+- `mcp__hub__read` — advance your read cursor to acknowledge what you have consumed.
 
 ## The protocol
 
-1. **On start — register and state your goal.** `mcp__mesh__register`, then
-   `mcp__mesh__post` your **goal**: one line naming the objective you were dispatched
+1. **On start — register and state your goal.** `mcp__hub__register`, then
+   `mcp__hub__post` your **goal**: one line naming the objective you were dispatched
    for and your done-condition. `roster` + `claims` to see who is live and what they
    hold, then `claim` what you are about to touch. If a live peer already holds it,
    `post` a deferred-interest note to them and to `*`, then stand down — never
@@ -35,12 +35,12 @@ other and to the driver. Your `agent_id` is your spawn / git-fs branch id.
    `release` every claim you hold.
 
 Always open with a goal and close with a report — a peer or the driver reading only
-your first and last mesh posts must understand what you set out to do and what
+your first and last hub posts must understand what you set out to do and what
 happened.
 
 ## Two channels
 
-- **mesh** is the durable state-and-coordination channel: claims, intent and
+- **hub** is the durable state-and-coordination channel: claims, intent and
   interest, goal, stage posts, and the final report survive even your death, so the
   driver can reconcile them onto the ledger.
 - **SendMessage** is the live, context-preserving back-channel the operator or
