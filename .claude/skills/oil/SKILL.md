@@ -64,7 +64,29 @@ what drifted, never blow away a working layer.
      `personas.md` indexes them with `**File:** .machine/personas/<name>.md` pointers. If the
      domain is unclear, write an empty `personas.md` stub and tell the user to author it.
 
-Status line and API keys are wired by drill's bring-up (references/assemble.md), not here.
+4. **Ensure the status line is wired** (self-heal). A plugin cannot contribute a main
+   `statusLine`, so it must live in the repo's `.claude/settings.json`. `/oil` is the
+   advertised post-install entry point, so guarantee a working statusbar here rather
+   than assuming drill's bring-up ran. Both steps are idempotent:
+   ```bash
+   # a) ensure the stable shim exists (bring-up's bootstrap also installs/refreshes it)
+   SHIM="$HOME/.claude/hooks/machine-statusline.mjs"
+   mkdir -p "$(dirname "$SHIM")"
+   [ -f "$SHIM" ] || cp "${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs" "$SHIM"
+   # b) point this repo's settings at the stable shim (never the versioned cache path)
+   SETTINGS="$(git rev-parse --show-toplevel)/.claude/settings.json"
+   mkdir -p "$(dirname "$SETTINGS")"
+   [ -f "$SETTINGS" ] || printf '{}' > "$SETTINGS"
+   node -e '
+     const fs = require("fs");
+     const [file] = process.argv.slice(1);
+     const s = JSON.parse(fs.readFileSync(file, "utf8"));
+     s.statusLine = { type: "command", command: "node ~/.claude/hooks/machine-statusline.mjs", refreshInterval: 10 };
+     fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
+   ' "$SETTINGS"
+   ```
+   API keys remain bring-up's job (references/assemble.md); only the status line is
+   self-healed here, because it is the one piece a user reasonably expects `/oil` to leave working.
 
 ### Re-run — reconcile in place
 
@@ -76,8 +98,9 @@ drifted; do **not** clear `/.machine/`:
 - `agent.md` — identity/domain law still matches the repo's shape?
 
 If `/.machine/` is missing or structurally stale, regenerate it (the first-run path above).
-If present and largely intact, hand-patch the specific gaps. To re-wire the status
-line or re-check API keys, re-run drill's bring-up (or `just bootstrap`).
+If present and largely intact, hand-patch the specific gaps. Re-run the status-line
+self-heal step above (it is idempotent); to re-check API keys, re-run drill's bring-up
+(or `just bootstrap`).
 
 ## Then mine — equip the machine
 
@@ -97,6 +120,8 @@ discipline, and the dispatch table are live.
 
 ## Boundaries
 
-- `/oil` writes **only** under `/.machine/`. Never touch the machine itself
-  (`skills/`, `agents/`, `hooks/`, `settings.json`, `rules/`) during re-index —
-  that is the plugin's content, updated via `/plugin update machine`.
+- `/oil` writes under `/.machine/`, plus the single `statusLine` key in the **target
+  repo's** `.claude/settings.json` (the self-heal step above) and the stable shim at
+  `~/.claude/hooks/`. It never touches the **machine plugin's own** content
+  (`skills/`, `agents/`, `hooks/`, the plugin's `settings.json`, `rules/`) during
+  re-index — that is the plugin's content, updated via `/plugin update machine`.

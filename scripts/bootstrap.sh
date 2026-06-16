@@ -125,6 +125,28 @@ SHIM
   did "git-fs-mcp shim written to $LOCAL_BIN (restart Claude to apply)"
 }
 
+# Install/refresh the status-line shim at a STABLE, version-independent path.
+# A plugin cannot contribute a main `statusLine` (Claude Code reads it only from
+# user/project/local settings), and the plugin cache dir is versioned — so a repo
+# that pointed at `.../machine/<version>/.claude/hooks/statusline.mjs` would rot on
+# every `/plugin update`. Copy the script to ~/.claude/hooks/machine-statusline.mjs
+# instead; repos point at that one stable path and never need re-wiring. Idempotent:
+# overwrites on every run so a plugin update ships the latest script automatically.
+ensure_statusline_shim() {
+  head "statusline (stable shim)"
+  local src="$REPO_ROOT/.claude/hooks/statusline.mjs"
+  local dst="$HOME/.claude/hooks/machine-statusline.mjs"
+  if [ ! -f "$src" ]; then
+    warn "statusline source not found at $src — cannot install shim"; return
+  fi
+  mkdir -p "$(dirname "$dst")"
+  if cp "$src" "$dst"; then
+    did "statusline shim refreshed at $dst (repos point at it via ~/.claude/hooks/machine-statusline.mjs)"
+  else
+    warn "could not write statusline shim to $dst"
+  fi
+}
+
 # --- kern -------------------------------------------------------------------
 install_kern() {
   head "kern (memory daemon)"
@@ -325,6 +347,7 @@ install_kern
 install_mesh
 install_gitfs
 ensure_gitfs_shim
+ensure_statusline_shim
 ensure_node
 check_others
 install_taskboard

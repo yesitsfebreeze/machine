@@ -128,32 +128,37 @@ only the keys it owns and leaves the rest of the settings untouched.
 
 ### Status line
 
-A plugin cannot contribute a main `statusLine`, so the machine's status line only
-appears once it is wired into the target repo. Resolve the installed plugin's
-status line script at `${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs` and
-capture the RESOLVED absolute path. Write that resolved path as a LITERAL string
-into the project settings, because the `${CLAUDE_PLUGIN_ROOT}` token does NOT
-expand inside a project `settings.json`.
+A plugin cannot contribute a main `statusLine` — Claude Code reads `statusLine` only
+from user/project/local settings, never from a plugin's bundled settings (a plugin's
+`settings.json` honors only `agent` and `subagentStatusLine`). So the machine's status
+line only appears once it is wired into the target repo's `.claude/settings.json`.
+
+Point the wiring at the **stable shim**, not the versioned plugin cache. `bootstrap.sh`
+installs/refreshes the script to `~/.claude/hooks/machine-statusline.mjs` (a
+version-independent path) on every run, so a `/plugin update` ships the latest script
+there automatically and the recorded command never rots. Do NOT write the
+`${CLAUDE_PLUGIN_ROOT}/.claude/hooks/...` path: that token does not expand inside a
+project `settings.json`, and its resolved value bakes in the version dir that an
+update invalidates.
 
 Merge a `statusLine` block into `<project>/.claude/settings.json` without
 clobbering any other keys. If the file is absent, create it as `{}` first, then
 merge. The block sets `statusLine.type` to `"command"`, `statusLine.command` to
-`node "<resolved-abs-path>"`, and `statusLine.refreshInterval` to `10`. Overwriting
-rather than skipping means a plugin update that moves the install directory
-self-heals the recorded path on the next run.
+`node ~/.claude/hooks/machine-statusline.mjs` (the shell that runs the status line
+expands `~`), and `statusLine.refreshInterval` to `10`. Overwriting rather than
+skipping keeps the command current if the stable path ever changes.
 
 ```bash
 SETTINGS="$(git rev-parse --show-toplevel)/.claude/settings.json"
-SCRIPT="${CLAUDE_PLUGIN_ROOT}/.claude/hooks/statusline.mjs"
 mkdir -p "$(dirname "$SETTINGS")"
 [ -f "$SETTINGS" ] || printf '{}' > "$SETTINGS"
 node -e '
   const fs = require("fs");
-  const [file, script] = process.argv.slice(1);
+  const [file] = process.argv.slice(1);
   const s = JSON.parse(fs.readFileSync(file, "utf8"));
-  s.statusLine = { type: "command", command: `node "${script}"`, refreshInterval: 10 };
+  s.statusLine = { type: "command", command: "node ~/.claude/hooks/machine-statusline.mjs", refreshInterval: 10 };
   fs.writeFileSync(file, JSON.stringify(s, null, 2) + "\n");
-' "$SETTINGS" "$SCRIPT"
+' "$SETTINGS"
 ```
 
 ### Required API keys
