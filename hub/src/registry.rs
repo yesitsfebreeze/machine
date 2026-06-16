@@ -105,9 +105,10 @@ impl Registry {
         removed
     }
 
-    /// Pre-load the 8 built-in hub verbs. Called once at construction.
+    /// Pre-load the built-in hub verbs (8 mesh + 11 board + 2 registry tools).
     fn preload_verbs(&self) {
         let verbs: &[(&str, &str, Value)] = &[
+            // 8 mesh verbs
             ("register", "Announce presence and refresh liveness (heartbeat).", json!({
                 "type":"object","required":["agent_id","branch","prompt_ptr"],
                 "properties":{"agent_id":{"type":"string"},"branch":{"type":"string"},"prompt_ptr":{"type":"string"},"role":{"type":"string"},"ttl_seconds":{"type":"integer"}}
@@ -140,6 +141,7 @@ impl Registry {
                 "type":"object","required":["agent_id","up_to"],
                 "properties":{"agent_id":{"type":"string"},"up_to":{"type":"string"}}
             })),
+            // 2 registry management verbs
             ("hub_register_tool", "Register a new MCP tool in the hub registry; emits tools/list_changed.", json!({
                 "type":"object","required":["name","description","input_schema"],
                 "properties":{"name":{"type":"string"},"description":{"type":"string"},"input_schema":{"type":"object"}}
@@ -147,6 +149,50 @@ impl Registry {
             ("hub_unregister_tool", "Remove a registered MCP tool from the hub registry; the 8 built-in verbs cannot be removed.", json!({
                 "type":"object","required":["name"],
                 "properties":{"name":{"type":"string"}}
+            })),
+            // 11 board verbs
+            ("project_resolve", "Get-or-create a board project by name (board-per-cwd).", json!({
+                "type":"object","required":["name"],
+                "properties":{"name":{"type":"string"}}
+            })),
+            ("project_list", "List all board projects.", json!({
+                "type":"object","properties":{}
+            })),
+            ("board_get", "Read a project's columns and cards, grouped left-to-right with comment counts.", json!({
+                "type":"object","required":["projectId"],
+                "properties":{"projectId":{"type":"string"}}
+            })),
+            ("column_create", "Create a column (lifecycle lane) in a project.", json!({
+                "type":"object","required":["projectId","name"],
+                "properties":{"projectId":{"type":"string"},"name":{"type":"string"}}
+            })),
+            ("column_delete", "Delete a column and cascade to its cards and comments.", json!({
+                "type":"object","required":["id"],
+                "properties":{"id":{"type":"string"}}
+            })),
+            ("card_create", "Create a card in a column.", json!({
+                "type":"object","required":["columnId","title"],
+                "properties":{"columnId":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"}}
+            })),
+            ("card_update", "Update a card's title and/or body.", json!({
+                "type":"object","required":["id"],
+                "properties":{"id":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"}}
+            })),
+            ("card_move", "Move a card to a column at a 0-based index (reorders the destination).", json!({
+                "type":"object","required":["id","toColumnId"],
+                "properties":{"id":{"type":"string"},"toColumnId":{"type":"string"},"newIndex":{"type":"integer"}}
+            })),
+            ("card_delete", "Delete a card and its comments.", json!({
+                "type":"object","required":["id"],
+                "properties":{"id":{"type":"string"}}
+            })),
+            ("comment_add", "Add a comment to a card.", json!({
+                "type":"object","required":["cardId","author","body"],
+                "properties":{"cardId":{"type":"string"},"author":{"type":"string"},"body":{"type":"string"}}
+            })),
+            ("comment_list", "List a card's comments oldest-first.", json!({
+                "type":"object","required":["cardId"],
+                "properties":{"cardId":{"type":"string"}}
             })),
         ];
 
@@ -171,9 +217,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn preloads_ten_tools() {
+    fn preloads_twenty_one_tools() {
         let reg = Registry::new();
-        assert_eq!(reg.list().len(), 10); // 8 verbs + 2 registry tools
+        assert_eq!(reg.list().len(), 21); // 8 mesh + 11 board + 2 registry tools
     }
 
     #[test]
@@ -191,10 +237,10 @@ mod tests {
         let reg = Registry::new();
         let was_new = reg.register("my_tool".into(), "desc".into(), json!({"type":"object"}));
         assert!(was_new);
-        assert_eq!(reg.list().len(), 11);
+        assert_eq!(reg.list().len(), 22);
         let removed = reg.unregister("my_tool");
         assert!(removed);
-        assert_eq!(reg.list().len(), 10);
+        assert_eq!(reg.list().len(), 21);
     }
 
     #[test]
@@ -202,7 +248,7 @@ mod tests {
         let reg = Registry::new();
         let removed = reg.unregister("register");
         assert!(!removed);
-        assert_eq!(reg.list().len(), 10);
+        assert_eq!(reg.list().len(), 21);
     }
 
     #[test]
@@ -211,7 +257,7 @@ mod tests {
         reg.register("dupe".into(), "v1".into(), json!({}));
         let was_new = reg.register("dupe".into(), "v2".into(), json!({}));
         assert!(!was_new); // replacement, not new
-        assert_eq!(reg.list().len(), 11); // count unchanged
+        assert_eq!(reg.list().len(), 22); // count unchanged
     }
 
     #[test]

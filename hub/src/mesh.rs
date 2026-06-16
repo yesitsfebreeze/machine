@@ -478,6 +478,11 @@ impl Mesh {
         })
     }
 
+    /// Read the current state without locking (for WS snapshot; read-only).
+    pub fn current_state(&self) -> crate::state::State {
+        self.store.load()
+    }
+
     // --- maintenance: gc ----------------------------------------------------
 
     /// Drop TTL-expired messages and sweep dead claims. Returns reclaimed count.

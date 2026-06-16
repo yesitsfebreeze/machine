@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hub board</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
+header h1 { font-size: 14px; font-weight: 600; color: #fff; }
+#project-name { font-size: 13px; color: #aaa; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
+.status-dot.connected { background: #4caf50; }
+.status-dot.disconnected { background: #f44336; }
+#status-label { font-size: 11px; color: #666; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* kanban */
+#kanban { flex: 1; display: flex; gap: 10px; padding: 12px; overflow-x: auto; align-items: flex-start; }
+.column { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; min-width: 220px; max-width: 260px; display: flex; flex-direction: column; max-height: 100%; }
+.col-header { padding: 8px 10px; font-size: 12px; font-weight: 600; color: #ccc; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: space-between; }
+.col-count { font-size: 11px; color: #555; font-weight: normal; }
+.cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; }
+.card { background: #242424; border: 1px solid #333; border-radius: 4px; padding: 8px 10px; cursor: grab; }
+.card:hover { border-color: #555; }
+.card.dragging { opacity: 0.4; }
+.card-title { font-size: 12px; line-height: 1.4; color: #ddd; }
+.card-meta { display: flex; gap: 8px; margin-top: 4px; font-size: 10px; color: #555; }
+.card-body { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; max-height: 60px; overflow: hidden; }
+.drop-target { border: 1px dashed #4caf5088; background: #4caf5010; min-height: 40px; border-radius: 4px; }
+.col-empty { font-size: 11px; color: #444; text-align: center; padding: 12px 0; }
+
+/* roster panel */
+#roster { width: 200px; flex-shrink: 0; background: #141414; border-left: 1px solid #2a2a2a; padding: 10px; overflow-y: auto; }
+#roster h2 { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.agent { font-size: 11px; padding: 4px 6px; border-radius: 3px; margin-bottom: 3px; background: #1e1e1e; border: 1px solid #2a2a2a; }
+.agent-id { color: #bbb; word-break: break-all; }
+.agent-branch { color: #5a9; font-size: 10px; }
+.roster-empty { font-size: 11px; color: #444; }
+
+/* project picker */
+#proj-picker { display: flex; align-items: center; gap: 6px; }
+#proj-picker select { background: #252525; border: 1px solid #333; color: #ccc; font-size: 12px; padding: 3px 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="status-dot" id="dot"></div>
+  <h1>hub board</h1>
+  <div id="proj-picker">
+    <select id="proj-sel" onchange="selectProject(this.value)"></select>
+  </div>
+  <span id="project-name"></span>
+  <span style="flex:1"></span>
+  <span id="status-label">connecting...</span>
+</header>
+<div class="main">
+  <div id="kanban"></div>
+  <div id="roster">
+    <h2>Roster</h2>
+    <div id="roster-list"><span class="roster-empty">empty</span></div>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let reconnectDelay = 1000;
+let currentProjectId = null;
+let lastState = null;
+let dragCardId = null;
+let dragToColumnId = null;
+
+function connect() {
+  ws = new WebSocket('ws://' + location.host + '/ws');
+  ws.onopen = () => {
+    setStatus(true);
+    reconnectDelay = 1000;
+  };
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      lastState = msg;
+      render(msg);
+    } catch {}
+  };
+  ws.onclose = () => {
+    setStatus(false);
+    setTimeout(connect, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, 16000);
+  };
+  ws.onerror = () => ws.close();
+}
+
+function setStatus(ok) {
+  document.getElementById('dot').className = 'status-dot ' + (ok ? 'connected' : 'disconnected');
+  document.getElementById('status-label').textContent = ok ? 'live' : 'reconnecting...';
+}
+
+function render(msg) {
+  renderProjects(msg.projects || []);
+  renderRoster(msg.roster || {});
+  const projects = (msg.projects || []);
+  if (!currentProjectId && projects.length > 0) {
+    currentProjectId = projects[0].id;
+  }
+  if (currentProjectId) {
+    renderKanban(msg, currentProjectId);
+  } else {
+    document.getElementById('kanban').innerHTML = '<div style="color:#444;font-size:12px;padding:20px">No projects yet.</div>';
+  }
+}
+
+function renderProjects(projects) {
+  const sel = document.getElementById('proj-sel');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  if (!projects.length) {
+    const o = document.createElement('option');
+    o.value = '';
+    o.textContent = '(no projects)';
+    sel.appendChild(o);
+    return;
+  }
+  projects.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.name;
+    sel.appendChild(o);
+  });
+  if (prev && projects.find(p => p.id === prev)) sel.value = prev;
+  else if (projects.length > 0) sel.value = projects[0].id;
+  currentProjectId = sel.value || null;
+}
+
+function selectProject(id) {
+  currentProjectId = id;
+  if (lastState) renderKanban(lastState, id);
+}
+
+function renderKanban(state, projectId) {
+  const columns = (state.columns || []).filter(c => c.projectId === projectId)
+    .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+  const cards = (state.cards || []);
+  const comments = (state.comments || []);
+  const commentCounts = {};
+  comments.forEach(c => { commentCounts[c.cardId] = (commentCounts[c.cardId] || 0) + 1; });
+  const project = (state.projects || []).find(p => p.id === projectId);
+  document.getElementById('project-name').textContent = project ? project.name : '';
+
+  const kanban = document.getElementById('kanban');
+  kanban.innerHTML = '';
+  if (!columns.length) {
+    kanban.innerHTML = '<div style="color:#444;font-size:12px;padding:20px">No columns yet.</div>';
+    return;
+  }
+  columns.forEach(col => {
+    const colCards = cards.filter(k => k.columnId === col.id)
+      .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.colId = col.id;
+
+    const header = document.createElement('div');
+    header.className = 'col-header';
+    header.innerHTML = `<span>${esc(col.name)}</span><span class="col-count">${colCards.length}</span>`;
+    colEl.appendChild(header);
+
+    const cardsEl = document.createElement('div');
+    cardsEl.className = 'cards';
+    cardsEl.dataset.colId = col.id;
+    cardsEl.addEventListener('dragover', onDragOver);
+    cardsEl.addEventListener('drop', onDrop);
+
+    if (!colCards.length) {
+      const empty = document.createElement('div');
+      empty.className = 'col-empty';
+      empty.textContent = 'empty';
+      cardsEl.appendChild(empty);
+    }
+    colCards.forEach((card, idx) => {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.draggable = true;
+      cardEl.dataset.cardId = card.id;
+      cardEl.dataset.idx = idx;
+      const cc = commentCounts[card.id] || 0;
+      cardEl.innerHTML = `<div class="card-title">${esc(card.title)}</div>${card.body ? `<div class="card-body">${esc(card.body)}</div>` : ''}<div class="card-meta">${cc ? `<span>${cc} comment${cc>1?'s':''}</span>` : ''}</div>`;
+      cardEl.addEventListener('dragstart', onDragStart);
+      cardEl.addEventListener('dragend', onDragEnd);
+      cardsEl.appendChild(cardEl);
+    });
+    colEl.appendChild(cardsEl);
+    kanban.appendChild(colEl);
+  });
+}
+
+function renderRoster(roster) {
+  const list = document.getElementById('roster-list');
+  const agents = Object.values(roster);
+  if (!agents.length) { list.innerHTML = '<span class="roster-empty">empty</span>'; return; }
+  list.innerHTML = agents.map(a => `<div class="agent"><div class="agent-id">${esc(a.agent_id)}</div><div class="agent-branch">${esc(a.branch || '')}</div></div>`).join('');
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// --- drag and drop ----------------------------------------------------------
+function onDragStart(e) {
+  dragCardId = e.currentTarget.dataset.cardId;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  target.classList.add('drop-target');
+}
+function onDrop(e) {
+  e.preventDefault();
+  const cardsEl = e.currentTarget;
+  cardsEl.classList.remove('drop-target');
+  const toColumnId = cardsEl.dataset.colId;
+  if (!dragCardId || !toColumnId) return;
+  // Find drop index from mouse position
+  const cardEls = [...cardsEl.querySelectorAll('.card')].filter(el => el.dataset.cardId !== dragCardId);
+  let newIndex = cardEls.length;
+  for (let i = 0; i < cardEls.length; i++) {
+    const rect = cardEls[i].getBoundingClientRect();
+    if (e.clientY < rect.top + rect.height / 2) { newIndex = i; break; }
+  }
+  apiCall('card_move', { id: dragCardId, toColumnId, newIndex });
+  dragCardId = null;
+}
+
+function apiCall(verb, body) {
+  fetch('/api/' + verb, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(console.error);
+}
+
+connect();
+</script>
+</body>
+</html>

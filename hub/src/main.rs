@@ -2,14 +2,14 @@
 //!
 //! Rust replacement for the prior `mesh/mesh.mjs`. kern owns *memory* (why
 //! decisions were made); hub owns *live coordination* (who is here, who holds
-//! what, who said what to whom). Three categories of dynamic state — roster,
-//! claims, messages — exposed as eight MCP verbs over stdio.
+//! what, who said what to whom) AND board state (kanban projects/columns/cards).
 //!
-//! State is a single JSON file under a repo-scoped, gitignored `.mesh/`
-//! directory (the dir name is unchanged for data continuity), shared by every
-//! git worktree of the repo. Cross-process atomicity comes from an OS-atomic
-//! lock directory plus atomic rename on write.
+//! Two transports:
+//!   hub serve    HTTP+SSE singleton daemon on port 7777 (primary)
+//!   hub mcp      MCP server over stdio (fallback / local test)
 
+mod board;
+mod board_http;
 mod error;
 mod mesh;
 mod registry;
@@ -23,22 +23,21 @@ use std::path::PathBuf;
 use std::process::Command;
 
 const DATA_DIR: &str = ".mesh";
+const BOARD_DIR: &str = ".board";
+const DEFAULT_PORT: u16 = 7777;
 
-const USAGE: &str = "hub — fleet inter-agent coordination daemon (kern's coordination sibling)
+const USAGE: &str = "hub — fleet inter-agent coordination daemon
 
 Usage:
-  hub mcp        Run the MCP server over stdio (the fleet attaches here)
-  hub gc         Reclaim TTL-expired messages and sweep dead claims
-  hub --version  Show version
+  hub serve [--port N]  Run the HTTP+SSE+WS singleton daemon (primary)
+  hub mcp               Run the MCP server over stdio (fallback)
+  hub gc                Reclaim TTL-expired messages and sweep dead claims
+  hub --version         Show version
 
-Data lives in a repo-scoped, gitignored .mesh/ directory at the repo root, shared
-by every git worktree of the repo (a single JSON state file). Override with MESH_DIR.";
+Data lives in repo-scoped, gitignored .mesh/ and .board/ directories.
+Override with MESH_DIR / BOARD_DIR env vars.";
 
-/// Resolve the hub store. Repo-scoped, not cwd-scoped: every git worktree of the
-/// same repository shares one store. Resolution order:
-///   1. MESH_DIR env override.
-///   2. The repo root that owns this cwd — the parent of git's common dir.
-///   3. Fall back to cwd when not inside a git repository.
+/// Resolve the mesh store dir. Repo-scoped, git-common-dir rooted.
 fn data_dir() -> PathBuf {
     if let Ok(d) = std::env::var("MESH_DIR") {
         if !d.is_empty() {
@@ -52,9 +51,6 @@ fn data_dir() -> PathBuf {
         if output.status.success() {
             let common = String::from_utf8_lossy(&output.stdout).trim().to_string();
             if !common.is_empty() {
-                // `common` is `.git` (relative) in a main worktree, or an
-                // absolute path in a linked worktree. Its parent is the shared
-                // repo root in both cases.
                 let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
                 let abs = if PathBuf::from(&common).is_absolute() {
                     PathBuf::from(&common)
@@ -72,22 +68,44 @@ fn data_dir() -> PathBuf {
         .join(DATA_DIR)
 }
 
+/// Resolve the board store dir (sibling of mesh dir).
+fn board_data_dir() -> PathBuf {
+    if let Ok(d) = std::env::var("BOARD_DIR") {
+        if !d.is_empty() {
+            return PathBuf::from(d);
+        }
+    }
+    // Same parent as mesh dir but with .board suffix
+    let mesh = data_dir();
+    mesh.parent()
+        .map(|p| p.join(BOARD_DIR))
+        .unwrap_or_else(|| PathBuf::from(BOARD_DIR))
+}
+
 #[tokio::main]
 async fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cmd = args.first().map(String::as_str).unwrap_or("");
-    if let Err(e) = run(cmd).await {
+    if let Err(e) = run(cmd, &args[1.min(args.len())..]).await {
         eprintln!("hub: {e}");
         std::process::exit(1);
     }
 }
 
-async fn run(cmd: &str) -> Result<()> {
+async fn run(cmd: &str, rest: &[String]) -> Result<()> {
     match cmd {
+        "serve" => {
+            // Parse optional --port N
+            let port = parse_port(rest).unwrap_or(DEFAULT_PORT);
+            let mesh = Mesh::open(data_dir())?;
+            let board_dir = board_data_dir();
+            board_http::serve_http(mesh, board_dir, port).await
+        }
         "mcp" => {
             let mesh = Mesh::open(data_dir())?;
+            let board = board::Board::open(board_data_dir(), board::system_clock())?;
             let registry = registry::Registry::new();
-            server::serve(mesh, registry).await
+            server::serve(mesh, board, registry).await
         }
         "gc" | "compact" => {
             let mesh = Mesh::open(data_dir())?;
@@ -108,4 +126,16 @@ async fn run(cmd: &str) -> Result<()> {
             std::process::exit(1);
         }
     }
+}
+
+fn parse_port(args: &[String]) -> Option<u16> {
+    let mut iter = args.iter();
+    while let Some(a) = iter.next() {
+        if a == "--port" {
+            if let Some(p) = iter.next() {
+                return p.parse().ok();
+            }
+        }
+    }
+    None
 }

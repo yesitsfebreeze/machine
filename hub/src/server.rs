@@ -5,6 +5,7 @@
 //! registry's broadcast channel and emits a single
 //! `notifications/tools/list_changed` JSON-RPC notification per burst.
 
+use crate::board::Board;
 use crate::error::{HubError, Result};
 use crate::mesh::Mesh;
 use crate::registry::Registry;
@@ -15,12 +16,12 @@ use tokio::sync::Mutex as AsyncMutex;
 
 pub const PROTOCOL_VERSION: &str = "2024-11-05";
 pub const SERVER_NAME: &str = "hub";
-pub const SERVER_VERSION: &str = "0.4.0";
+pub const SERVER_VERSION: &str = "0.8.0";
 
 // ---- dispatch ---------------------------------------------------------------
 
 /// Invoke a mesh verb by name with its arguments.
-fn invoke_verb(mesh: &Mesh, name: &str, args: &Value) -> Result<Value> {
+fn invoke_mesh_verb(mesh: &Mesh, name: &str, args: &Value) -> Result<Value> {
     match name {
         "register" => mesh.register(args),
         "roster"   => mesh.roster(args),
@@ -30,12 +31,12 @@ fn invoke_verb(mesh: &Mesh, name: &str, args: &Value) -> Result<Value> {
         "post"     => mesh.post(args),
         "inbox"    => mesh.inbox(args),
         "read"     => mesh.read(args),
-        _ => Err(HubError::new(format!("unknown verb '{name}'"))),
+        _ => Err(HubError::new(format!("unknown mesh verb '{name}'"))),
     }
 }
 
 /// Dispatch a JSON-RPC method. `Ok(None)` means a notification with no reply.
-fn dispatch(mesh: &Mesh, registry: &Registry, method: &str, params: Option<&Value>) -> Result<Option<Value>> {
+fn dispatch(mesh: &Mesh, board: &Board, registry: &Registry, method: &str, params: Option<&Value>) -> Result<Option<Value>> {
     match method {
         "initialize" => Ok(Some(json!({
             "protocolVersion": PROTOCOL_VERSION,
@@ -70,7 +71,11 @@ fn dispatch(mesh: &Mesh, registry: &Registry, method: &str, params: Option<&Valu
                 }
                 // All 8 mesh verbs
                 verb if crate::registry::BUILTIN_VERBS.contains(&verb) => {
-                    invoke_verb(mesh, verb, &args)?
+                    invoke_mesh_verb(mesh, verb, &args)?
+                }
+                // All 11 board verbs
+                verb if crate::board::BOARD_VERBS.contains(&verb) => {
+                    board.invoke(verb, &args)?
                 }
                 other => return Err(HubError::new(format!("unknown verb '{other}'"))),
             };
@@ -85,7 +90,7 @@ fn dispatch(mesh: &Mesh, registry: &Registry, method: &str, params: Option<&Valu
 }
 
 /// Handle one JSON-RPC line; return the response line (if any) to write.
-fn handle_line(mesh: &Mesh, registry: &Registry, line: &str) -> Option<String> {
+fn handle_line(mesh: &Mesh, board: &Board, registry: &Registry, line: &str) -> Option<String> {
     let req: Value = match serde_json::from_str(line) {
         Ok(v) => v,
         Err(_) => {
@@ -104,7 +109,7 @@ fn handle_line(mesh: &Mesh, registry: &Registry, line: &str) -> Option<String> {
     let method = req.get("method").and_then(|v| v.as_str()).unwrap_or("");
     let params = req.get("params");
 
-    match dispatch(mesh, registry, method, params) {
+    match dispatch(mesh, board, registry, method, params) {
         Ok(None) => {
             if is_notification {
                 None
@@ -162,7 +167,7 @@ fn spawn_notification_pump(
 // ---- stdio loop -------------------------------------------------------------
 
 /// Serve the MCP protocol over stdio until EOF.
-pub async fn serve(mesh: Mesh, registry: Registry) -> Result<()> {
+pub async fn serve(mesh: Mesh, board: Board, registry: Registry) -> Result<()> {
     let stdin = tokio::io::stdin();
     let stdout = Arc::new(AsyncMutex::new(tokio::io::stdout()));
 
@@ -181,7 +186,7 @@ pub async fn serve(mesh: Mesh, registry: Registry) -> Result<()> {
         if trimmed.is_empty() {
             continue;
         }
-        if let Some(resp) = handle_line(&mesh, &registry, &trimmed) {
+        if let Some(resp) = handle_line(&mesh, &board, &registry, &trimmed) {
             let mut out = stdout.lock().await;
             out.write_all(resp.as_bytes()).await?;
             out.write_all(b"\n").await?;
@@ -196,11 +201,13 @@ pub async fn serve(mesh: Mesh, registry: Registry) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::board::Board;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
 
     static COUNTER: AtomicU64 = AtomicU64::new(0);
 
-    fn setup() -> (Mesh, Registry) {
+    fn setup() -> (Mesh, Board, Registry) {
         let mut tmp = std::env::temp_dir();
         tmp.push(format!(
             "hub-srv-{}-{}",
@@ -208,31 +215,32 @@ mod tests {
             COUNTER.fetch_add(1, Ordering::SeqCst)
         ));
         let mesh = Mesh::open(tmp.join(".mesh")).unwrap();
+        let board = Board::open(tmp.join(".board"), Arc::new(|| 1_000_000)).unwrap();
         let registry = Registry::new();
-        (mesh, registry)
+        (mesh, board, registry)
     }
 
     #[test]
     fn initialize_reports_hub_identity_and_list_changed() {
-        let (m, r) = setup();
-        let resp = handle_line(&m, &r, r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#).unwrap();
+        let (m, b, r) = setup();
+        let resp = handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert_eq!(v["result"]["serverInfo"]["name"], "hub");
-        assert_eq!(v["result"]["serverInfo"]["version"], "0.4.0");
+        assert_eq!(v["result"]["serverInfo"]["version"], "0.8.0");
         assert_eq!(v["result"]["capabilities"]["tools"]["listChanged"], true);
     }
 
     #[test]
-    fn tools_list_has_ten_tools() {
-        let (m, r) = setup();
-        let resp = handle_line(&m, &r, r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#).unwrap();
+    fn tools_list_has_twenty_one_tools() {
+        let (m, b, r) = setup();
+        let resp = handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
-        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 10);
+        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 21);
     }
 
     #[test]
     fn hub_register_tool_adds_entry() {
-        let (m, r) = setup();
+        let (m, b, r) = setup();
         let req = json!({
             "jsonrpc": "2.0", "id": 3, "method": "tools/call",
             "params": {
@@ -244,46 +252,46 @@ mod tests {
                 }
             }
         }).to_string();
-        let resp = handle_line(&m, &r, &req).unwrap();
+        let resp = handle_line(&m, &b, &r, &req).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         // Should succeed (no error key)
         assert!(v.get("error").is_none());
 
-        // tools/list should now have 11 entries
-        let resp2 = handle_line(&m, &r, r#"{"jsonrpc":"2.0","id":4,"method":"tools/list"}"#).unwrap();
+        // tools/list should now have 22 entries
+        let resp2 = handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","id":4,"method":"tools/list"}"#).unwrap();
         let v2: Value = serde_json::from_str(&resp2).unwrap();
-        assert_eq!(v2["result"]["tools"].as_array().unwrap().len(), 11);
+        assert_eq!(v2["result"]["tools"].as_array().unwrap().len(), 22);
     }
 
     #[test]
     fn hub_unregister_tool_removes_entry() {
-        let (m, r) = setup();
+        let (m, b, r) = setup();
         r.register("temp".into(), "desc".into(), json!({}));
-        assert_eq!(r.list().len(), 11);
+        assert_eq!(r.list().len(), 22);
 
         let req = json!({
             "jsonrpc": "2.0", "id": 5, "method": "tools/call",
             "params": { "name": "hub_unregister_tool", "arguments": { "name": "temp" } }
         }).to_string();
-        let resp = handle_line(&m, &r, &req).unwrap();
+        let resp = handle_line(&m, &b, &r, &req).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert!(v.get("error").is_none());
-        assert_eq!(r.list().len(), 10);
+        assert_eq!(r.list().len(), 21);
     }
 
     #[test]
     fn notification_yields_no_reply() {
-        let (m, r) = setup();
+        let (m, b, r) = setup();
         assert!(
-            handle_line(&m, &r, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+            handle_line(&m, &b, &r, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
                 .is_none()
         );
     }
 
     #[test]
     fn parse_error_returns_minus_32700() {
-        let (m, r) = setup();
-        let resp = handle_line(&m, &r, "not json").unwrap();
+        let (m, b, r) = setup();
+        let resp = handle_line(&m, &b, &r, "not json").unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert_eq!(v["error"]["code"], -32700);
     }
