@@ -63,12 +63,10 @@ Term divergences found across the docs — each must be unified before any renam
   verified on disk). Renamed across the drill layer (`drill/SKILL.md`, `agents/drill.md`,
   `agents/default.md`, agent-memory) and worktree dirs (`gitfs-<sid>`). `drill/<sid>`
   (orchestrator worktree) is intentionally separate and kept.
-- **mesh identity vs git-fs branch (open).** `mesh/README.md` and the comm-daemon SPEC
-  describe the mesh `agent_id` *as* "the git-fs `agent/<id>` identity", but mesh tests
-  (`mesh/test.mjs`) use `agent/<id>` while the git-fs branch is `gitfs/<sid>` — the two
-  are conflated. Decide whether mesh's `agent_id` should be the git-fs branch
-  (`gitfs/<sid>`, needs a `test.mjs` change) or its own scheme (then stop calling it the
-  git-fs identity). Not a docs-only fix — touches code.
+- **mesh identity vs git-fs branch.** RESOLVED → unified to `gitfs/<sid>`. mesh treats
+  `agent_id` as an opaque principal (no format check), so by convention an agent's
+  `agent_id` *is* its git-fs branch `gitfs/<sid>`. Updated comm-daemon SPEC (v1.1.0),
+  `mesh/README.md`, and `mesh/test.mjs` branch fixtures (44/44 tests green).
 - **git-fs version drift.** HANDOFF.md says v3.0.1; installed plugin is v3.1.2.
 - **subagent spelling.** Canonical is one word **`subagent`** (matches Claude Code's
   official term; the law source `default.md` already prefers it). Source files

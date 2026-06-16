@@ -49,8 +49,8 @@ lock left by a crashed process is reclaimed after a bounded wait.
 ## The eight verbs
 
 All are MCP tools on the `mesh` server, namespaced `mcp__mesh__*`. Every request
-carries the caller's `agent_id` (the git-fs `agent/<id>` identity), treated as the
-authenticated principal.
+carries the caller's `agent_id` — by convention the agent's git-fs branch
+`gitfs/<sid>` — treated as the (opaque) authenticated principal.
 
 | Family | Verb | Purpose |
 |---|---|---|

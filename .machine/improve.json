@@ -13,42 +13,6 @@
     "gitfs_branch": "git-fs v3.1.2 creates gitfs/<sid> branches in .git-fs/ (verified on disk). 'agent/<id>' is stale wherever it labels a git-fs branch.",
     "note": "superpowers:* and plugin-namespaced skills are REAL (plugin registry) — not fiction. /oil and /mine are skills, not commands."
   },
-  "files": [
-    {
-      "path": "REPO-WIDE: subagent spelling sweep",
-      "rating": [8, 6, 8, 8, 4, 5],
-      "score": 5.5,
-      "measured": ["duplication"],
-      "todos": [
-        "Canonical = 'subagent' (one word). Source files (glossary, TERMS, default.md) already unified.",
-        "Replace remaining ~320 'sub-agent' -> 'subagent' across .claude/** and .machine/** tracked docs (skip gitignored worktrees, skip historical SPEC.md version-history rows).",
-        "Do as one atomic sweep commit so the rename is reviewable; re-grep to confirm zero 'sub-agent' remain."
-      ]
-    },
-    {
-      "path": "mesh/README.md + .machine/specs/comm-daemon/SPEC.md",
-      "rating": [6, 6, 7, 4, 6, 6],
-      "score": 5.5,
-      "measured": ["truthfulness"],
-      "todos": [
-        "OPEN DECISION (touches code): mesh agent_id is described as 'the git-fs agent/<id> identity' but mesh/test.mjs uses agent/<id> while git-fs branch is gitfs/<sid> — conflated.",
-        "Either make agent_id = git-fs branch gitfs/<sid> (update test.mjs + SPEC body + add a SPEC version-history row) or keep agent/<id> as mesh's own id scheme and stop labeling it 'the git-fs identity'.",
-        "comm-daemon/SPEC.md:41 calls the git-fs branch agent/<id> (wrong); fix as part of whichever path is chosen, keeping the SPEC internally consistent."
-      ]
-    },
-    {
-      "path": "HANDOFF.md",
-      "rating": [6, 7, 6, 6, 6, 7],
-      "score": 6.3,
-      "measured": ["truthfulness"],
-      "todos": [
-        "git-fs version says v3.0.1; installed is v3.1.2 — update.",
-        "Confirm gitfs/<sid> claims still match the live drill flow after the SKILL.md reconciliation."
-      ]
-    }
-  ],
-  "ranking": {
-    "folders": [".claude/skills/drill", ".claude/agents", "."],
-    "files": [".claude/skills/drill/SKILL.md", ".claude/agents/default.md", ".claude/agents/drill.md", "HANDOFF.md"]
-  }
+  "files": [],
+  "ranking": { "folders": [], "files": [] }
 }

@@ -34,7 +34,7 @@ function test(name, fn) {
 // --- awareness -------------------------------------------------------------
 
 test("register + roster + liveness state machine", ({ m, advance }) => {
-  const r = m.register({ agent_id: "a", branch: "agent/a", prompt_ptr: "p", ttl_seconds: 60 });
+  const r = m.register({ agent_id: "a", branch: "gitfs/a", prompt_ptr: "p", ttl_seconds: 60 });
   eq(r.epoch, 1, "first register epoch=1");
   eq(m.roster({ agent_id: "a" }).agents[0].liveness, "alive", "alive within ttl");
   advance(75); // 60 ttl + into grace
@@ -42,7 +42,7 @@ test("register + roster + liveness state machine", ({ m, advance }) => {
   advance(30); // past grace -> dead
   eq(m.roster({ agent_id: "a" }).agents.length, 0, "dead hidden by default");
   eq(m.roster({ agent_id: "a", include_stale: true }).agents[0].liveness, "dead", "dead with include_stale");
-  const r2 = m.register({ agent_id: "a", branch: "agent/a", prompt_ptr: "p" });
+  const r2 = m.register({ agent_id: "a", branch: "gitfs/a", prompt_ptr: "p" });
   eq(r2.epoch, 2, "re-register after death bumps epoch");
 });
 
@@ -91,7 +91,7 @@ test("lease expiry frees lock", ({ m, advance }) => {
 });
 
 test("dead-agent claim self-heal", ({ m, advance }) => {
-  m.register({ agent_id: "a", branch: "agent/a", prompt_ptr: "p", ttl_seconds: 60 });
+  m.register({ agent_id: "a", branch: "gitfs/a", prompt_ptr: "p", ttl_seconds: 60 });
   m.claim({ agent_id: "a", resource: "R", lease_seconds: 10000 });
   advance(200); // a is dead (60 + 30 grace)
   // b can grab it because a's claim is swept once a is dead.

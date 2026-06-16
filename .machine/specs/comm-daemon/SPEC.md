@@ -1,10 +1,10 @@
 ---
 id: SPEC-COMM-001
 title: "Fleet inter-agent communication daemon (mesh) — kern's coordination sibling"
-version: 1.0.0
+version: 1.1.0
 status: draft
 created: 2026-06-14
-updated: 2026-06-14
+updated: 2026-06-16
 author: machine-manager-spec
 priority: high
 issue_number: null
@@ -28,6 +28,7 @@ contract requires.
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0.0 | 2026-06-14 | machine-manager-spec | Initial draft. Specifies the two-layer split against git-fs, the ~8-verb contract (register/roster, claim/release/claims, post/inbox/read), atomic-claim semantics with staleness/expiry, the message model (addressing, topics, broadcast, durability, read cursors), the cooperative-poll-primary + hub-relay-alternative delivery resolution, the LMDB-primary + SQLite-journal storage decision matching kern, the roster/liveness model, the trust model, and the numbered acceptance criteria. |
+| 1.1.0 | 2026-06-16 | machine-default | Branch naming `agent/<id>` -> `gitfs/<sid>` (git-fs v3.1.2). `agent_id` unified to the agent's git-fs branch `gitfs/<sid>`; daemon treats it as an opaque principal (no format check). Updated §3, §4 intro, §4.1 register table, and mesh/test.mjs branch fixtures. Prior history rows unchanged. |
 
 ---
 
@@ -38,7 +39,7 @@ contract requires.
 The machine runs many agents in parallel across one repo. Two pieces of infra
 already exist:
 
-- **git-fs** — each agent works on branch `agent/<id>`; every edit is a commit; a
+- **git-fs** — each agent works on branch `gitfs/<sid>`; every edit is a commit; a
   Stop hook merges the branch to `main`. This gives **isolation** (agents do not
   stomp each other's working tree) and a durable **change history** (every edit is
   recoverable). git-fs also carries one per-agent `.machine-prompt` file: the
@@ -176,8 +177,9 @@ defaults toward kern's choice deliberately.
 
 Eight verbs in three families. All verbs are MCP tools on the `mesh` server,
 namespaced `mcp__mesh__*` (mirroring `mcp__kern__*`). Every request carries the
-caller's `agent_id` (the git-fs `agent/<id>` identity); the daemon treats
-`agent_id` as the authenticated principal for the trust rules in §8.
+caller's `agent_id` — by convention the agent's git-fs branch `gitfs/<sid>`; the
+daemon treats `agent_id` as an opaque authenticated principal (no format check) for
+the trust rules in §8.
 
 Shapes below are *contracts* (fields + meaning), not serialization formats.
 Timestamps are ISO-8601 UTC. `ulid` denotes a sortable unique id.
@@ -192,8 +194,8 @@ keyed by `agent_id`).
 Request:
 | field | type | meaning |
 |---|---|---|
-| `agent_id` | string | The agent's `agent/<id>` identity. |
-| `branch` | string | The git-fs branch the agent works on. |
+| `agent_id` | string | The agent's identity — by convention its git-fs branch `gitfs/<sid>` (opaque to the daemon). |
+| `branch` | string | The git-fs branch the agent works on (`gitfs/<sid>`). |
 | `prompt_ptr` | string | Path to the git-fs `.machine-prompt` (pointer, not text). |
 | `role` | string? | Optional declared role/specialty (e.g. `expert-backend`). |
 | `ttl_seconds` | int? | Liveness window; default applies if omitted. |
