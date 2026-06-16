@@ -4,18 +4,14 @@
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"
   },
-  "metadata": {
-    "description": "Home marketplace for the machine plugin.",
-    "version": "0.4.1"
-  },
   "plugins": [
     {
       "name": "machine",
-      "source": ".",
-      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern + mesh + context7 + pdf-reader + context-mode MCP servers).",
-      "version": "0.4.1",
-      "category": "development",
-      "keywords": ["agents", "skills", "workflow", "memory", "orchestration"]
+      "source": {
+        "source": "github",
+        "repo": "yesitsfebreeze/machine"
+      },
+      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern + mesh + context7 + pdf-reader + context-mode MCP servers)."
     }
   ]
 }
