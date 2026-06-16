@@ -157,6 +157,7 @@ export class Board {
   #txn(fn) {
     this.#lock();
     let rev = null;
+    let value = null;
     try {
       const state = this.#load();
       const result = fn(state);
@@ -165,7 +166,7 @@ export class Board {
         rev = state.rev;
         this.#save(state);
       }
-      var value = result.value;
+      value = result.value;
     } finally {
       this.#unlock();
     }
