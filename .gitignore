@@ -13,8 +13,11 @@ plugins/
 # kern daemon data store (binary LMDB)
 .kern/
 
-# mesh daemon data store (LMDB primary + SQLite-WAL journal)
+# hub daemon data store (single JSON state file under a repo-scoped dir)
 .mesh/
+
+# hub Rust build artifacts
+hub/target/
 
 # board addon data store (single JSON state + lock)
 .board/
@@ -22,6 +25,8 @@ plugins/
 # lock files
 *.lock
 *.lock.json
+# but the hub Rust binary's lockfile is tracked for reproducible builds
+!hub/Cargo.lock
 
 # installed-machine version stamp (generated at install/update time, never tracked)
 version.log
