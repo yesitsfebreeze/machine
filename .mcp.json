@@ -9,7 +9,7 @@
     "mesh": {
       "command": "node",
       "args": [
-        "mesh/mesh.mjs",
+        "${CLAUDE_PLUGIN_ROOT:-.}/mesh/mesh.mjs",
         "mcp"
       ]
     },
