@@ -76,8 +76,8 @@ or stale, before any card work:
 2. Write `.machine/board.json` with the schema above (`version` 1, the absolute
    `cwd`, the `name`, the returned `projectId`, `url` `http://localhost:3010`, and the
    current ISO-8601 `resolvedAt`).
-3. Create the five lifecycle columns (below) once via `column_create` if the project
-   has none yet.
+3. Create the six lifecycle columns (below) once via `column_create`, left-to-right
+   in order, if the project has none yet.
 
 Resolution is a single MCP call plus a small file write — there is no shell resolver
 and no sha1-prefix scheme. The persisted `cwd` guards the local file against reuse in
@@ -90,26 +90,32 @@ The web UI is started by bootstrap (`start_board`). To start it by hand, run
 without it. The page live-reloads via SSE: a card moved in one tab appears in another
 within about a second.
 
-## Five lifecycle columns
+## Six lifecycle columns
 
-The drill creates ITS project with five lifecycle columns via `column_create`, in
-left-to-right order. This table is the single source of truth for the
-drill-stage -> column mapping.
+The drill creates ITS project with six fixed lifecycle columns via `column_create`,
+left-to-right exactly: **Gathered | Approved | In Progress | Mergable | To Merge |
+Merged**. The board IS the pipeline view: the agent gathers a task -> the user
+approves it -> a subagent plans, reviews, and implements -> the build goes mergable ->
+the user approves the merge -> it merges into master. This table is the single source
+of truth for the drill-stage -> column mapping.
 
 | Drill status | board column |
 |---|---|
-| drilling | `drilling` |
-| planning, plan-review | `planning` |
-| plan-ready | `plan-ready` |
-| implementing, arbiter | `implementing` |
-| merge-proposed | `merge-proposed` |
-| merged, dropped | card removed (`card_delete`) |
+| grilling | `Gathered` |
+| planning, plan-review, plan-ready | `Approved` |
+| implementing | `In Progress` |
+| arbiter, merge-proposed | `Mergable` |
+| (user approved merge; resolve/merge in flight) | `To Merge` |
+| merged | `Merged` (card KEPT, not deleted) |
+| dropped | card removed (`card_delete`) |
 
 Card title convention: `[<status>] <label>`. The card `body` carries the entry id,
 the current stage, the git branch, and a one-line summary. On a stage transition,
 `card_move` the card to the target column and `card_update` to retitle, as one action.
-On `merged` or `dropped`, `card_delete` so the board converges to empty — the
-`/.machine/sessions/` ledger remains the history.
+On `merged`, `card_move` the card to the `Merged` column and keep it there — the
+Merged column is the completed-pipeline record. Only `dropped` calls `card_delete`
+(an abandoned feature leaves no card); the `/.machine/sessions/` ledger remains the
+durable history in both cases.
 
 ## Read-update-consult discipline
 
