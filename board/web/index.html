@@ -11,6 +11,7 @@
     body { padding: 1rem 1.5rem; max-width: none; }
     header.board-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
     header.board-head h1 { margin: 0; font-size: 1.4rem; }
+    #cwd-picker { width: auto; margin: 0; font-size: 0.8rem; padding: 0.15rem 1.8rem 0.15rem 0.5rem; height: auto; }
     #live { font-size: 0.75rem; opacity: 0.6; }
     .board-cols { display: flex; gap: var(--board-gap); align-items: flex-start; overflow-x: auto; padding-bottom: 1rem; }
     .col { flex: 0 0 16rem; background: var(--pico-card-background-color); border-radius: var(--pico-border-radius); padding: 0.6rem; }
@@ -32,6 +33,7 @@
 <body>
   <header class="board-head">
     <h1 id="proj-name">board</h1>
+    <select id="cwd-picker" aria-label="select cwd"></select>
     <span id="live">connecting…</span>
   </header>
 
@@ -55,13 +57,17 @@
 
   <script>
     // --- state ---------------------------------------------------------------
+    // The board is a per-host singleton; this page picks WHICH cwd (repo) to show
+    // via the dropdown. `root` is the selected cwd; it scopes every read/write.
     const params = new URLSearchParams(location.search);
-    let projectId = params.get("projectId") || null;
+    let root = params.get("root") || localStorage.getItem("board.root") || null;
     let board = null;       // { project, columns:[ { id,name,cards:[...] } ] }
     let openCardId = null;
 
+    // Mutations carry ?root= so they land in the selected cwd's own store.
     async function api(verb, args) {
-      const res = await fetch("/api/" + verb, {
+      const qs = root ? "?root=" + encodeURIComponent(root) : "";
+      const res = await fetch("/api/" + verb + qs, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(args || {}),
@@ -71,17 +77,32 @@
       return data;
     }
 
-    // Resolve a project: explicit ?projectId wins; else first project; else none.
-    async function resolveProject() {
-      if (projectId) return;
-      const res = await fetch("/api/board");
-      const data = await res.json();
-      if (data.projects && data.projects.length) projectId = data.projects[0].id;
+    // Populate the cwd dropdown from the global index, preserving the current
+    // selection (or falling back to the first cwd) and persisting it.
+    async function loadCwds() {
+      const picker = document.getElementById("cwd-picker");
+      let cwds = [];
+      try {
+        const res = await fetch("/api/cwds");
+        cwds = (await res.json()).cwds || [];
+      } catch { /* daemon may be mid-restart */ }
+      if (!cwds.some((c) => c.root === root)) root = cwds.length ? cwds[0].root : null;
+      picker.innerHTML = "";
+      for (const c of cwds) {
+        const opt = document.createElement("option");
+        opt.value = c.root;
+        opt.textContent = c.name;
+        opt.title = c.root;
+        if (c.root === root) opt.selected = true;
+        picker.append(opt);
+      }
+      picker.style.display = cwds.length ? "" : "none";
+      if (root) localStorage.setItem("board.root", root);
     }
 
     async function refresh() {
-      if (!projectId) { render(null); return; }
-      const res = await fetch("/api/board?projectId=" + encodeURIComponent(projectId));
+      if (!root) { render(null); return; }
+      const res = await fetch("/api/board?root=" + encodeURIComponent(root));
       board = await res.json();
       render(board);
     }
@@ -98,24 +119,30 @@
       return e;
     }
 
+    // Display name for the current cwd (the dropdown's selected label).
+    function cwdLabel() {
+      const picker = document.getElementById("cwd-picker");
+      return picker.selectedOptions[0]?.textContent || "board";
+    }
+
     function render(b) {
-      const root = document.getElementById("root");
-      root.innerHTML = "";
-      if (!b) {
-        document.getElementById("proj-name").textContent = "board";
-        root.append(el("p", { class: "empty" }, "no project yet"));
+      const mount = document.getElementById("root");
+      mount.innerHTML = "";
+      if (!b || !b.project) {
+        document.getElementById("proj-name").textContent = b ? cwdLabel() : "board";
+        mount.append(el("p", { class: "empty" }, root ? "no project yet" : "no cwd registered"));
         return;
       }
       document.getElementById("proj-name").textContent = b.project.name;
       if (!b.columns.length) {
-        root.append(el("p", { class: "empty" }, "no columns yet"));
+        mount.append(el("p", { class: "empty" }, "no columns yet"));
         return;
       }
       for (const col of b.columns) {
         const cards = el("div", { class: "cards", "data-col": col.id });
         for (const card of col.cards) cards.append(cardEl(card));
         wireColumn(cards, col.id);
-        root.append(el("div", { class: "col" },
+        mount.append(el("div", { class: "col" },
           el("h3", {}, col.name, el("span", { class: "count" }, String(col.cards.length))),
           cards,
         ));
@@ -194,18 +221,30 @@
       refresh();
     });
 
+    // Switch the visible cwd from the dropdown.
+    document.getElementById("cwd-picker").addEventListener("change", async (ev) => {
+      root = ev.target.value || null;
+      if (root) localStorage.setItem("board.root", root);
+      const url = new URL(location.href);
+      if (root) url.searchParams.set("root", root); else url.searchParams.delete("root");
+      history.replaceState(null, "", url);
+      await refresh();
+    });
+
     // --- live channel --------------------------------------------------------
     function connectSSE() {
       const live = document.getElementById("live");
       const es = new EventSource("/events");
       es.onopen = () => { live.textContent = "live"; };
-      es.onmessage = () => { refresh(); };
+      // A change anywhere may be a new cwd registering OR a card edit: refresh
+      // the dropdown (cheap) and the current board.
+      es.onmessage = async () => { await loadCwds(); refresh(); };
       es.onerror = () => { live.textContent = "reconnecting…"; };
     }
 
     // --- boot ----------------------------------------------------------------
     (async () => {
-      await resolveProject();
+      await loadCwds();
       await refresh();
       connectSSE();
     })();

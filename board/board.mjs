@@ -24,8 +24,9 @@ import {
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
-import { join, dirname, resolve } from "node:path";
+import { join, dirname, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
 
 // --- constants -------------------------------------------------------------
 
@@ -95,6 +96,58 @@ function nowIso() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
+// --- global cwd index ------------------------------------------------------
+// The board is a per-host singleton: one `serve` daemon on :3010 for every repo.
+// Card data stays repo-scoped (each repo writes its own .board/), but each repo
+// self-registers its board dir here so the singleton can list every cwd in a
+// dropdown and read it on demand. Resolution: BOARD_INDEX env, else XDG data
+// home, else ~/.local/share. Parity-free with mesh/kern (those stay per-repo).
+const INDEX_FILE = "index.json";
+
+function indexPath() {
+  if (process.env.BOARD_INDEX) return resolve(process.env.BOARD_INDEX);
+  const base = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share");
+  return join(base, "machine", "board", INDEX_FILE);
+}
+
+// Read the index: { boards: { <root>: { root, dir, name, updatedAt } } }.
+// Missing/corrupt index reads as empty so the daemon never hard-fails on it.
+function readIndex(path = indexPath()) {
+  try {
+    const idx = JSON.parse(readFileSync(path, "utf8"));
+    return idx && typeof idx === "object" && idx.boards ? idx : { boards: {} };
+  } catch {
+    return { boards: {} };
+  }
+}
+
+// Register (or refresh) one repo's board dir in the global index. Atomic write
+// under a sibling lock dir so concurrent sessions don't clobber each other.
+// Best-effort: the index is an optimization for the dropdown, never a hard dep.
+function upsertIndex(root, dir, name, path = indexPath()) {
+  const idxDir = dirname(path);
+  mkdirSync(idxDir, { recursive: true });
+  const lock = join(idxDir, ".lock");
+  const start = Date.now();
+  for (;;) {
+    try { mkdirSync(lock); break; }
+    catch {
+      if (Date.now() - start > 5000) { try { rmdirSync(lock); } catch { /* race */ } }
+      const until = Date.now() + 2;
+      while (Date.now() < until) { /* spin */ }
+    }
+  }
+  try {
+    const idx = readIndex(path);
+    idx.boards[root] = { root, dir, name, updatedAt: nowIso() };
+    const tmp = `${path}.tmp.${process.pid}`;
+    writeFileSync(tmp, JSON.stringify(idx));
+    renameSync(tmp, path);
+  } finally {
+    try { rmdirSync(lock); } catch { /* released */ }
+  }
+}
+
 // --- the daemon ------------------------------------------------------------
 
 export class Board {
@@ -102,6 +155,7 @@ export class Board {
   // committed mutation with the new rev — the web layer hooks it to push SSE.
   constructor(dir, opts = {}) {
     this.dir = dir;
+    this.root = dirname(dir); // the repo/cwd that owns this .board store
     this.statePath = join(dir, STATE_FILE);
     this.lockPath = join(dir, LOCK_DIR);
     this.onMutate = opts.onMutate || null;
@@ -157,7 +211,6 @@ export class Board {
   #txn(fn) {
     this.#lock();
     let rev = null;
-    let value = null;
     try {
       const state = this.#load();
       const result = fn(state);
@@ -166,7 +219,7 @@ export class Board {
         rev = state.rev;
         this.#save(state);
       }
-      value = result.value;
+      var value = result.value;
     } finally {
       this.#unlock();
     }
@@ -177,9 +230,11 @@ export class Board {
   // --- projects -----------------------------------------------------------
 
   // Get-or-create a project by name (board-per-cwd: name = basename(cwd)).
+  // Also lazy-registers this repo's board dir in the global cwd index so the
+  // singleton web daemon can surface this cwd in its dropdown (best-effort).
   project_resolve(req) {
     requireFields(req, ["name"]);
-    return this.#txn((state) => {
+    const out = this.#txn((state) => {
       const existing = Object.values(state.projects).find((p) => p.name === req.name);
       if (existing) return { mutated: false, value: { project: existing } };
       const id = ulid();
@@ -187,6 +242,8 @@ export class Board {
       state.projects[id] = project;
       return { mutated: true, value: { project } };
     });
+    try { upsertIndex(this.root, this.dir, req.name); } catch { /* index optional */ }
+    return out;
   }
 
   project_list() {
@@ -483,37 +540,49 @@ function serveStdio(board) {
 
 // --- web server + SSE ------------------------------------------------------
 
-// HTTP + SSE web view: GET / (UI), /healthz, /api/board (read), POST /api/<verb>
-// (the full domain as thin JSON wrappers), and /events (live rev push).
-function serveHttp(dataPath, port) {
+// The verbs the HTTP POST surface exposes (the full domain, thin JSON wrappers).
+// The web daemon is the per-host singleton: it serves EVERY repo's board, not
+// just the cwd it launched from. Repos are discovered through the global index
+// (one entry per cwd, written by project_resolve); card data is read on demand
+// from and written back to each repo's own .board store.
+function serveHttp(homeDataPath, port) {
   const clients = new Set(); // open SSE responses
-  let lastRev = -1;
-  const broadcast = (rev) => {
-    if (rev == null || rev <= lastRev) return;
-    lastRev = rev;
+  let rev = 0;
+  const broadcast = () => {
+    rev++;
     const frame = `data:${JSON.stringify({ rev })}\n\n`;
     for (const res of clients) res.write(frame);
   };
-  const board = new Board(dataPath, { onMutate: broadcast });
 
-  // Cross-process live updates. The MCP server writes state.json from a SEPARATE
-  // process, so its mutations never reach the in-process onMutate hook above —
-  // without this watch, drill/MCP card changes would not live-refresh the page.
-  // #save does writeFile(tmp)+rename, replacing the inode, so watch the data dir
-  // (not the file) and re-broadcast whenever the persisted rev advances; rev
-  // dedup in broadcast() collapses the duplicate from our own in-process writes.
-  const statePath = join(dataPath, STATE_FILE);
-  const readRev = () => {
-    try { return JSON.parse(readFileSync(statePath, "utf8")).rev || 0; }
-    catch { return null; }
+  // Board instances cached per data dir; one per cwd we touch.
+  const boards = new Map();
+  const boardFor = (dir) => {
+    let b = boards.get(dir);
+    if (!b) { b = new Board(dir); boards.set(dir, b); }
+    return b;
   };
-  lastRev = readRev() ?? -1;
+  // Map a cwd root to its board data dir via the index (fallback: <root>/.board).
+  const dirForRoot = (root) => readIndex().boards[root]?.dir || join(root, DATA_DIR);
+
+  // Cross-process live updates: MCP servers and the drill write state.json from
+  // SEPARATE processes, so watch each registered board dir + the index dir and
+  // re-broadcast on any change; the client refetches its currently selected cwd.
+  const watched = new Set();
+  const watchDir = (dir) => {
+    if (watched.has(dir) || !existsSync(dir)) return;
+    try { watch(dir, () => broadcast()); watched.add(dir); }
+    catch { /* fs.watch unsupported here: SSE reconnect still refetches */ }
+  };
+  const syncWatches = () => {
+    watchDir(homeDataPath);
+    for (const e of Object.values(readIndex().boards)) watchDir(e.dir);
+  };
+  const idxDir = dirname(indexPath());
   try {
-    watch(dataPath, (_evt, file) => {
-      if (file && file !== STATE_FILE) return;
-      broadcast(readRev());
-    });
-  } catch { /* fs.watch unsupported here: in-process onMutate still works */ }
+    mkdirSync(idxDir, { recursive: true });
+    watch(idxDir, () => { syncWatches(); broadcast(); }); // a new cwd registered
+  } catch { /* index dir unwatchable: dropdown still refreshes on demand */ }
+  syncWatches();
 
   let indexHtml = "";
   try { indexHtml = readFileSync(WEB_INDEX, "utf8"); } catch { /* served as 500 below */ }
@@ -524,6 +593,7 @@ function serveHttp(dataPath, port) {
       res.writeHead(code, { "content-type": type });
       res.end(body);
     };
+    const sendJson = (code, value) => send(code, "application/json", JSON.stringify(value));
 
     if (req.method === "GET" && url.pathname === "/") {
       if (!indexHtml) return send(500, "text/plain", "board: web/index.html missing");
@@ -534,22 +604,40 @@ function serveHttp(dataPath, port) {
     // which a foreign daemon squatting the port may also answer 200 to) to tell a
     // real board.mjs server apart from a stale listener on the same port.
     if (req.method === "GET" && url.pathname === "/healthz") {
-      return send(200, "application/json", JSON.stringify({ board: "machine-board", version: SERVER_VERSION }));
+      return sendJson(200, { board: "machine-board", version: SERVER_VERSION });
+    }
+
+    // Dropdown source: every cwd registered in the global index (existing dirs).
+    if (req.method === "GET" && url.pathname === "/api/cwds") {
+      const cwds = Object.values(readIndex().boards)
+        .filter((e) => existsSync(e.dir))
+        .map((e) => ({ root: e.root, name: e.name || basename(e.root), dir: e.dir, updatedAt: e.updatedAt }))
+        .sort((a, b) => cmp(a.name, b.name));
+      return sendJson(200, { cwds });
     }
 
     if (req.method === "GET" && url.pathname === "/api/board") {
+      const root = url.searchParams.get("root");
       const projectId = url.searchParams.get("projectId");
       try {
-        const value = projectId
-          ? board.board_get({ projectId })
-          : { projects: board.project_list().projects };
-        return send(200, "application/json", JSON.stringify(value));
+        // cwd-addressed read: pick a repo's store, return one project's board.
+        if (root) {
+          const b = boardFor(dirForRoot(root));
+          const projects = b.project_list().projects;
+          if (!projects.length) return sendJson(200, { project: null, columns: [] });
+          return sendJson(200, b.board_get({ projectId: projectId || projects[0].id }));
+        }
+        // back-compat: no cwd → the launching store (projectId or project list).
+        const home = boardFor(homeDataPath);
+        return sendJson(200, projectId
+          ? home.board_get({ projectId })
+          : { projects: home.project_list().projects });
       } catch (e) {
-        return send(400, "application/json", JSON.stringify({ error: String(e.message || e) }));
+        return sendJson(400, { error: String(e.message || e) });
       }
     }
 
-    // SSE live channel: every mutation pushes data:{"rev":N}; client refetches.
+    // SSE live channel: any watched mutation pushes data:{"rev":N}; client refetches.
     if (req.method === "GET" && url.pathname === "/events") {
       res.writeHead(200, {
         "content-type": "text/event-stream",
@@ -562,21 +650,24 @@ function serveHttp(dataPath, port) {
       return;
     }
 
+    // Mutations route to the cwd's own store via ?root= (the web client passes
+    // its selected cwd); without it they fall back to the launching store.
     if (req.method === "POST" && url.pathname.startsWith("/api/")) {
       const verb = url.pathname.slice("/api/".length);
-      if (!VERBS.includes(verb)) return send(404, "application/json", JSON.stringify({ error: `unknown verb '${verb}'` }));
+      if (!VERBS.includes(verb)) return sendJson(404, { error: `unknown verb '${verb}'` });
+      const root = url.searchParams.get("root");
       let raw = "";
       req.on("data", (c) => { raw += c; if (raw.length > 1e6) req.destroy(); });
       req.on("end", () => {
         let args = {};
         if (raw.trim()) {
-          try { args = JSON.parse(raw); } catch { return send(400, "application/json", JSON.stringify({ error: "invalid JSON body" })); }
+          try { args = JSON.parse(raw); } catch { return sendJson(400, { error: "invalid JSON body" }); }
         }
         try {
-          const value = board[verb](args);
-          send(200, "application/json", JSON.stringify(value));
+          const b = boardFor(root ? dirForRoot(root) : homeDataPath);
+          sendJson(200, b[verb](args));
         } catch (e) {
-          send(400, "application/json", JSON.stringify({ error: String(e.message || e) }));
+          sendJson(400, { error: String(e.message || e) });
         }
       });
       return;

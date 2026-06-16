@@ -3,7 +3,7 @@
 // Exercises the domain verbs against a temp BOARD_DIR (mirrors mesh/test.mjs).
 
 import { Board } from "./board.mjs";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -18,9 +18,13 @@ function eq(a, b, name) {
 
 function fixture() {
   const dir = mkdtempSync(join(tmpdir(), "board-test-"));
+  // Isolate the global cwd index per fixture so project_resolve's self-register
+  // never touches the real ~/.local/share index, and cleans up with the temp dir.
+  const indexFile = join(dir, "index.json");
+  process.env.BOARD_INDEX = indexFile;
   const revs = [];
   const b = new Board(join(dir, ".board"), { onMutate: (r) => revs.push(r) });
-  return { b, dir, revs };
+  return { b, dir, indexFile, revs };
 }
 
 function test(name, fn) {
@@ -40,6 +44,34 @@ test("project_resolve is get-or-create by name; project_list ordered", ({ b }) =
   const p3 = b.project_resolve({ name: "other" }).project;
   ok(p3.id !== p1.id, "different name -> different project");
   eq(b.project_list().projects.length, 2, "two distinct projects");
+});
+
+// --- global cwd index (singleton aggregation) ------------------------------
+
+test("project_resolve self-registers this repo's board dir in the global index", ({ b, indexFile }) => {
+  b.project_resolve({ name: "machine" });
+  const idx = JSON.parse(readFileSync(indexFile, "utf8"));
+  const entry = idx.boards[b.root];
+  ok(entry, "index has an entry keyed by repo root");
+  eq(entry.dir, b.dir, "entry points at this repo's .board dir");
+  eq(entry.name, "machine", "entry carries the project/cwd name");
+});
+
+test("re-resolving the same cwd does not duplicate index entries", ({ b, indexFile }) => {
+  b.project_resolve({ name: "machine" });
+  b.project_resolve({ name: "machine" });
+  const idx = JSON.parse(readFileSync(indexFile, "utf8"));
+  eq(Object.keys(idx.boards).length, 1, "one cwd -> one index entry");
+});
+
+test("two repos sharing one index both appear (dropdown aggregation)", ({ dir, indexFile }) => {
+  const a = new Board(join(dir, "repoA", ".board"));
+  const z = new Board(join(dir, "repoZ", ".board"));
+  a.project_resolve({ name: "alpha" });
+  z.project_resolve({ name: "zeta" });
+  const idx = JSON.parse(readFileSync(indexFile, "utf8"));
+  eq(Object.keys(idx.boards).length, 2, "two distinct cwds registered");
+  ok(idx.boards[a.root] && idx.boards[z.root], "both cwds present in the index");
 });
 
 // --- columns + board_get ---------------------------------------------------
