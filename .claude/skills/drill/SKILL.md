@@ -127,9 +127,11 @@ subagent owns each unit of real work.
    It reports back; it never merges and never writes the ledger.
 
 7. **Propose a merge.** When the implementation agent reports a green, stable build,
-   present to the user: the materialized diff, the gate result, the persona synthesis,
-   and the codex arbiter verdict. Then PROPOSE a merge into `main`. This is the second
-   hard human gate. Nothing merges until the user approves.
+   the drill runs the `/personas` panel (Skill `personas`) against the materialized
+   diff — the miner never spawns the panel itself (dispatched agents do not
+   orchestrate). Then present to the user: the materialized diff, the gate result, the
+   persona synthesis, and the codex arbiter verdict. Then PROPOSE a merge into `main`.
+   This is the second hard human gate. Nothing merges until the user approves.
 
 8. **Merge and close (on approval).** On the user's approval, first take the `mesh`
    `branch:main` claim — the shared `main` tree is serialized so a concurrent session
