@@ -9,6 +9,41 @@ Each row: the canonical spelling, its kind, a one-line role, and where it lives.
 To rename a term, change it here, in the glossary, and grep the codebase for the
 old name.
 
+## Rename plan
+
+Fill the **New name** column (leftmost) for any term you want to rename, then hand it
+back — each row becomes one verified `git grep` sweep + commit. Hit counts are
+tracked-file occurrences (gitignored worktrees excluded). Leave a row blank to keep it.
+
+### Project identity
+| New name | Term | Hits | Files | Blast radius |
+|----------|------|------|-------|--------------|
+|          | the machine | 115 | 46 | name + `machine:` plugin namespace + plugin.json + marketplace + README badges |
+
+### Coined names — clean grep-rename (distinctive, low collision)
+| New name | Term | Hits | Files | What it is |
+|----------|------|------|-------|------------|
+|          | mesh | 306 | 53 | coordination daemon |
+|          | drill | 241 | 27 | orchestrator surface |
+|          | ledger | 146 | 41 | `.machine/sessions/` roster |
+|          | git-fs / gitfs | 135 / 52 | 25 / 17 | branch-isolation layer (two spellings) |
+|          | kern | 109 | 29 | memory daemon |
+|          | personas | 96 | 31 | review panel |
+|          | grill-first / grill | 20 / 56 | — | driver mode |
+|          | miner | 17 | 5 | spoken name for the implementation subagent |
+
+### Collision-prone — sweep needs word-boundary/context review (common English words)
+| New name | Term | Hits | Files | Risk |
+|----------|------|------|-------|------|
+|          | gate | 162 | 37 | "gate one" / "quality gate" + generic prose |
+|          | factory | 111 | 14 | "factory agent" vs generic |
+|          | mine | 99 | 21 | collides with English "mine"; also `mine/` dir + `/mine` skill |
+|          | oil / /oil | 75 / 64 | 22 / 21 | "oil"/"oiled" verbs; target `/oil` to be safe |
+
+### Not recommended to rename (platform/upstream/structural, not project brand)
+`subagent` (Claude Code term) · `taskboard`/`kanban` (upstream addon) · `glossary` ·
+`improve.json` · `gate` (partly generic).
+
 ## Core identity
 
 | Term | Kind | Role | Lives in |
