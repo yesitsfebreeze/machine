@@ -76,12 +76,11 @@ MCP servers are configured in `.mcp.json` at the project root (NOT in settings.j
 ```json
 {
  "mcpServers": {
- "kern": { "command": "kern", "args": ["mcp"] },
  "context7": {
- "command": "npx",
- "args": ["@upstash/context7-mcp"],
- "env": { "CONTEXT7_API_KEY": "$CONTEXT7_KEY" }
- }
+   "command": "npx",
+   "args": ["@upstash/context7-mcp"],
+   "env": { "CONTEXT7_API_KEY": "$CONTEXT7_KEY" }
+  }
  }
 }
 ```

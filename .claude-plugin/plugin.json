@@ -1,7 +1,7 @@
 {
   "name": "machine",
   "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the mesh coordination daemon. Pairs with the kern memory plugin, installed alongside. Specialized per-repo by /oil into /.machine.",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "author": {
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"

@@ -164,6 +164,96 @@ Add it once, then install each plugin from the same hub:
 
 ---
 
+## 📜 Full functionality reference
+
+Every capability the machine ships, by category.
+
+### Core agents (always loaded)
+
+| Agent | What it does |
+|-------|--------------|
+| `default` | Eager-generalist driver. Whole toolbelt, bias-to-verify; drives most work itself and routes domain decisions to specialists. |
+| `drill` | The session driver / orchestrator. Grills a request into a valid plan, dispatches plan + implementation subagents on isolated branches, gates and reviews results, proposes merges. |
+| `manager-tdd` | Test-driven (RED-GREEN-REFACTOR) implementation for greenfield work. |
+| `manager-ddd` | Domain-driven (ANALYZE-PRESERVE-IMPROVE) implementation for legacy code with characterization tests. |
+| `builder-agent` | Authors new subagent definitions. |
+| `builder-skill` | Authors new skills (YAML frontmatter + knowledge organization). |
+| `builder-plugin` | Authors Claude Code plugins and marketplace structure. |
+
+### Core skills (load on demand)
+
+| Skill | What it does |
+|-------|--------------|
+| `drill` | Single entry point — drives work, runs session/bootstrap bring-up, manages the agent roster. |
+| `coder` | Architect-mode for non-trivial features/refactors/fixes (KISS/DRY/YAGNI, phased planning, adversarial self-review). |
+| `clean` | Cleanup pass — zero duplication, minimum file count, single responsibility, gate-green between steps. |
+| `gate` | Language-agnostic quality gate: format, lint, tests, build in one pass-fail report. |
+| `personas` | Runs the project's adversarial review panel in parallel, synthesizes a ship verdict. |
+| `codex-review` | Advisory second-AI review via the Codex CLI at plan + implementation checkpoints. |
+| `oil` | Re-indexes `/.machine/` to specialize the machine to this repo, then fires `/mine`. |
+| `mine` | Surveys the `mine/` addon kit, matches best-fit tools to the repo, slots and registers them. |
+| `improve` | Rates every file 1-10, rolls ratings into a folder tree, improves worst→best. |
+| `promote` | Turns crystallized brainstorm findings into board tickets. |
+| `questioneer` | Single chat that aggregates and resolves questions raised by parallel agents. |
+| `report` | Files a machine self-diagnostic report into `/.machine/reports/` (write-side). |
+| `resolve` | Consumes the report backlog — fixes the top report at root cause, verifies green (act-side; repo-local). |
+| `caveman` | Ultra-compressed comm mode (~75% token cut; lite/full/ultra levels). |
+| `cheat` | Cheatsheet lookup via cht.sh (interactive fzf picker + direct mode). |
+| `mcp-plugin` | Authors an install-anywhere Claude Code plugin that bundles an MCP server. |
+
+### MCP servers (bundled in `plugin.json`)
+
+| Server | Tools / purpose |
+|--------|-----------------|
+| `mesh` | Fleet coordination — live roster, atomic cross-process claims/leases/queues, durable mail. Verbs: `register`, `roster`, `claim`, `claims`, `release`, `post`, `inbox`, `read`. |
+| `board` | Kanban board — projects, columns, cards, comments. Verbs: `board_get`, `project_list`/`resolve`, `column_create`/`delete`, `card_create`/`update`/`move`/`delete`, `comment_add`/`list`. |
+| `context7` | Current versioned library/framework docs (`resolve-library-id`, `query-docs`). Needs `CONTEXT7_API_KEY`. |
+| `pdf-reader` | PDF inspect, search, render, OCR, region extraction (`read_pdf`, `inspect_pdf`, `search_pdf`, `render_page`, `ocr_pages`, `extract_regions`, `analyze_regions`). |
+| `context-mode` | Keeps large output out of context via `ctx_*` tools (execute, batch, search, index, stats). Needs Node ≥22.5.0. |
+
+### Companion plugins (installed alongside, not vendored)
+
+| Plugin | Purpose |
+|--------|---------|
+| `kern` | Per-directory memory daemon — auto-captures decisions, recalls them per prompt and at session start. MCP verbs: `query`, `ingest`, `forget`, `anchor`, `link`, `degrade`, `descriptor`, `health`, `pulse`, `gc`. |
+| `git-fs` | Per-session copy-on-write virtual git filesystem — N agents, 1 repo, 0 collisions; edits are commits, Stop-hook merges to main. |
+| `split` | Function-level code index — splits source into per-function bodies for token-efficient navigation, bidirectional edit sync. |
+
+### Lifecycle hooks
+
+| Hook | Event | What it does |
+|------|-------|--------------|
+| `ignite.mjs` | SessionStart | Injects machine-mode context, writes `/.machine/ENV.md`, rebuilds the drill footer from the prior roster. |
+| `personas.mjs` | Stop | Post-task persona-review nudge. |
+| `subagent-report.mjs` | SubagentStop | Surfaces a finished subagent's report to the driver. |
+| `statusline.mjs` | Status line | Live status line rendering. |
+| `stop-input.mjs` | — | Stop-input handling. |
+
+### Output styles (comm modes)
+
+| Style | Purpose |
+|-------|---------|
+| `machine` | The default machine comm mode. |
+| `einstein` | Alternate comm mode. |
+
+### The `mine/` addon kit (curated, not loaded until slotted via `/oil`)
+
+- **Specialist agents:** `expert-backend`, `expert-frontend`, `expert-debug`, `expert-devops`, `expert-performance`, `expert-refactoring`, `expert-security`, `expert-testing`.
+- **Manager agents:** `manager-spec`, `manager-strategy`, `manager-git`, `manager-docs`, `manager-project`, `manager-quality`.
+- **Other agents:** `evaluator-active`, `plan-auditor`, `researcher`, plus the `builder-*` set.
+- **Skills:** `tool-ast-grep`, `workflow-testing`, `workflow-thinking`, `foundation-cc`/`-core`/`-quality`, `ref-git-workflow`, `ref-owasp-checklist`, `ref-testing-pyramid`, `specialists`, `improve`, `parallel`, `perf-gate`, `learn`, `caveman`, `board`, `helper`, `codex-peer-review`.
+- **Hooks:** `helper-suggest.mjs`, `helper-trigger.mjs`.
+
+### Cross-cutting behaviors
+
+- **Job lifecycle.** Concept → Plan → Implement → Test → Persona analysis → Evaluate → Fix → Present, with gates between stages and parallel jobs isolated on `git-fs` branches.
+- **Brainstorm mode.** Exploratory prompts stay conversational (no file writes) until the idea crystallizes into a dispatchable task.
+- **Machine law.** Root-cause over patch, one clean implementation per change, single source of truth, glossary discipline, durable memory in kern, serialized writes to shared `main`.
+- **Project layer.** `/oil` writes `/.machine/` (identity, stack, glossary, persona panel) so the same portable payload specializes to each repo.
+- **One-shot bootstrap.** `just bootstrap` (or `bash scripts/bootstrap.sh`) installs and verifies every dependency in one idempotent pass.
+
+---
+
 ## 🗂️ Layout
 
 ```
