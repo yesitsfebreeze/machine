@@ -61,9 +61,11 @@ Understand what this repo *needs* and what is *already slotted* (idempotency):
    (manifests, entry points, CI) for the same facts.
 2. **Already slotted:** read `.claude-plugin/plugin.json` (`agents` / `skills` arrays)
    and `.claude/hooks/hooks.json`. Anything registered there is done — never re-slot it.
-3. **Prior decisions:** `mcp__kern__query` for past `/mine` sessions — what was slotted,
-   what the user **rejected** and why. Never re-propose a rejected addon without a
-   changed reason; surface the prior decision instead.
+3. **Prior decisions:** read `/.machine/mine.json` — `agents`/`skills` arrays show
+   what is currently declared; `_rejected` shows what was previously turned down and
+   why. Never re-propose a rejected addon without a changed reason; surface the prior
+   decision instead. `mine.json` is the durable record; kern is not used for mine
+   decisions.
 
 ## Phase 3 — match
 
@@ -83,50 +85,69 @@ evidence, not to vibe:
 Present a ranked shortlist: addon, one-line rationale tied to repo evidence, and
 prerequisite cost. Skip anything already slotted or previously rejected.
 
-## Phase 4 — confirm
+## Phase 4 — confirm and write the manifest
 
 Ask the user which of the shortlist to slot (default to the top high-confidence
-picks). Nothing installs without the go-ahead. If the user rejects one, capture the
-reason for Phase 6.
+picks). Nothing installs without the go-ahead.
 
-## Phase 5 — slot it in
+Once the user confirms, **write the approved set to `/.machine/mine.json`**
+(the declarative source of truth for this repo's mine addons):
 
-For each approved addon, follow `$MINE/README.md`'s protocol exactly (the `.claude/`
-and `.claude-plugin/` slot targets are the machine plugin's own payload — the same
-root `$MINE` came from — not the target project's CWD):
+```json
+{
+  "agents": ["<approved-agent-names>"],
+  "skills": ["<approved-skill-names>"],
+  "hooks":  []
+}
+```
 
-1. **Agent:** copy `$MINE/agents/<name>.md` → `.claude/agents/<name>.md`. Add
-   `"./.claude/agents/<name>.md"` to the `agents` array in `.claude-plugin/plugin.json`.
-   **Sanitize on slot:** strip any `permissionMode: bypassPermissions` line from the
-   copied frontmatter — the machine deliberately keeps `bypassPermissions` out of
-   installs (see `settings.json`). An agent that needs it is a red flag to raise with
-   the user, never a silent slot.
-2. **Skill:** copy the folder `$MINE/skills/<name>/` → `.claude/skills/<name>/`. Add
-   `"./.claude/skills/<name>"` to the `skills` array in `.claude-plugin/plugin.json`.
-3. **Hook:** copy the script into `.claude/hooks/` and restore its entry in
-   `.claude/hooks/hooks.json`.
-4. **Prerequisites:** wire anything the addon needs — an MCP server in plugin.json
-   `mcpServers`, a CLI binary (tell the user the install command, e.g. `sg` for
-   ast-grep, the Codex CLI for codex-peer-review), or an API key env var. State
-   clearly what the user must install by hand.
+If the user rejects a candidate, record the reason in `mine.json` as a comment
+(JSON does not support comments — add a `"_rejected"` sibling key):
 
-Keep one clean implementation: a slotted addon is **moved into service**, not
-duplicated — leave the `mine/` copy as the kit's source of truth, and never let an
-addon's `name:` collide with a registered one.
+```json
+{
+  "agents": [],
+  "skills": [],
+  "hooks":  [],
+  "_rejected": { "expert-security": "no auth boundary in this repo" }
+}
+```
+
+`mine.json` is the only change in Phase 4. Phase 5 applies it.
+
+## Phase 5 — sync
+
+Apply `mine.json` by running the sync script. It diffs the manifest against what is
+currently slotted, copies / removes files from the mine kit, and rewrites
+`plugin.json` and the installed cache atomically:
+
+```bash
+node "${MACHINE_PLUGIN_ROOT}/.claude/hooks/mine-sync.mjs"
+```
+
+(Resolve `$MACHINE_PLUGIN_ROOT` from `/.machine/ENV.md` first.)
+
+The script handles sanitization (strips `bypassPermissions`), cleanup (removes
+addons no longer in the manifest), and cache mirroring. Do NOT patch `plugin.json`
+or copy files manually — let the script own that.
+
+**Prerequisites:** after sync, wire anything the newly-slotted addon needs that the
+script cannot infer — an MCP server entry in `plugin.json` `mcpServers`, a CLI
+binary (tell the user the install command, e.g. `sg` for ast-grep, the Codex CLI),
+or an API key env var. State what the user must install by hand.
 
 Then run `/gate` to confirm config integrity (manifest parses, agent names unique,
 skill `name:` matches dir, every referenced skill resolves).
 
-## Phase 6 — record and report
+## Phase 6 — report
 
-1. **Ingest the decision into kern** (`mcp__kern__ingest`) so the next `/mine`
-   session compounds instead of re-deciding: one excerpt per session with a stable
-   `object_id` (e.g. `mine-session-<repo>`), titled, listing what was slotted (with
-   evidence), what was rejected (with reason), and what prerequisites remain
-   pending. Skip silently if kern is down.
-2. **Report:** what got slotted, what the user must install by hand, the gate result,
-   and the top one or two candidates left for the next session. State plainly how
-   close the toolset is to "buttered" for this repo.
+Report what changed (sync script output), what prerequisites remain for the user,
+the gate result, and the top one or two candidates left for the next session. State
+plainly how close the toolset is to "buttered" for this repo.
+
+Do not call kern during this phase — mine decisions live in `/.machine/mine.json`,
+which is version-controlled and self-documenting. Kern is for per-repo operational
+memory, not for plugin-level slot decisions.
 
 ## Boundaries
 

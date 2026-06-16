@@ -119,17 +119,28 @@ from the cache, never a git guess.
 
 ## Then mine — equip the machine
 
-The project layer is now current, so `/oil` knows what this repo is. Hand off to
-`/mine` to act on it: once the re-index above is done, invoke the `mine` skill.
-`/oil` scrapes and updates the **project**; `/mine` scrapes and updates the
-**tools** — it surveys the mine graph against the freshly-indexed `/.machine/` and
-slots in the best-fit addons. They are one motion: oil specializes, mine equips.
+The project layer is now current, so `/oil` knows what this repo is.
 
-Skip the hand-off only if the user scoped `/oil` to the project layer alone, or the
-mine kit is genuinely absent — and check the right place before declaring it absent:
-`$MACHINE_MINE` from `/.machine/ENV.md` (the plugin payload), **not** the target
-project's CWD. A repo that only installed the machine has no `mine/` at its own root,
-which is not the same as the kit being absent.
+**Step 1 — apply the existing manifest (if any).** If `/.machine/mine.json` exists,
+run the sync script immediately to apply whatever was already declared:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/.claude/hooks/mine-sync.mjs"
+```
+
+This is idempotent: already-slotted addons are a no-op; anything removed from the
+manifest is cleaned up. It also keeps the installed cache in sync with the source.
+
+**Step 2 — survey and propose new addons.** Hand off to `/mine` to act on the
+freshly-indexed project layer. `/oil` scrapes and updates the **project**; `/mine`
+scrapes and updates the **tools** — it surveys the mine graph against `/.machine/`
+and proposes best-fit addons. They are one motion: oil specializes, mine equips.
+
+Skip the mine hand-off only if the user scoped `/oil` to the project layer alone, or
+the mine kit is genuinely absent — and check the right place before declaring it
+absent: `$MACHINE_MINE` from `/.machine/ENV.md` (the plugin payload), **not** the
+target project's CWD. A repo that only installed the machine has no `mine/` at its
+own root, which is not the same as the kit being absent.
 
 ## Report
 
