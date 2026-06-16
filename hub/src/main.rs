@@ -12,6 +12,7 @@
 
 mod error;
 mod mesh;
+mod registry;
 mod server;
 mod state;
 mod ulid_gen;
@@ -85,7 +86,8 @@ async fn run(cmd: &str) -> Result<()> {
     match cmd {
         "mcp" => {
             let mesh = Mesh::open(data_dir())?;
-            server::serve(mesh).await
+            let registry = registry::Registry::new();
+            server::serve(mesh, registry).await
         }
         "gc" | "compact" => {
             let mesh = Mesh::open(data_dir())?;

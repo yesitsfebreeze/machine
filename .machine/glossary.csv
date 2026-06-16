@@ -4,6 +4,7 @@ identity,kern,The per-cwd memory daemon (mcp__kern__*); the machine's durable me
 identity,hub,The per-cwd fleet coordination daemon (mcp__hub__*); a Rust binary (hub/target/release/hub) that replaced the mesh.mjs daemon; kern's sibling — owns live coordination (roster/claims/messages) while kern owns memory. State persists in the repo-scoped .mesh/ directory (dir name kept for data continuity).
 identity,git-fs,The branch-per-agent isolation and change-history layer (git-fs v3.1.2; gitfs/<sid> branches in the .git-fs bare store; Stop-hook merge) that hub defers to for code and declared intent.
 concept,hub verbs,The eight MCP verbs the hub daemon exposes (mcp__hub__{register,roster,claim,release,claims,post,inbox,read}); the full tool surface of fleet coordination.
+concept,tool registry,The in-memory table of MCP tool descriptors maintained by hub; changes emit tools/list_changed notifications; the 8 mesh verbs are pre-registered at startup and always present. Two extra verbs (hub_register_tool and hub_unregister_tool) allow dynamic extension at runtime.
 concept,claim/fence token,A cross-process atomic resource lock held in hub; its fence is the monotonic per-resource generation counter proving a grant is current.
 concept,roster,The live set of agent presence/liveness entries in hub; liveness is alive/stale/dead derived from heartbeat freshness only.
 concept,read cursor,The per-agent marker in hub that gives exactly-once message consumption; inbox returns messages after it and read advances it.
