@@ -10,13 +10,6 @@
     "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1"
   },
   "includeGitInstructions": true,
-  "permissions": {
-    "defaultMode": "bypassPermissions",
-    "deny": [
-      "Edit",
-      "Write"
-    ]
-  },
   "enableAllProjectMcpServers": false,
   "skillOverrides": {
     "trello": "off"
@@ -36,5 +29,12 @@
   "showThinkingSummaries": false,
   "theme": "dark-ansi",
   "teammateMode": "auto",
-  "disableBypassPermissionsMode": false
+  "disableBypassPermissionsMode": false,
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash"
+    ]
+  }
 }
