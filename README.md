@@ -44,25 +44,6 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 
 ---
 
-## Marketplace hub
-
-The machine's `marketplace.json` is the single Claude Code plugin marketplace.
-Add it once, then install each plugin from the same hub:
-
-```
-/plugin marketplace add yesitsfebreeze/machine
-/plugin install machine@machine
-/plugin install git-fs@machine
-/plugin install split@machine
-```
-
-- `git-fs` and `split` are referenced from this hub, not vendored into the machine.
-- `kern` stays a separate marketplace (install from `yesitsfebreeze/kern`),
-  intentionally not folded in.
-- The legacy `stack` hub is superseded by this one.
-
----
-
 ## ✨ What it can do
 
 - **🤖 Bare-bones agent core.** Four agents stay loaded: the eager-generalist
@@ -75,7 +56,7 @@ Add it once, then install each plugin from the same hub:
 - **📦 The `mine/` addon kit.** The rest of the toolbelt — the `expert-*` and
   `builder-*` agents, `manager-spec` / `-strategy` / `-git` / `-docs` / etc.,
   `tool-ast-grep`, `workflow-*`, `foundation-*`, `ref-*`, `specialists`, `improve`,
-  `parallel`, `perf-gate`, `learn`, `caveman`, `trello`, and more — lives in
+  `parallel`, `perf-gate`, `learn`, `caveman`, `taskboard`, and more — lives in
   `mine/` at the repo root. Nothing there is loaded until you slot it in; `/oil`
   can scan it and suggest the pieces that fit a given repo.
 - **🧠 Compounding memory ([`kern`](https://github.com/yesitsfebreeze/kern)).** A
