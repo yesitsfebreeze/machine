@@ -234,19 +234,39 @@ HOOK
 # surface is launched on demand by the harness (plugin.json), independent of this
 # daemon. Rollback: remove the plugin.json `board` mcpServers entry and
 # mine/skills/board/, delete board/, optionally `node board/board.mjs stop`.
+# Note: the `board` mcpServers entry only registers its MCP tools after a Claude
+# Code restart — sessions started before it was added must restart to get them.
 BOARD_PORT="3010"
 
-# Poll the web API until the daemon is listening (bounded). The backgrounded
-# `serve` binds asynchronously, so confirm readiness before declaring it up.
+# Board-specific liveness probe (bounded). The backgrounded `serve` binds
+# asynchronously, so confirm readiness before declaring it up. We probe
+# /healthz and require the board's identity signature — NOT a bare 200 on
+# /api/board, which a foreign daemon (e.g. a stale taskboard) squatting the same
+# port also answers, which would make us mistake the squatter for the board.
 board_ready() {
   local i
   for i in 1 2 3 4 5 6 7 8 9 10; do
-    if have curl && curl -fsS "http://localhost:${BOARD_PORT}/api/board" >/dev/null 2>&1; then
+    if board_signature_present; then
       return 0
     fi
     sleep 1
   done
   return 1
+}
+
+# True iff :$BOARD_PORT is served by a real board.mjs (its /healthz identity).
+board_signature_present() {
+  have curl || return 1
+  curl -fsS "http://localhost:${BOARD_PORT}/healthz" 2>/dev/null | grep -q '"board":"machine-board"'
+}
+
+# PID of whatever is listening on :$BOARD_PORT, or empty if the port is free.
+board_port_pid() {
+  if have lsof; then
+    lsof -tiTCP:"$BOARD_PORT" -sTCP:LISTEN 2>/dev/null | head -1
+  elif have fuser; then
+    fuser "${BOARD_PORT}/tcp" 2>/dev/null | tr -d ' ' | head -1
+  fi
 }
 
 start_board() {
@@ -255,10 +275,27 @@ start_board() {
     warn "Node >=22.5.0 not resolvable — board web view off (MCP card ops still work)"
     return
   fi
-  # Already up? `curl /api/board` confirms a live daemon; treat it as ok.
-  if board_ready; then
+  # Already up? Require the board's own /healthz signature, not any listener.
+  if board_signature_present; then
     ok "board daemon already running (http://localhost:$BOARD_PORT)"
     return
+  fi
+  # A foreign listener squatting the port (e.g. a stale taskboard daemon that
+  # survived an addon removal) is NOT the board. Clear the known culprit via its
+  # own CLI, else fail loudly — never silently treat it as the board.
+  local squatter; squatter="$(board_port_pid)"
+  if [ -n "$squatter" ]; then
+    warn "port :$BOARD_PORT held by non-board listener (pid $squatter) — board.mjs is not serving here"
+    if have taskboard; then
+      echo "  stopping stale taskboard daemon ..."
+      taskboard stop >/dev/null 2>&1 || true
+      sleep 1
+    fi
+    squatter="$(board_port_pid)"
+    if [ -n "$squatter" ]; then
+      warn "could not free :$BOARD_PORT (pid $squatter still listening) — stop it manually, then re-run bootstrap"
+      return
+    fi
   fi
   echo "  starting board web daemon on :$BOARD_PORT ..."
   ( cd "$REPO_ROOT" && nohup node board/board.mjs serve >/dev/null 2>&1 & )

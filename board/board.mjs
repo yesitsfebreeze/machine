@@ -528,6 +528,13 @@ function serveHttp(dataPath, port) {
       return send(200, "text/html; charset=utf-8", indexHtml);
     }
 
+    // Board-specific liveness signature. Bootstrap probes THIS (not /api/board,
+    // which a foreign daemon squatting the port may also answer 200 to) to tell a
+    // real board.mjs server apart from a stale listener on the same port.
+    if (req.method === "GET" && url.pathname === "/healthz") {
+      return send(200, "application/json", JSON.stringify({ board: "machine-board", version: SERVER_VERSION }));
+    }
+
     if (req.method === "GET" && url.pathname === "/api/board") {
       const projectId = url.searchParams.get("projectId");
       try {
