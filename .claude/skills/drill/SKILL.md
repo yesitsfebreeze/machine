@@ -274,13 +274,13 @@ into the ledger, board trust quarantines it as `untrusted`.
 ## mesh — claim before you build
 
 Before dispatching a plan or implementation agent for a feature, claim it so two
-agents never build the same thing. Check `mcp__hub__roster` and `mcp__hub__claims`,
-`mcp__hub__claim` the feature, and `mcp__hub__post` an intent broadcast. Record the
-claim handle in the entry's `claim_id`. Release it with `mcp__hub__release` when the
+agents never build the same thing. Check `mcp__mesh__roster` and `mcp__mesh__claims`,
+`mcp__mesh__claim` the feature, and `mcp__mesh__post` an intent broadcast. Record the
+claim handle in the entry's `claim_id`. Release it with `mcp__mesh__release` when the
 job reaches `merged` or `dropped`. If the claim is already held by a live peer, do not
 dispatch a duplicate: post a deferred-interest note and surface it to the user.
 
-Each dispatched agent `register`s, `post`s its **goal** on start and a final **report** on finish, and posts a note per stage transition; read those with `mcp__hub__inbox` + `mcp__hub__read` and reconcile them onto the ledger. Full verb reference: @.claude/shared/hub.md.
+Each dispatched agent `register`s, `post`s its **goal** on start and a final **report** on finish, and posts a note per stage transition; read those with `mcp__mesh__inbox` + `mcp__mesh__read` and reconcile them onto the ledger. Full verb reference: @.claude/shared/mesh.md.
 
 When a plan or implementation agent blocks on a question it `post`s to `topic:questions` and waits. Those are resolved in the `questioneer` chat (Skill `questioneer`) — the single ongoing surface where the operator answers and the answer is written back to unblock the agent. The drill does not improvise answers to a blocked agent; it surfaces the question and lets the questioneer route the decision.
 

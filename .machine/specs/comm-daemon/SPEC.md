@@ -1,6 +1,6 @@
 ---
 id: SPEC-COMM-001
-title: "Fleet inter-agent communication daemon (hub) — kern's coordination sibling"
+title: "Fleet inter-agent communication daemon (mesh) — kern's coordination sibling"
 version: 1.1.0
 status: draft
 created: 2026-06-14
@@ -10,7 +10,7 @@ priority: high
 issue_number: null
 ---
 
-# Fleet Inter-Agent Communication Daemon (working name: `hub`)
+# Fleet Inter-Agent Communication Daemon (working name: `mesh`)
 
 A per-cwd MCP daemon that gives a fleet of parallel agents the four coordination
 primitives git cannot cheaply provide: **awareness**, **atomic claims/locks**,
@@ -175,8 +175,8 @@ defaults toward kern's choice deliberately.
 
 ## 4. Verb / API contract
 
-Eight verbs in three families. All verbs are MCP tools on the `hub` server,
-namespaced `mcp__hub__*` (mirroring `mcp__kern__*`). Every request carries the
+Eight verbs in three families. All verbs are MCP tools on the `mesh` server,
+namespaced `mcp__mesh__*` (mirroring `mcp__kern__*`). Every request carries the
 caller's `agent_id` — by convention the agent's git-fs branch `gitfs/<sid>`; the
 daemon treats `agent_id` as an opaque authenticated principal (no format check) for
 the trust rules in §8.
@@ -633,8 +633,8 @@ ownership so a buggy or confused agent cannot corrupt others' coordination state
     primary store and an ordered message/claim/cursor log lives in a SQLite-WAL
     journal, and the data directory is gitignored (S-1, S-3, S-4).
 15. **Matches kern's lifecycle.** Given the machine plugin is installed, when the
-    fleet starts, then `hub` launches as a per-cwd native-binary MCP server over
-    stdio (the same idiom as `kern mcp`) and is reachable as `mcp__hub__*`
+    fleet starts, then `mesh` launches as a per-cwd native-binary MCP server over
+    stdio (the same idiom as `kern mcp`) and is reachable as `mcp__mesh__*`
     (L-1, L-2).
 
 ---

@@ -6,7 +6,7 @@ other: one session's merge/checkout resets the tree to HEAD and silently destroy
 another session's uncommitted tracked edits, or a ref update computed against a
 `main` that a peer just moved drops committed work (lost-update). This has bitten
 more than once (incidents e193515d, e0afc0d). The fix is mutual exclusion on the
-shared tree, realized through the `mesh` bus (full verbs: @.claude/shared/hub.md).
+shared tree, realized through the `mesh` bus (full verbs: @.claude/shared/mesh.md).
 
 ## The rule
 
@@ -22,15 +22,15 @@ point of worktree isolation. The lock guards only the one shared tree.
 
 ## The protocol
 
-1. **Acquire.** `mcp__hub__register` (refresh liveness), then `mcp__hub__claims`
-   to inspect, then `mcp__hub__claim` the resource `branch:main`.
-2. **If a live peer already holds it,** do not edit or land on `main`. `mcp__hub__post`
+1. **Acquire.** `mcp__mesh__register` (refresh liveness), then `mcp__mesh__claims`
+   to inspect, then `mcp__mesh__claim` the resource `branch:main`.
+2. **If a live peer already holds it,** do not edit or land on `main`. `mcp__mesh__post`
    a deferred-interest note to the holder and to `*`, then either wait for your queued
    claim to be granted or stand down — never edit the shared tree under another holder.
 3. **Land.** With the claim held, make your edits and commit, or run the ref merge.
    Recompute against the current `main` tip immediately before the ref update; never
    commit a tree computed against a stale `main`.
-4. **Release.** `mcp__hub__release` the `branch:main` claim as soon as the landing is
+4. **Release.** `mcp__mesh__release` the `branch:main` claim as soon as the landing is
    committed, so a waiting peer proceeds. Hold it for the landing, not for your whole
    session.
 

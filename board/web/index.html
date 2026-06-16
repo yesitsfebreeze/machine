@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>board</title>
+  <!-- Pico.css: classless, tiny, no build step. Design template credit: LocalBoards (MIT). -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    :root { --board-gap: 1rem; }
+    body { padding: 1rem 1.5rem; max-width: none; }
+    header.board-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+    header.board-head h1 { margin: 0; font-size: 1.4rem; }
+    #cwd-picker { width: auto; margin: 0; font-size: 0.8rem; padding: 0.15rem 1.8rem 0.15rem 0.5rem; height: auto; }
+    #live { font-size: 0.75rem; opacity: 0.6; }
+    .board-cols { display: flex; gap: var(--board-gap); align-items: flex-start; overflow-x: auto; padding-bottom: 1rem; }
+    .col { flex: 0 0 16rem; background: var(--pico-card-background-color); border-radius: var(--pico-border-radius); padding: 0.6rem; }
+    .col > h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin: 0 0 0.6rem; display: flex; justify-content: space-between; }
+    .col > h3 .count { opacity: 0.5; font-weight: normal; }
+    .cards { min-height: 2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .card { background: var(--pico-background-color); border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 0.5rem 0.6rem; cursor: grab; }
+    .card.dragging { opacity: 0.4; }
+    .card .title { font-size: 0.85rem; font-weight: 600; }
+    .card .body { font-size: 0.72rem; opacity: 0.7; white-space: pre-wrap; margin-top: 0.25rem; }
+    .card .meta { font-size: 0.68rem; opacity: 0.5; margin-top: 0.3rem; }
+    .empty { opacity: 0.5; padding: 2rem 0; text-align: center; }
+    dialog article { max-width: 32rem; }
+    .comment { border-bottom: 1px solid var(--pico-muted-border-color); padding: 0.4rem 0; font-size: 0.82rem; }
+    .comment .who { font-weight: 600; opacity: 0.8; }
+    .comment .when { font-size: 0.68rem; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <header class="board-head">
+    <h1 id="proj-name">board</h1>
+    <select id="cwd-picker" aria-label="select cwd"></select>
+    <span id="live">connecting…</span>
+  </header>
+
+  <div id="root" class="board-cols"><p class="empty">loading…</p></div>
+
+  <dialog id="card-dialog">
+    <article>
+      <header><strong id="dlg-title"></strong></header>
+      <p id="dlg-body" style="white-space:pre-wrap;"></p>
+      <h4>Comments</h4>
+      <div id="dlg-comments"></div>
+      <form id="dlg-comment-form">
+        <input type="text" id="dlg-comment-input" placeholder="add a comment…" autocomplete="off">
+        <footer>
+          <button type="button" class="secondary" id="dlg-close">close</button>
+          <button type="submit">comment</button>
+        </footer>
+      </form>
+    </article>
+  </dialog>
+
+  <script>
+    // --- state ---------------------------------------------------------------
+    // The board is a per-host singleton; this page picks WHICH cwd (repo) to show
+    // via the dropdown. `root` is the selected cwd; it scopes every read/write.
+    const params = new URLSearchParams(location.search);
+    let root = params.get("root") || localStorage.getItem("board.root") || null;
+    let board = null;       // { project, columns:[ { id,name,cards:[...] } ] }
+    let openCardId = null;
+
+    // Mutations carry ?root= so they land in the selected cwd's own store.
+    async function api(verb, args) {
+      const qs = root ? "?root=" + encodeURIComponent(root) : "";
+      const res = await fetch("/api/" + verb + qs, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(args || {}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    // Populate the cwd dropdown from the global index, preserving the current
+    // selection (or falling back to the first cwd) and persisting it.
+    async function loadCwds() {
+      const picker = document.getElementById("cwd-picker");
+      let cwds = [];
+      try {
+        const res = await fetch("/api/cwds");
+        cwds = (await res.json()).cwds || [];
+      } catch { /* daemon may be mid-restart */ }
+      if (!cwds.some((c) => c.root === root)) root = cwds.length ? cwds[0].root : null;
+      picker.innerHTML = "";
+      for (const c of cwds) {
+        const opt = document.createElement("option");
+        opt.value = c.root;
+        opt.textContent = c.name;
+        opt.title = c.root;
+        if (c.root === root) opt.selected = true;
+        picker.append(opt);
+      }
+      picker.style.display = cwds.length ? "" : "none";
+      if (root) localStorage.setItem("board.root", root);
+    }
+
+    async function refresh() {
+      if (!root) { render(null); return; }
+      const res = await fetch("/api/board?root=" + encodeURIComponent(root));
+      board = await res.json();
+      render(board);
+    }
+
+    // --- render --------------------------------------------------------------
+    function el(tag, attrs, ...kids) {
+      const e = document.createElement(tag);
+      for (const k in (attrs || {})) {
+        if (k === "class") e.className = attrs[k];
+        else if (k.startsWith("on")) e[k] = attrs[k];
+        else if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+      }
+      for (const kid of kids) if (kid != null) e.append(kid);
+      return e;
+    }
+
+    // Display name for the current cwd (the dropdown's selected label).
+    function cwdLabel() {
+      const picker = document.getElementById("cwd-picker");
+      return picker.selectedOptions[0]?.textContent || "board";
+    }
+
+    function render(b) {
+      const mount = document.getElementById("root");
+      mount.innerHTML = "";
+      if (!b || !b.project) {
+        document.getElementById("proj-name").textContent = b ? cwdLabel() : "board";
+        mount.append(el("p", { class: "empty" }, root ? "no project yet" : "no cwd registered"));
+        return;
+      }
+      document.getElementById("proj-name").textContent = b.project.name;
+      if (!b.columns.length) {
+        mount.append(el("p", { class: "empty" }, "no columns yet"));
+        return;
+      }
+      for (const col of b.columns) {
+        const cards = el("div", { class: "cards", "data-col": col.id });
+        for (const card of col.cards) cards.append(cardEl(card));
+        wireColumn(cards, col.id);
+        mount.append(el("div", { class: "col" },
+          el("h3", {}, col.name, el("span", { class: "count" }, String(col.cards.length))),
+          cards,
+        ));
+      }
+    }
+
+    function cardEl(card) {
+      const e = el("div", {
+        class: "card", draggable: "true", "data-id": card.id,
+        onclick: () => openCard(card),
+      },
+        el("div", { class: "title" }, card.title),
+        card.body ? el("div", { class: "body" }, card.body) : null,
+        el("div", { class: "meta" }, card.commentCount ? card.commentCount + " comment(s)" : ""),
+      );
+      e.addEventListener("dragstart", (ev) => {
+        ev.dataTransfer.setData("text/plain", card.id);
+        ev.dataTransfer.effectAllowed = "move";
+        e.classList.add("dragging");
+      });
+      e.addEventListener("dragend", () => e.classList.remove("dragging"));
+      return e;
+    }
+
+    // Native HTML5 drop target: compute insert index from pointer Y, then move.
+    function wireColumn(cardsEl, columnId) {
+      cardsEl.addEventListener("dragover", (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "move"; });
+      cardsEl.addEventListener("drop", async (ev) => {
+        ev.preventDefault();
+        const id = ev.dataTransfer.getData("text/plain");
+        if (!id) return;
+        const siblings = [...cardsEl.querySelectorAll(".card")].filter((c) => c.dataset.id !== id);
+        let index = siblings.length;
+        for (let i = 0; i < siblings.length; i++) {
+          const r = siblings[i].getBoundingClientRect();
+          if (ev.clientY < r.top + r.height / 2) { index = i; break; }
+        }
+        try { await api("card_move", { id, toColumnId: columnId, newIndex: index }); }
+        catch (e) { alert(e.message); }
+        // SSE refetch will re-render; refresh immediately for snappiness.
+        refresh();
+      });
+    }
+
+    // --- card dialog ---------------------------------------------------------
+    const dialog = document.getElementById("card-dialog");
+    async function openCard(card) {
+      openCardId = card.id;
+      document.getElementById("dlg-title").textContent = card.title;
+      document.getElementById("dlg-body").textContent = card.body || "";
+      await renderComments(card.id);
+      dialog.showModal();
+    }
+    async function renderComments(cardId) {
+      const box = document.getElementById("dlg-comments");
+      box.innerHTML = "";
+      const { comments } = await api("comment_list", { cardId });
+      if (!comments.length) { box.append(el("p", { class: "empty" }, "no comments")); return; }
+      for (const c of comments) {
+        box.append(el("div", { class: "comment" },
+          el("span", { class: "who" }, c.author + ": "),
+          c.body + " ",
+          el("span", { class: "when" }, new Date(c.createdAt).toLocaleString()),
+        ));
+      }
+    }
+    document.getElementById("dlg-close").onclick = () => dialog.close();
+    document.getElementById("dlg-comment-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const input = document.getElementById("dlg-comment-input");
+      const body = input.value.trim();
+      if (!body || !openCardId) return;
+      await api("comment_add", { cardId: openCardId, author: "web", body });
+      input.value = "";
+      await renderComments(openCardId);
+      refresh();
+    });
+
+    // Switch the visible cwd from the dropdown.
+    document.getElementById("cwd-picker").addEventListener("change", async (ev) => {
+      root = ev.target.value || null;
+      if (root) localStorage.setItem("board.root", root);
+      const url = new URL(location.href);
+      if (root) url.searchParams.set("root", root); else url.searchParams.delete("root");
+      history.replaceState(null, "", url);
+      await refresh();
+    });
+
+    // --- live channel --------------------------------------------------------
+    function connectSSE() {
+      const live = document.getElementById("live");
+      const es = new EventSource("/events");
+      es.onopen = () => { live.textContent = "live"; };
+      // A change anywhere may be a new cwd registering OR a card edit: refresh
+      // the dropdown (cheap) and the current board.
+      es.onmessage = async () => { await loadCwds(); refresh(); };
+      es.onerror = () => { live.textContent = "reconnecting…"; };
+    }
+
+    // --- boot ----------------------------------------------------------------
+    (async () => {
+      await loadCwds();
+      await refresh();
+      connectSSE();
+    })();
+  </script>
+</body>
+</html>

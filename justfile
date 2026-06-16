@@ -10,7 +10,7 @@ marketplace := ".claude-plugin/marketplace.json"
 default:
     @just --list
 
-# Install and verify every machine dependency (kern, hub, git-fs, MCP servers).
+# Install and verify every machine dependency (kern, mesh, git-fs, MCP servers).
 # Idempotent — skips what is already present. Safe to re-run.
 bootstrap:
     @bash scripts/bootstrap.sh

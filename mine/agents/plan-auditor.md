@@ -5,7 +5,7 @@ description: |
   MUST INVOKE for SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance check, document validation.
   EN: SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance, document validation
   NOT for: code implementation, code review, documentation writing, git operations, running tests
-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
+tools: Read, Grep, Glob, Bash, Write, Edit, mcp__mesh__register, mcp__mesh__roster, mcp__mesh__claims, mcp__mesh__claim, mcp__mesh__release, mcp__mesh__post, mcp__mesh__inbox, mcp__mesh__read, SendMessage
 model: sonnet
 effort: high
 permissionMode: default
@@ -270,17 +270,17 @@ The audit boundary is clear: plan-auditor audits, manager-spec creates and revis
 
 You share a mesh bus with every other agent this session — use it so parallel work
 never collides or duplicates. Your `agent_id` is your spawn / branch id.
-- **On start:** `mcp__hub__register`, then `mcp__hub__post` your **goal** — one line
-  naming what you were dispatched to do and your done-condition. `mcp__hub__roster` +
-  `mcp__hub__claims` to see who is live and what they hold, then `mcp__hub__claim`
-  what you will touch (if a live peer holds it, `mcp__hub__post` a deferred-interest
+- **On start:** `mcp__mesh__register`, then `mcp__mesh__post` your **goal** — one line
+  naming what you were dispatched to do and your done-condition. `mcp__mesh__roster` +
+  `mcp__mesh__claims` to see who is live and what they hold, then `mcp__mesh__claim`
+  what you will touch (if a live peer holds it, `mcp__mesh__post` a deferred-interest
   note and report back instead of colliding).
-- **While working:** `mcp__hub__post` a note at each stage and `mcp__hub__inbox` +
-  `mcp__hub__read` to hear peers and the driver.
-- **On finish:** `mcp__hub__post` a **report** — goal, what you did, result, follow-ups —
-  then `mcp__hub__release` every claim. This is the report the driver and your
+- **While working:** `mcp__mesh__post` a note at each stage and `mcp__mesh__inbox` +
+  `mcp__mesh__read` to hear peers and the driver.
+- **On finish:** `mcp__mesh__post` a **report** — goal, what you did, result, follow-ups —
+  then `mcp__mesh__release` every claim. This is the report the driver and your
   SubagentStop hook expect.
 
 `SendMessage` is the driver's live back-channel. As a dispatched sub-agent, coordinate
 and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
-peers. Full protocol: @.claude/shared/hub.md
+peers. Full protocol: @.claude/shared/mesh.md

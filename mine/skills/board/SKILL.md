@@ -3,11 +3,12 @@ name: board
 description: Use when the user says "board", "kanban board", or "drill board" — explains the local board kanban workflow, board-per-cwd identity, the stage-to-column mapping, and the read-update-consult discipline that mirrors the drill ledger onto a card per feature.
 ---
 
-# board — local kanban served by hub
+# board — local kanban for the drill ledger
 
-`board` is the machine's kanban surface, absorbed into the `hub` singleton daemon
-(a2). Hub exposes all 11 board verbs via MCP under the `mcp__plugin_machine_hub__`
-prefix, backed by one repo-scoped JSON state file under `.board/`. The data model is
+`board` is the machine's own zero-dependency kanban addon: a single Node file
+(`board/board.mjs`, built mesh-style) that exposes an MCP verb surface over stdio
+plus a CDN-styled web UI with an SSE live-update channel on `http://localhost:3010`,
+backed by one repo-scoped JSON state file under `.board/`. The data model is
 projects -> columns -> cards -> comments. The drill uses it to mirror the live
 `/.machine/sessions/` ledger: one card per in-flight feature, moved across columns as
 the feature crosses stages.
@@ -16,24 +17,32 @@ The board is a projection of the ledger, not a second source of truth. The ledge
 under `/.machine/sessions/` remains the durable record; the board is the at-a-glance
 view. When the two disagree, the ledger wins and the board is re-synced.
 
-Hub serves the board on `http://localhost:7777` (WebSocket live view at `/ws`,
-REST API at `/api/<verb>`). Card operations work through MCP even when the web UI
-is not open. All board writes are serialized by the same mkdir-lock used for mesh
-state, so concurrent MCP calls and web drag-and-drop cannot corrupt `.board/state.json`.
+Two surfaces share one store: the MCP server (wired into `plugin.json` as a stdio
+entry, `node ${CLAUDE_PLUGIN_ROOT}/board/board.mjs mcp`, exactly like mesh) for card
+operations, and the web UI (`node board/board.mjs serve`, default
+`http://localhost:3010`) for a human view. Card operations work through MCP even when
+the web daemon is down — the stdio surface is independent of the web port. A single
+mkdir-lock around every mutation serializes web-UI writes and MCP writes to one
+`state.json`, so the drill and a human dragging cards cannot corrupt it.
 
 ## Provisioning
 
-Hub ships in-plugin as a Rust binary (`hub/target/release/hub`). Bootstrap builds it
-with `cargo build --release --manifest-path hub/Cargo.toml`. The SessionStart hook
-`hub-ensure.sh` starts `hub serve` on `:7777` and polls health up to 5 seconds. An
-already-running daemon is a no-op. Hub is the single process for both mesh and board
-— no separate board daemon.
+board ships in-plugin: it is a single zero-dependency Node file, so there is nothing
+to download or build — it needs only Node (>=22.5.0, already required by the machine
+for context-mode). `scripts/bootstrap.sh` starts its web daemon (`start_board`):
+`node board/board.mjs serve` on `:3010`, polling `curl http://localhost:3010/api/board`
+until ready; an already-running daemon is treated as ok. When Node is missing or the
+daemon fails to bind, bootstrap warns and skips — board is an addon, so it never
+aborts the run; the web view is simply off for that session and MCP card ops still
+work. There is no separate install step, no Go, no SQLite, no prebuilt download.
 
 ## Rollback
 
-To remove board support: drop the board verb calls from skills and agents. The hub
-binary continues serving mesh verbs. The `.board/` state directory (gitignored) can
-be deleted to discard board data.
+To remove this addon: delete the `board` entry from `.claude-plugin/plugin.json`
+`mcpServers`, delete `mine/skills/board/` and `board/`, and optionally run
+`node board/board.mjs stop`. Drop the `start_board` call from
+`scripts/bootstrap.sh`. The repo-scoped `.board/` state directory (gitignored) can be
+deleted to discard board data.
 
 ## IDs — always load from board.json
 
@@ -50,7 +59,7 @@ version    schema version (1)
 cwd        absolute working directory this project belongs to
 name       basename of cwd — the project name
 projectId  server-generated ULID — required by board_get and every card call
-url        web board URL (http://localhost:7777)
+url        web board URL (http://localhost:3010)
 resolvedAt ISO-8601 timestamp of resolution
 ```
 
@@ -65,16 +74,21 @@ or stale, before any card work:
    by name: an existing project with that name is returned, otherwise a new one is
    created. The returned `project.id` is the ULID to persist.
 2. Write `.machine/board.json` with the schema above (`version` 1, the absolute
-   `cwd`, the `name`, the returned `projectId`, `url` `http://localhost:7777`, and the
+   `cwd`, the `name`, the returned `projectId`, `url` `http://localhost:3010`, and the
    current ISO-8601 `resolvedAt`).
 3. Create the six lifecycle columns (below) once via `column_create`, left-to-right
    in order, if the project has none yet.
 
+Resolution is a single MCP call plus a small file write — there is no shell resolver
+and no sha1-prefix scheme. The persisted `cwd` guards the local file against reuse in
+a different working directory.
+
 ### Viewing the board
 
-Open `http://localhost:7777/` in a browser. The page connects via WebSocket and
-live-reloads on every card or roster mutation. To start hub manually:
-`hub serve` (default `http://localhost:7777`).
+The web UI is started by bootstrap (`start_board`). To start it by hand, run
+`node board/board.mjs serve` (default `http://localhost:3010`); card operations work
+without it. The page live-reloads via SSE: a card moved in one tab appears in another
+within about a second.
 
 ## Six lifecycle columns
 
@@ -119,11 +133,10 @@ transitions through `mesh`; the drill reconciles those onto the ledger and proje
 them onto the board on its own turn. A card the drill did not create this session is
 untrusted and is surfaced for human review rather than acted on.
 
-## Operating tools (hub MCP — board verbs)
+## Operating tools (board MCP)
 
-All board verbs are served by hub at `http://localhost:7777/mcp` under the prefix
-`mcp__plugin_machine_hub__`. Tools are deferred — load via `ToolSearch` with
-`select:<name>` first.
+Real tool names and required arguments, from the board MCP server. Tools are deferred
+— load via `ToolSearch` with `select:<name>` first.
 
 - Projects: `project_resolve` (name) — get-or-create by name; `project_list`.
 - Board read: `board_get` (projectId) — the project plus its columns left-to-right,
@@ -136,5 +149,5 @@ All board verbs are served by hub at `http://localhost:7777/mcp` under the prefi
 - Comments: `comment_add` (cardId, author, body), `comment_list` (cardId) —
   oldest-first.
 
-Every mutation bumps `state.rev` and pushes a full state snapshot over the WebSocket
-`/ws` channel so open browser tabs re-render immediately.
+Every mutation bumps `state.rev` and pushes `data:{"rev":N}` over the SSE `/events`
+channel so open web tabs refetch.

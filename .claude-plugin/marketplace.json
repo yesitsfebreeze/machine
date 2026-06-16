@@ -12,7 +12,7 @@
         "source": "github",
         "repo": "yesitsfebreeze/machine"
       },
-      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, hub + board + context7 + pdf-reader + context-mode MCP servers)."
+      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, mesh + board + context7 + pdf-reader + context-mode MCP servers)."
     },
     {
       "name": "kern",
