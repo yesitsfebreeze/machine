@@ -15,8 +15,11 @@ The board is a projection of the ledger, not a second source of truth. The ledge
 under `/.machine/sessions/` remains the durable record; the board is the at-a-glance
 view. When the two disagree, the ledger wins and the board is re-synced.
 
-Two surfaces share one database: the MCP server (`taskboard mcp`, wired into
-`plugin.json`) for card operations, and the web UI (`taskboard start`, default
+Two surfaces share one database: the MCP server (wired into `plugin.json` via a
+plugin-dir-prefixed launcher, `${CLAUDE_PLUGIN_ROOT}/taskboard/launch.sh mcp`, which
+resolves the `taskboard` binary by absolute path so it loads even when `~/.local/bin`
+is off the MCP launcher's PATH — mirroring how mesh loads) for card operations, and
+the web UI (`taskboard start`, default
 `http://localhost:3010`) for a human view. Card operations work through MCP even
 when the web daemon is down. The shared SQLite database runs in WAL mode, so the
 web UI and the MCP server can write concurrently without lock contention.
@@ -35,7 +38,8 @@ release version is a constant in `bootstrap.sh`; bump it deliberately to upgrade
 ## Rollback
 
 To remove this addon: delete the `taskboard` entry from `.claude-plugin/plugin.json`
-`mcpServers`, delete `mine/skills/taskboard/`, and optionally run `taskboard stop`.
+`mcpServers`, delete `mine/skills/taskboard/` and `taskboard/launch.sh`, and
+optionally run `taskboard stop`.
 Leave the SQLite database at `~/.config/taskboard/taskboard.db` untouched.
 
 ## IDs — always load from taskboard.json

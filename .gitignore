@@ -35,3 +35,6 @@ version.log
 
 # taskboard project identity (resolved per-cwd at runtime by taskboard-resolve.sh)
 .machine/taskboard.json
+
+.env
+.env.*

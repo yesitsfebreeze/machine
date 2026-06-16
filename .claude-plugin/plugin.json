@@ -1,7 +1,7 @@
 {
   "name": "machine",
   "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil into /.machine.",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "author": {
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"
@@ -36,6 +36,7 @@
     "./.claude/skills/drill",
     "./.claude/skills/gate",
     "./.claude/skills/improve",
+    "./.claude/skills/mcp-plugin",
     "./.claude/skills/mine",
     "./.claude/skills/oil",
     "./.claude/skills/personas",
@@ -58,8 +59,9 @@
       ]
     },
     "taskboard": {
-      "command": "taskboard",
+      "command": "bash",
       "args": [
+        "${CLAUDE_PLUGIN_ROOT}/taskboard/launch.sh",
         "mcp"
       ]
     },

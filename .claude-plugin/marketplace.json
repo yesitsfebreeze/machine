@@ -1,5 +1,6 @@
 {
   "name": "machine",
+  "description": "The machine marketplace — the portable Claude Code payload plus its companion plugins (git-fs, split).",
   "owner": {
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"
