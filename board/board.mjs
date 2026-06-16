@@ -482,7 +482,8 @@ function serveStdio(board) {
 
 // --- web server + SSE ------------------------------------------------------
 
-// The verbs the HTTP POST surface exposes (the full domain, thin JSON wrappers).
+// HTTP + SSE web view: GET / (UI), /healthz, /api/board (read), POST /api/<verb>
+// (the full domain as thin JSON wrappers), and /events (live rev push).
 function serveHttp(dataPath, port) {
   const clients = new Set(); // open SSE responses
   let lastRev = -1;
