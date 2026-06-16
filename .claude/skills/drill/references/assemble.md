@@ -27,7 +27,7 @@ Division of labour:
 | `context-mode` | vendored MCP (`ctx_*`) | runs via `npx`; needs Node >=22.5.0 |
 | `context7` | vendored MCP | needs `CONTEXT7_API_KEY` |
 | `pdf-reader` | vendored MCP | runs via `npx` on demand |
-| `board` | addon: kanban MCP + web board | ships in-plugin as a single zero-dep Node file; `bootstrap.sh` only starts its web daemon on `:3010`; skips with a warning if Node is missing or the daemon fails to bind (MCP card ops still work) |
+| `hub` (board) | kanban board absorbed into hub | hub serves board verbs at `:7777`; `bootstrap.sh` calls `start_hub()` to bring it up |
 | `codex-peer-review` | optional addon | copied into project `.claude/skills/` on opt-in (needs OpenAI Codex CLI) |
 | status line | per-repo config | wired into project `.claude/settings.json` |
 | required keys | per-repo config | recorded in gitignored `settings.local.json` |
@@ -171,8 +171,8 @@ in exactly one place.
 
 - **context7** (HTTP transport) — requires `CONTEXT7_API_KEY`.
 - **kern**, **hub**, **pdf-reader**, **context-mode** — require no key.
-- Local services (no key required): **board** — a local zero-dep Node daemon over a
-  single repo-scoped JSON state file; it authenticates nothing and is never sent a key.
+- Local services (no key required): **hub** (mesh + board) — a local Rust daemon over
+  repo-scoped JSON state files; it authenticates nothing and is never sent a key.
 
 So today the only required key is `CONTEXT7_API_KEY`, and it is **optional**:
 without it, context7 simply stays unauthenticated. Nothing else breaks, because the

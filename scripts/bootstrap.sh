@@ -8,12 +8,9 @@
 #   context-mode vendored MCP server    (npx on demand; needs Node >=22.5.0)
 #   context7     vendored MCP server    (needs CONTEXT7_API_KEY)
 #   pdf-reader   vendored MCP server    (npx on demand)
-#   board        addon: kanban MCP+web  (ships in-plugin; needs only Node)
 #
-# board is an optional addon, not a core daemon: it ships in-plugin (a single
-# zero-dep Node file), so there is nothing to install — bring-up only starts its
-# web daemon. If Node is missing or the daemon fails to bind it warns and skips
-# (the web view is off, MCP card ops still work) — it never aborts the run.
+# hub is the singleton daemon for both mesh coordination and kanban board (a2+).
+# It serves HTTP+SSE+WS on port 7777. bootstrap starts it via start_hub().
 #
 # Idempotent: already-satisfied dependencies are skipped. Safe to re-run.
 # Usage: scripts/bootstrap.sh   (or: just bootstrap)
@@ -230,81 +227,44 @@ HOOK
   if have node; then node scripts/graphify.mjs >/dev/null 2>&1 && ok "graphify hook installed + initial graph built (.machine/graph.json)" || ok "graphify hook installed (initial build deferred)"; else warn "node not found — graphify hook installed but cannot run until node is present"; fi
 }
 
-# --- board (addon: local kanban MCP + web) ---------------------------------
-# board ships in-plugin as a single zero-dependency Node file (board/board.mjs),
-# so there is nothing to install — bring-up only starts its web daemon. The MCP
-# surface is launched on demand by the harness (plugin.json), independent of this
-# daemon. Rollback: remove the plugin.json `board` mcpServers entry and
-# mine/skills/board/, delete board/, optionally `node board/board.mjs stop`.
-# Note: the `board` mcpServers entry only registers its MCP tools after a Claude
-# Code restart — sessions started before it was added must restart to get them.
-BOARD_PORT="3010"
+# --- hub singleton daemon (mesh + board) ------------------------------------
+# hub is the singleton HTTP+SSE+WS daemon for both mesh coordination and the
+# kanban board. It binds port 7777. The SessionStart hook hub-ensure.sh handles
+# per-session bring-up automatically; bootstrap starts it once for new installs.
+HUB_PORT="7777"
 
-# Board-specific liveness probe (bounded). The backgrounded `serve` binds
-# asynchronously, so confirm readiness before declaring it up. We probe
-# /healthz and require the board's identity signature — NOT a bare 200 on
-# /api/board, which a foreign daemon (e.g. a stale taskboard) squatting the same
-# port also answers, which would make us mistake the squatter for the board.
-board_ready() {
+# True iff :$HUB_PORT is served by the real hub daemon (identity probe).
+hub_healthy() {
+  have curl || return 1
+  curl -fsS --max-time 2 "http://localhost:${HUB_PORT}/health" 2>/dev/null | grep -q '"hub":"machine-hub"'
+}
+
+# Poll until hub is healthy, up to 10 x 500ms = 5 seconds.
+hub_ready() {
   local i
   for i in 1 2 3 4 5 6 7 8 9 10; do
-    if board_signature_present; then
-      return 0
-    fi
-    sleep 1
+    if hub_healthy; then return 0; fi
+    sleep 0.5
   done
   return 1
 }
 
-# True iff :$BOARD_PORT is served by a real board.mjs (its /healthz identity).
-board_signature_present() {
-  have curl || return 1
-  curl -fsS "http://localhost:${BOARD_PORT}/healthz" 2>/dev/null | grep -q '"board":"machine-board"'
-}
-
-# PID of whatever is listening on :$BOARD_PORT, or empty if the port is free.
-board_port_pid() {
-  if have lsof; then
-    lsof -tiTCP:"$BOARD_PORT" -sTCP:LISTEN 2>/dev/null | head -1
-  elif have fuser; then
-    fuser "${BOARD_PORT}/tcp" 2>/dev/null | tr -d ' ' | head -1
+start_hub() {
+  head "hub (singleton daemon: mesh + board on :$HUB_PORT)"
+  local hub_bin="$REPO_ROOT/hub/target/release/hub"
+  if [ ! -x "$hub_bin" ]; then
+    warn "hub binary not found at $hub_bin — run bootstrap again after building hub"; return
   fi
-}
-
-start_board() {
-  head "board (addon: kanban MCP + web board)"
-  if ! node_ok; then
-    warn "Node >=22.5.0 not resolvable — board web view off (MCP card ops still work)"
+  if hub_healthy; then
+    ok "hub daemon already running (http://localhost:$HUB_PORT)"
     return
   fi
-  # Already up? Require the board's own /healthz signature, not any listener.
-  if board_signature_present; then
-    ok "board daemon already running (http://localhost:$BOARD_PORT)"
-    return
-  fi
-  # A foreign listener squatting the port (e.g. a stale taskboard daemon that
-  # survived an addon removal) is NOT the board. Clear the known culprit via its
-  # own CLI, else fail loudly — never silently treat it as the board.
-  local squatter; squatter="$(board_port_pid)"
-  if [ -n "$squatter" ]; then
-    warn "port :$BOARD_PORT held by non-board listener (pid $squatter) — board.mjs is not serving here"
-    if have taskboard; then
-      echo "  stopping stale taskboard daemon ..."
-      taskboard stop >/dev/null 2>&1 || true
-      sleep 1
-    fi
-    squatter="$(board_port_pid)"
-    if [ -n "$squatter" ]; then
-      warn "could not free :$BOARD_PORT (pid $squatter still listening) — stop it manually, then re-run bootstrap"
-      return
-    fi
-  fi
-  echo "  starting board web daemon on :$BOARD_PORT ..."
-  ( cd "$REPO_ROOT" && nohup node board/board.mjs serve >/dev/null 2>&1 & )
-  if board_ready; then
-    did "board daemon up (http://localhost:$BOARD_PORT)"
+  echo "  starting hub daemon on :$HUB_PORT ..."
+  ( cd "$REPO_ROOT" && nohup "$hub_bin" serve >/dev/null 2>&1 & )
+  if hub_ready; then
+    did "hub daemon up (http://localhost:$HUB_PORT)"
   else
-    warn "board daemon did not become ready on :$BOARD_PORT — MCP card ops still work without the web UI"
+    warn "hub daemon did not become ready on :$HUB_PORT — MCP and board ops may not work"
   fi
 }
 
@@ -317,7 +277,7 @@ ensure_gitfs_shim
 ensure_statusline_shim
 ensure_node
 check_others
-start_board
+start_hub
 install_graphify
 
 head "summary"
