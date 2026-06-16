@@ -88,7 +88,12 @@ subagent owns each unit of real work.
 
 2. **Plan agent.** On the user's go-ahead, dispatch ONE subagent whose only job is
    to write the implementation plan for the agreed shape — concept and plan stages,
-   no implementation. It returns a plan document, not code.
+   no implementation. The plan is written as a psaido scaffold (@docs/psaido.md): a
+   rough what-and-how the implementation agent later translates into code, never the
+   code itself. The plan must be **supersede-aware** — when the feature replaces an
+   existing implementation, the plan rips the old one out in the same change (machine
+   law: one clean implementation, no parallel duplicate). It returns a plan document,
+   not code.
 
 3. **Review the plan (advisory).** Before storing it:
    - run the `/personas` panel (Skill `personas`) against the plan, and
@@ -113,7 +118,8 @@ subagent owns each unit of real work.
      worktree on a real branch, so concurrent miners never collide on a working tree,
    - the miner operates entirely inside its worktree dir and edits through git-fs
      (per-edit commits on its branch), not raw disk writes,
-   - it is handed the stored plan as its working spec (reads `.machine/plans/<id>.md`),
+   - it is handed the stored plan as its working spec (reads `.machine/plans/<id>.md`) —
+     a psaido scaffold (@docs/psaido.md) it translates into real code,
    - it implements autonomously, runs the `gate` skill (Skill `gate`) and iterates
      until the build is green and stable,
    - on green it materializes its git-fs branch state onto the worktree branch, then
@@ -242,12 +248,12 @@ you reconcile those posts onto the ledger on your turn. `mesh` is the source of 
 for where a feature sits; the ledger is your durable projection of it, so the two may
 differ briefly between the agent's post and your next turn.
 
-When the `board` addon is slotted, also project each ledger entry's status onto a
-board card per `$MACHINE_MINE/skills/board/SKILL.md` (from `/.machine/ENV.md`; the single
-source for the stage-to-column mapping; once the addon is slotted, its working copy
-lives at `.claude/skills/board/`), moving the card to the `Merged` column on merge
-(kept as the completed-pipeline record) and removing it with `card_delete` only when
-the feature is dropped.
+`board` is a core MCP server (always available, not a slotted addon), so also project
+each ledger entry's status onto a card on the cwd's board via the board MCP verbs.
+Tickets enter the board through `/promote` (the brainstorm-to-board bridge) in the
+intake lane; as a job advances you `card_move` it rightward through the fixed pipeline
+columns to match its ledger status, land it in the `Merged` column on merge (kept as
+the completed-pipeline record), and `card_delete` it only when the feature is dropped.
 
 ## Dispatched agents never drive
 
@@ -273,6 +279,8 @@ job reaches `merged` or `dropped`. If the claim is already held by a live peer, 
 dispatch a duplicate: post a deferred-interest note and surface it to the user.
 
 Each dispatched agent `register`s, `post`s its **goal** on start and a final **report** on finish, and posts a note per stage transition; read those with `mcp__mesh__inbox` + `mcp__mesh__read` and reconcile them onto the ledger. Full verb reference: @.claude/shared/mesh.md.
+
+When a plan or implementation agent blocks on a question it `post`s to `topic:questions` and waits. Those are resolved in the `questioneer` chat (Skill `questioneer`) — the single ongoing surface where the operator answers and the answer is written back to unblock the agent. The drill does not improvise answers to a blocked agent; it surfaces the question and lets the questioneer route the decision.
 
 ## Worktree topology — main is always free
 
