@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>board</title>
+  <!-- Pico.css: classless, tiny, no build step. Design template credit: LocalBoards (MIT). -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <!-- SortableJS: optional drag fallback; native HTML5 DnD is the primary path. -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
+  <style>
+    :root { --board-gap: 1rem; }
+    body { padding: 1rem 1.5rem; max-width: none; }
+    header.board-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+    header.board-head h1 { margin: 0; font-size: 1.4rem; }
+    #live { font-size: 0.75rem; opacity: 0.6; }
+    .board-cols { display: flex; gap: var(--board-gap); align-items: flex-start; overflow-x: auto; padding-bottom: 1rem; }
+    .col { flex: 0 0 16rem; background: var(--pico-card-background-color); border-radius: var(--pico-border-radius); padding: 0.6rem; }
+    .col > h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin: 0 0 0.6rem; display: flex; justify-content: space-between; }
+    .col > h3 .count { opacity: 0.5; font-weight: normal; }
+    .cards { min-height: 2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .card { background: var(--pico-background-color); border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); padding: 0.5rem 0.6rem; cursor: grab; }
+    .card.dragging { opacity: 0.4; }
+    .card .title { font-size: 0.85rem; font-weight: 600; }
+    .card .body { font-size: 0.72rem; opacity: 0.7; white-space: pre-wrap; margin-top: 0.25rem; }
+    .card .meta { font-size: 0.68rem; opacity: 0.5; margin-top: 0.3rem; }
+    .empty { opacity: 0.5; padding: 2rem 0; text-align: center; }
+    dialog article { max-width: 32rem; }
+    .comment { border-bottom: 1px solid var(--pico-muted-border-color); padding: 0.4rem 0; font-size: 0.82rem; }
+    .comment .who { font-weight: 600; opacity: 0.8; }
+    .comment .when { font-size: 0.68rem; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <header class="board-head">
+    <h1 id="proj-name">board</h1>
+    <span id="live">connecting…</span>
+  </header>
+
+  <div id="root" class="board-cols"><p class="empty">loading…</p></div>
+
+  <dialog id="card-dialog">
+    <article>
+      <header><strong id="dlg-title"></strong></header>
+      <p id="dlg-body" style="white-space:pre-wrap;"></p>
+      <h4>Comments</h4>
+      <div id="dlg-comments"></div>
+      <form id="dlg-comment-form">
+        <input type="text" id="dlg-comment-input" placeholder="add a comment…" autocomplete="off">
+        <footer>
+          <button type="button" class="secondary" id="dlg-close">close</button>
+          <button type="submit">comment</button>
+        </footer>
+      </form>
+    </article>
+  </dialog>
+
+  <script>
+    // --- state ---------------------------------------------------------------
+    const params = new URLSearchParams(location.search);
+    let projectId = params.get("projectId") || null;
+    let board = null;       // { project, columns:[ { id,name,cards:[...] } ] }
+    let openCardId = null;
+
+    async function api(verb, args) {
+      const res = await fetch("/api/" + verb, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(args || {}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    // Resolve a project: explicit ?projectId wins; else first project; else none.
+    async function resolveProject() {
+      if (projectId) return;
+      const res = await fetch("/api/board");
+      const data = await res.json();
+      if (data.projects && data.projects.length) projectId = data.projects[0].id;
+    }
+
+    async function refresh() {
+      if (!projectId) { render(null); return; }
+      const res = await fetch("/api/board?projectId=" + encodeURIComponent(projectId));
+      board = await res.json();
+      render(board);
+    }
+
+    // --- render --------------------------------------------------------------
+    function el(tag, attrs, ...kids) {
+      const e = document.createElement(tag);
+      for (const k in (attrs || {})) {
+        if (k === "class") e.className = attrs[k];
+        else if (k.startsWith("on")) e[k] = attrs[k];
+        else if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+      }
+      for (const kid of kids) if (kid != null) e.append(kid);
+      return e;
+    }
+
+    function render(b) {
+      const root = document.getElementById("root");
+      root.innerHTML = "";
+      if (!b) {
+        document.getElementById("proj-name").textContent = "board";
+        root.append(el("p", { class: "empty" }, "no project yet"));
+        return;
+      }
+      document.getElementById("proj-name").textContent = b.project.name;
+      if (!b.columns.length) {
+        root.append(el("p", { class: "empty" }, "no columns yet"));
+        return;
+      }
+      for (const col of b.columns) {
+        const cards = el("div", { class: "cards", "data-col": col.id });
+        for (const card of col.cards) cards.append(cardEl(card));
+        wireColumn(cards, col.id);
+        root.append(el("div", { class: "col" },
+          el("h3", {}, col.name, el("span", { class: "count" }, String(col.cards.length))),
+          cards,
+        ));
+      }
+    }
+
+    function cardEl(card) {
+      const e = el("div", {
+        class: "card", draggable: "true", "data-id": card.id,
+        onclick: () => openCard(card),
+      },
+        el("div", { class: "title" }, card.title),
+        card.body ? el("div", { class: "body" }, card.body) : null,
+        el("div", { class: "meta" }, card.commentCount ? card.commentCount + " comment(s)" : ""),
+      );
+      e.addEventListener("dragstart", (ev) => {
+        ev.dataTransfer.setData("text/plain", card.id);
+        ev.dataTransfer.effectAllowed = "move";
+        e.classList.add("dragging");
+      });
+      e.addEventListener("dragend", () => e.classList.remove("dragging"));
+      return e;
+    }
+
+    // Native HTML5 drop target: compute insert index from pointer Y, then move.
+    function wireColumn(cardsEl, columnId) {
+      cardsEl.addEventListener("dragover", (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "move"; });
+      cardsEl.addEventListener("drop", async (ev) => {
+        ev.preventDefault();
+        const id = ev.dataTransfer.getData("text/plain");
+        if (!id) return;
+        const siblings = [...cardsEl.querySelectorAll(".card")].filter((c) => c.dataset.id !== id);
+        let index = siblings.length;
+        for (let i = 0; i < siblings.length; i++) {
+          const r = siblings[i].getBoundingClientRect();
+          if (ev.clientY < r.top + r.height / 2) { index = i; break; }
+        }
+        try { await api("card_move", { id, toColumnId: columnId, newIndex: index }); }
+        catch (e) { alert(e.message); }
+        // SSE refetch will re-render; refresh immediately for snappiness.
+        refresh();
+      });
+    }
+
+    // --- card dialog ---------------------------------------------------------
+    const dialog = document.getElementById("card-dialog");
+    async function openCard(card) {
+      openCardId = card.id;
+      document.getElementById("dlg-title").textContent = card.title;
+      document.getElementById("dlg-body").textContent = card.body || "";
+      await renderComments(card.id);
+      dialog.showModal();
+    }
+    async function renderComments(cardId) {
+      const box = document.getElementById("dlg-comments");
+      box.innerHTML = "";
+      const { comments } = await api("comment_list", { cardId });
+      if (!comments.length) { box.append(el("p", { class: "empty" }, "no comments")); return; }
+      for (const c of comments) {
+        box.append(el("div", { class: "comment" },
+          el("span", { class: "who" }, c.author + ": "),
+          c.body + " ",
+          el("span", { class: "when" }, new Date(c.createdAt).toLocaleString()),
+        ));
+      }
+    }
+    document.getElementById("dlg-close").onclick = () => dialog.close();
+    document.getElementById("dlg-comment-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const input = document.getElementById("dlg-comment-input");
+      const body = input.value.trim();
+      if (!body || !openCardId) return;
+      await api("comment_add", { cardId: openCardId, author: "web", body });
+      input.value = "";
+      await renderComments(openCardId);
+      refresh();
+    });
+
+    // --- live channel --------------------------------------------------------
+    function connectSSE() {
+      const live = document.getElementById("live");
+      const es = new EventSource("/events");
+      es.onopen = () => { live.textContent = "live"; };
+      es.onmessage = () => { refresh(); };
+      es.onerror = () => { live.textContent = "reconnecting…"; };
+    }
+
+    // --- boot ----------------------------------------------------------------
+    (async () => {
+      await resolveProject();
+      await refresh();
+      connectSSE();
+    })();
+  </script>
+</body>
+</html>
