@@ -38,3 +38,4 @@ factory,dedup handshake,The pre-stage-1 ritual (mesh roster+claims+claim+intent 
 factory,stage (lifecycle),A factory entry's position in the eight-stage job lifecycle (concept|plan|implement|test|personas|evaluate|fix|present); orthogonal to orchestration status.
 identity,mine graph,The curated addon kit at mine/ — unregistered agents/skills/hooks kept out of the active machine; surveyed by /mine.
 process,/mine,The skill that surveys the mine graph and the current repo then slots best-fit addons into .claude/ + plugin.json; sibling to /oil (which owns /.machine). Equips the machine; /oil specializes it.
+artifact,TERMS.md,The rename registry at repo root: canonical names + kind + role + location for the main terms, so they can be renamed in one grep-driven sweep; complements glossary.csv (definitions) and never restates a definition (single source).
