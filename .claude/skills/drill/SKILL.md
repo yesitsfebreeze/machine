@@ -238,6 +238,10 @@ you reconcile those posts onto the ledger on your turn. `mesh` is the source of 
 for where a feature sits; the ledger is your durable projection of it, so the two may
 differ briefly between the agent's post and your next turn.
 
+When the `taskboard` addon is slotted, also project each ledger entry's status onto a
+taskboard card per @mine/skills/taskboard/SKILL.md (the single source for the
+stage-to-column mapping), removing the card when the feature is merged or dropped.
+
 ## Dispatched agents never drive
 
 A dispatched sub-agent does exactly the one unit of work in its spawn prompt and

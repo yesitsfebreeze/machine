@@ -113,7 +113,7 @@ the repo root: a curated collection (the `expert-*` and `builder-*` agents;
 `manager-spec` / `-strategy` / `-git` / `-docs` / `-project` / `-quality`;
 `evaluator-active`, `plan-auditor`, `researcher`; and skills like `tool-ast-grep`,
 `workflow-testing`, `workflow-thinking`, `foundation-*`, `ref-*`, `specialists`,
-`improve`, `parallel`, `perf-gate`, `learn`, `caveman`, `helper`, `trello`). Nothing
+`improve`, `parallel`, `perf-gate`, `learn`, `caveman`, `helper`, `taskboard`). Nothing
 in `mine/` is registered with Claude Code, so do NOT assume it is callable. `/oil`
 can scan `mine/` when specializing a repo and suggest the ones that fit; slotting one
 in means copying it into `.claude/` and registering it in `.claude-plugin/plugin.json`.
