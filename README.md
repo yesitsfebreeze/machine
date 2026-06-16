@@ -44,22 +44,24 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 
 ---
 
-## Marketplace hub
+## Installation
 
-The machine's `marketplace.json` is the single Claude Code plugin marketplace.
-Add it once, then install each plugin from the same hub:
+The machine's `marketplace.json` lists the machine plugin. Add it and install:
 
 ```
 /plugin marketplace add yesitsfebreeze/machine
 /plugin install machine@machine
-/plugin install git-fs@machine
-/plugin install split@machine
 ```
 
-- `git-fs` and `split` are referenced from this hub, not vendored into the machine.
-- `kern` stays a separate marketplace (install from `yesitsfebreeze/kern`),
-  intentionally not folded in.
-- The legacy `stack` hub is superseded by this one.
+Companion plugins each have their own marketplace:
+
+```
+/plugin marketplace add yesitsfebreeze/kern
+/plugin install kern@kern
+
+/plugin marketplace add yesitsfebreeze/git-fs
+/plugin install git-fs@git-fs
+```
 
 ---
 
@@ -125,21 +127,17 @@ Add it once, then install each plugin from the same hub:
 > `just bootstrap`) to reinstall deps or re-wire config, or `/oil` alone to re-index `/.machine/`
 > after the project changes shape.
 
-> **Bundled MCP servers.** The plugin ships five servers via `plugin.json` `mcpServers`
+> **Bundled MCP servers.** The plugin ships four servers via `plugin.json` `mcpServers`
 > (so they travel to any repo where the plugin is installed):
-> [`kern`](https://github.com/yesitsfebreeze/kern) (memory),
-> `mesh` (fleet coordination — roster, atomic claims, durable mail; a
-> zero-dependency Node script — no build),
+> `hub` (fleet coordination — roster, atomic claims, durable mail; singleton HTTP daemon),
 > [`context7`](https://context7.com) (current library docs — set `CONTEXT7_API_KEY`),
 > `pdf-reader` (PDF extraction via `npx @sylphx/pdf-reader-mcp`),
 > and [`context-mode`](https://github.com/mksglu/context-mode) (keep large output out
 > of context via the `ctx_*` tools — runs via `npx`, needs Node >=22.5.0).
 >
-> **Companion plugin** (live, installed separately — the machine routes to it but
-> doesn't vendor it, since it ships no standalone binary):
-> [`git-fs`](https://github.com/yesitsfebreeze/git-fs) (per-session virtual git
-> filesystem). Install with `/plugin marketplace add yesitsfebreeze/git-fs` then
-> `/plugin install git-fs@git-fs`.
+> **Companion plugins** (installed separately — each ships its own runtime + hooks):
+> [`kern`](https://github.com/yesitsfebreeze/kern) (per-directory memory daemon) and
+> [`git-fs`](https://github.com/yesitsfebreeze/git-fs) (per-session virtual git filesystem).
 >
 > **One-shot setup.** From a checkout of this repo, `just bootstrap` (or
 > `bash scripts/bootstrap.sh`) installs and verifies every dependency above in one

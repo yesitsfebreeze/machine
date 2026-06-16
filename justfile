@@ -46,6 +46,6 @@ push message="":
     new="${line##*-> }"
     msg="${message:-chore(release): v${new}}"
     git add -A
-    git commit -q -m "$msg" -m "Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+    git commit -q -m "$msg"
     git push origin "$(git rev-parse --abbrev-ref HEAD)"
     echo "pushed v${new}"
