@@ -44,6 +44,25 @@ The split is the whole idea: **one portable machine**, **one per-repo brain**.
 
 ---
 
+## Marketplace hub
+
+The machine's `marketplace.json` is the single Claude Code plugin marketplace.
+Add it once, then install each plugin from the same hub:
+
+```
+/plugin marketplace add yesitsfebreeze/machine
+/plugin install machine@machine
+/plugin install git-fs@machine
+/plugin install split@machine
+```
+
+- `git-fs` and `split` are referenced from this hub, not vendored into the machine.
+- `kern` stays a separate marketplace (install from `yesitsfebreeze/kern`),
+  intentionally not folded in.
+- The legacy `stack` hub is superseded by this one.
+
+---
+
 ## ✨ What it can do
 
 - **🤖 Bare-bones agent core.** Four agents stay loaded: the eager-generalist
