@@ -1,6 +1,6 @@
 {
   "name": "machine",
-  "description": "The machine marketplace — the portable Claude Code payload plus its companion plugins (git-fs, split).",
+  "description": "The machine marketplace — the portable Claude Code payload plus its companion plugins (kern, git-fs, split).",
   "owner": {
     "name": "yesitsfebreeze",
     "url": "https://github.com/yesitsfebreeze"
@@ -12,7 +12,15 @@
         "source": "github",
         "repo": "yesitsfebreeze/machine"
       },
-      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, kern + mesh + context7 + pdf-reader + context-mode MCP servers)."
+      "description": "The machine — portable Claude Code payload (agents, skills, hooks, output styles, mesh + board + context7 + pdf-reader + context-mode MCP servers)."
+    },
+    {
+      "name": "kern",
+      "source": {
+        "source": "github",
+        "repo": "yesitsfebreeze/kern"
+      },
+      "description": "kern memory — self-organizing knowledge-graph agent memory. Auto-captures each turn, recalls relevant thoughts per prompt, and exposes the kern MCP tools. Ships its own capture/recall hooks; requires the `kern` CLI on PATH."
     },
     {
       "name": "git-fs",

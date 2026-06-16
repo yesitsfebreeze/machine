@@ -84,6 +84,9 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
 ## Your toolbelt — and when to reach for each
 
 ### kern MCP — the project's own memory daemon (use first for recall)
+kern is a **companion plugin** (installed alongside the machine — see "Companion
+plugins" below), not a vendored MCP server: installing it as a plugin carries its
+auto-capture and recall hooks, which a bare `mcpServers` entry would silently drop.
 - `mcp__kern__query` — ask the live graph before you guess. Any "where/why/how/what
   did we decide" question hits this first.
 - `mcp__kern__health` / `mcp__kern__pulse` — daemon liveness, heartbeat, load state.
@@ -153,6 +156,14 @@ auto-routing hooks (PreToolUse/PostToolUse) are NOT registered this way, which t
 machine does not rely on.
 
 ### Companion plugins — live, installed alongside the machine
+**`kern`** (`yesitsfebreeze/kern`) is the memory daemon, installed as its own plugin
+rather than vendored in the machine's `mcpServers` — because the plugin ships the
+auto-capture (Stop), recall (SessionStart), and per-prompt recall (UserPromptSubmit)
+hooks that a bare MCP-server entry cannot carry. It exposes the `mcp__kern__*` tools
+(see "kern MCP" above) and needs the `kern` CLI on PATH. Capture is opt-in per repo
+(no-ops unless a `.kern` dir exists). Install it as a plugin: `/plugin marketplace add yesitsfebreeze/machine`
+then `/plugin install kern@machine` (or from kern's own marketplace, `kern@kern`).
+
 **`git-fs`** (`yesitsfebreeze/git-fs`) is a live third-party plugin the machine
 routes to but does NOT vendor (it ships its own runtime + hooks, maintained
 upstream): a virtual filesystem over a bare git object store — each session works

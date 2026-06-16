@@ -1,6 +1,6 @@
 {
   "name": "machine",
-  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the kern memory daemon and mesh coordination daemon. Specialized per-repo by /oil into /.machine.",
+  "description": "The machine — a portable Claude Code payload: eager-generalist default agent, specialist sub-agents, on-demand skills, lifecycle hooks, output styles, and the mesh coordination daemon. Pairs with the kern memory plugin, installed alongside. Specialized per-repo by /oil into /.machine.",
   "version": "0.6.2",
   "author": {
     "name": "yesitsfebreeze",
@@ -46,12 +46,6 @@
   "outputStyles": "./.claude/output-styles",
   "hooks": "./.claude/hooks/hooks.json",
   "mcpServers": {
-    "kern": {
-      "command": "kern",
-      "args": [
-        "mcp"
-      ]
-    },
     "mesh": {
       "command": "node",
       "args": [
