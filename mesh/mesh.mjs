@@ -8,18 +8,20 @@
 //
 // This is a zero-dependency rewrite of the original Rust daemon. It needs nothing
 // but a Node runtime (already required by the machine for context-mode). State is
-// a single JSON file under a per-cwd, gitignored `.mesh/` directory; cross-process
+// a single JSON file under a repo-scoped, gitignored `.mesh/` directory (shared
+// by every git worktree of the repo); cross-process
 // atomicity (the CAS the claim primitive needs) comes from an OS-atomic lock
 // directory held around every mutating op, plus atomic rename on write.
 
 import { mkdirSync, readFileSync, writeFileSync, renameSync, rmdirSync, existsSync } from "node:fs";
 import { randomBytes } from "node:crypto";
-import { join } from "node:path";
+import { execFileSync } from "node:child_process";
+import { join, dirname, resolve } from "node:path";
 
 // --- constants (parity with the Rust daemon) -------------------------------
 
 const PROTOCOL_VERSION = "2024-11-05";
-const SERVER_VERSION = "0.2.0";
+const SERVER_VERSION = "0.3.0";
 const DATA_DIR = ".mesh";
 const STATE_FILE = "state.json";
 const LOCK_DIR = ".lock";
@@ -682,10 +684,34 @@ Usage:
   mesh gc         Reclaim TTL-expired messages and sweep dead claims
   mesh --version  Show version
 
-Data lives in a per-cwd, gitignored .mesh/ directory (a single JSON state file).
+Data lives in a repo-scoped, gitignored .mesh/ directory at the repo root, shared
+by every git worktree of the repo (a single JSON state file). Override with MESH_DIR.
 Zero runtime dependencies — needs only Node.`;
 
+// Resolve the mesh store. Repo-scoped, not cwd-scoped: every git worktree of the
+// same repository shares one store, so a fleet spread across worktrees sees a
+// single roster/claims/messages namespace. Resolution order:
+//   1. MESH_DIR env override (explicit, scriptable escape hatch).
+//   2. The repo root that owns this cwd — the parent of git's common dir, which
+//      is shared by the main worktree and every linked worktree of the repo.
+//   3. Fall back to cwd when not inside a git repository.
 function dataDir() {
+  if (process.env.MESH_DIR) return resolve(process.env.MESH_DIR);
+  try {
+    const common = execFileSync("git", ["rev-parse", "--git-common-dir"], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (common) {
+      // common is `.git` (relative) in a main worktree, or an absolute path to
+      // the main repo's `.git` in a linked worktree. Its parent is the shared
+      // repo root in both cases.
+      return join(dirname(resolve(process.cwd(), common)), DATA_DIR);
+    }
+  } catch {
+    // not a git repo, or git unavailable — fall through to cwd
+  }
   return join(process.cwd(), DATA_DIR);
 }
 

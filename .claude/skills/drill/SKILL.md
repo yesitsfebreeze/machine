@@ -246,6 +246,8 @@ claim handle in the entry's `claim_id`. Release it with `mcp__mesh__release` whe
 job reaches `merged` or `dropped`. If the claim is already held by a live peer, do not
 dispatch a duplicate: post a deferred-interest note and surface it to the user.
 
+Each dispatched agent `register`s, `post`s its **goal** on start and a final **report** on finish, and posts a note per stage transition; read those with `mcp__mesh__inbox` + `mcp__mesh__read` and reconcile them onto the ledger. Full verb reference: @.claude/shared/mesh.md.
+
 ## Everything ends up in git-fs
 
 The second acceptance invariant. The implementation agent works on its own

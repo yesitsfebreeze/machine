@@ -19,6 +19,16 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/subagent-report.mjs\""
+          }
+        ]
+      }
     ]
   }
 }

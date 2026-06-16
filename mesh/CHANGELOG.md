@@ -2,6 +2,22 @@
 
 All notable changes to the `mesh` daemon are documented here.
 
+## [0.3.0] - 2026-06-16
+
+Repo-scoped store. The mesh state directory is now resolved at the repository
+root (the parent of git's common dir) instead of `process.cwd()`, so every git
+worktree of one repository shares a single roster/claims/messages namespace.
+This is the invariant the worktree-isolated fleet needs: a drill driver and its
+miners, each in its own worktree, now see one another on the roster.
+
+### Changed
+
+- `dataDir()` resolution order: `MESH_DIR` env override, then the repo root via
+  `git rev-parse --git-common-dir`, then `process.cwd()` as the fallback when not
+  inside a git repository. Previously the store was hard-wired to
+  `join(process.cwd(), ".mesh")`, which gave each worktree an isolated store and
+  silently broke cross-worktree coordination.
+
 ## [0.2.0] - 2026-06-15
 
 Zero-dependency Node ESM rewrite. The daemon is now a single self-contained
