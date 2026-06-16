@@ -3,7 +3,7 @@
 #
 # Installs and verifies everything the machine depends on, in one pass:
 #   kern         memory daemon          (release installer, cargo fallback)
-#   mesh         coordination daemon    (cargo install --path mesh)
+#   hub          coordination daemon    (cargo build --release --manifest-path hub/Cargo.toml)
 #   git-fs       companion plugin       (claude plugin install)
 #   context-mode vendored MCP server    (npx on demand; needs Node >=22.5.0)
 #   context7     vendored MCP server    (needs CONTEXT7_API_KEY)
@@ -167,18 +167,20 @@ install_kern() {
   fail "kern not installed — see https://github.com/yesitsfebreeze/kern"
 }
 
-# --- mesh -------------------------------------------------------------------
-install_mesh() {
-  head "mesh (coordination daemon)"
-  if have mesh; then ok "mesh present ($(command -v mesh))"; return; fi
-  if [ ! -d "$REPO_ROOT/mesh" ]; then
-    fail "mesh source not found at $REPO_ROOT/mesh — clone the machine repo to build it"; return
+# --- hub --------------------------------------------------------------------
+install_hub() {
+  head "hub (coordination daemon)"
+  if [ -x "$REPO_ROOT/hub/target/release/hub" ]; then
+    ok "hub present ($REPO_ROOT/hub/target/release/hub)"; return
+  fi
+  if [ ! -d "$REPO_ROOT/hub" ]; then
+    fail "hub source not found at $REPO_ROOT/hub — clone the machine repo to build it"; return
   fi
   if ! have cargo; then
-    fail "cargo (Rust toolchain) required to build mesh — https://rustup.rs"; return
+    fail "cargo (Rust toolchain) required to build hub — https://rustup.rs"; return
   fi
-  echo "  building from $REPO_ROOT/mesh..."
-  if cargo install --path "$REPO_ROOT/mesh"; then did "mesh installed"; else fail "mesh build failed"; fi
+  echo "  building from $REPO_ROOT/hub..."
+  if cargo build --release --manifest-path "$REPO_ROOT/hub/Cargo.toml"; then did "hub built"; else fail "hub build failed"; fi
 }
 
 # --- git-fs plugin ----------------------------------------------------------
@@ -309,7 +311,7 @@ start_board() {
 # --- run --------------------------------------------------------------------
 echo "${bold}machine bootstrap${rst} ${dim}(idempotent — re-run anytime)${rst}"
 install_kern
-install_mesh
+install_hub
 install_gitfs
 ensure_gitfs_shim
 ensure_statusline_shim
