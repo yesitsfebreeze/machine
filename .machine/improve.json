@@ -1,5 +1,5 @@
 {
-  "target": "Whole-machine sweep: terse, truthful, portable. Zero fiction/external-naming; thin commands; no duplication.",
+  "target": "Whole-machine term-unification sweep: one canonical name per concept, zero duplicated contexts, so main terms can be renamed cleanly. Registry: TERMS.md. Definitions: glossary.csv.",
   "indexed": true,
   "rating": {
     "min": 0, "max": 10,
@@ -9,8 +9,55 @@
   "canonical": {
     "identity": "the machine",
     "law": "Machine law in agents/default.md; project layer in /.machine/ (agent.md, project.md single file, glossary.csv, personas/).",
-    "sole_driver_rule": "One session drives this loop (see glossary: sole driver).",
-    "note": "superpowers:* and plugin-namespaced skills are REAL (plugin registry) — do not flag them as fiction. /oil is a skill (skills/oil/), not a command; it replaced /bootstrap and absorbed install/update/re-index."
+    "registry": "TERMS.md at repo root is the canonical-name rename registry; glossary.csv is the single definitions source. Neither restates the other.",
+    "gitfs_branch": "git-fs v3.1.2 creates gitfs/<sid> branches in .git-fs/ (verified on disk). 'agent/<id>' is stale wherever it labels a git-fs branch.",
+    "note": "superpowers:* and plugin-namespaced skills are REAL (plugin registry) — not fiction. /oil and /mine are skills, not commands."
   },
-  "files": []
+  "files": [
+    {
+      "path": ".claude/skills/drill/SKILL.md",
+      "rating": [6, 7, 7, 5, 6, 7],
+      "score": 6.0,
+      "measured": ["truthfulness"],
+      "todos": [
+        "Reconcile agent/<id> worktree-branch naming vs git-fs gitfs/<sid> (see TERMS.md Pending reconciliation); pick one canonical name and apply.",
+        "If drill worktrees are distinct from git-fs branches, state the distinction once where the worktree is created; otherwise rename agent/<id> -> gitfs/<sid> throughout.",
+        "Cross-check the worktree-add commands against the actual git-fs v3.1.2 Stop-hook materialize model in HANDOFF.md."
+      ]
+    },
+    {
+      "path": ".claude/agents/default.md",
+      "rating": [5, 7, 7, 5, 6, 7],
+      "score": 6.0,
+      "measured": ["truthfulness"],
+      "todos": [
+        "git-fs companion-plugin block (lines ~143-147, 245) says agent/<id>; align to gitfs/<sid> once the SKILL.md reconciliation lands.",
+        "Confirm the description matches git-fs v3.1.2 (Stop-hook merge to main)."
+      ]
+    },
+    {
+      "path": ".claude/agents/drill.md",
+      "rating": [6, 7, 7, 5, 6, 7],
+      "score": 6.2,
+      "measured": ["truthfulness"],
+      "todos": [
+        "Lines ~52,67 use agent/<id>; apply the same branch-name decision as SKILL.md.",
+        "Keep drill/<sid> (orchestrator worktree) distinct and correct."
+      ]
+    },
+    {
+      "path": "HANDOFF.md",
+      "rating": [6, 7, 6, 6, 6, 7],
+      "score": 6.3,
+      "measured": ["truthfulness"],
+      "todos": [
+        "git-fs version says v3.0.1; installed is v3.1.2 — update.",
+        "Confirm gitfs/<sid> claims still match the live drill flow after the SKILL.md reconciliation."
+      ]
+    }
+  ],
+  "ranking": {
+    "folders": [".claude/skills/drill", ".claude/agents", "."],
+    "files": [".claude/skills/drill/SKILL.md", ".claude/agents/default.md", ".claude/agents/drill.md", "HANDOFF.md"]
+  }
 }
