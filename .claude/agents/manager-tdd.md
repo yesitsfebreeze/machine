@@ -54,6 +54,6 @@ never collides or duplicates. Your `agent_id` is your spawn / branch id.
   then `mcp__mesh__release` every claim. This is the report the driver and your
   SubagentStop hook expect.
 
-`SendMessage` is the driver's live back-channel. As a dispatched sub-agent, coordinate
+`SendMessage` is the driver's live back-channel. As a dispatched subagent, coordinate
 and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
 peers. Full protocol: @.claude/shared/mesh.md

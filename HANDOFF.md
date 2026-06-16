@@ -9,7 +9,7 @@
 ## Goal (see target.md)
 Repo behaves like a senior programmer we hand jobs to:
 grill → plan → review → store → (gate) implement → test → arbiter → (gate) propose
-merge. Each unit runs in a git-fs sub-agent we can talk to. Scale to many jobs under
+merge. Each unit runs in a git-fs subagent we can talk to. Scale to many jobs under
 the driver, all merging into git-fs, with a live roster of running agents.
 
 ## Acceptance invariants
@@ -19,10 +19,10 @@ the driver, all merging into git-fs, with a live roster of running agents.
 
 ## The drill flow (drill skill)
 
-Only the surface is themed: the orchestrator is the **drill**; sub-agents are spoken
-of as **miners**. Everything underneath keeps plain names (job, git-fs, sub-agent).
+Only the surface is themed: the orchestrator is the **drill**; subagents are spoken
+of as **miners**. Everything underneath keeps plain names (job, git-fs, subagent).
 1. **Grill (default).** Refine with the user via `grill-me` until they call it valid.
-2. **Plan agent.** Dispatch one sub-agent to write the implementation plan.
+2. **Plan agent.** Dispatch one subagent to write the implementation plan.
 3. **Review (advisory).** `/personas` + `codex-review` (plan mode). Codex never gates.
 4. **Store.** Plan written to `.machine/plans/<id>.md`.
 5. **Gate one.** Ask the user before dispatching implementation.

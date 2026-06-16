@@ -48,7 +48,7 @@ happened.
 
 ## Role scope
 
-- **Stage sub-agent** (dispatched for one unit of work): post your goal, coordinate,
+- **Stage subagent** (dispatched for one unit of work): post your goal, coordinate,
   and post your report, but do NOT write the `/.machine/sessions/` ledger or
   orchestrate peers.
 - **Factory-job agent** (owns one feature end to end): run the full handshake, post

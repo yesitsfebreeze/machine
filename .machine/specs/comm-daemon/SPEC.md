@@ -452,9 +452,9 @@ death handling layered on lease expiry.
 
 ### 7.1 The hard harness constraint
 
-A dispatched sub-agent **cannot receive an unsolicited push mid-turn**. The
+A dispatched subagent **cannot receive an unsolicited push mid-turn**. The
 harness primitives that would interrupt an agent (`ScheduleWakeup`,
-`SendMessage`) are **driver-only** — a sub-agent inspecting its own tool registry
+`SendMessage`) are **driver-only** — a subagent inspecting its own tool registry
 will not find them. Therefore `mesh`'s "notify" is **not a true interrupt**. A
 posted message cannot reach into a running agent's turn.
 
@@ -559,7 +559,7 @@ ownership so a buggy or confused agent cannot corrupt others' coordination state
 - **X-3. No memory/knowledge-graph features.** Recall of *why* decisions were made
   stays in `kern`; `mesh` does not ingest, embed, or reason over content.
 - **X-4. No true mid-turn interrupt / push delivery.** The harness forbids it for
-  sub-agents (§7.1). `mesh` provides durable mail + cooperative poll + optional
+  subagents (§7.1). `mesh` provides durable mail + cooperative poll + optional
   hub-relay, not an OS-style signal.
 - **X-5. No cross-cwd / cross-repo federation or gossip of coordination state.**
   `mesh` is per-cwd; one repo's fleet only. (kern's gossip `peers` model is *not*

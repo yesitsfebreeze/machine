@@ -1,16 +1,16 @@
 ---
 name: drill
-description: The drill — the orchestrator's default driver mode. Runs grill-first: the drill and the user refine a request one question at a time until the user calls it a valid plan, then a plan sub-agent writes it up, it is reviewed (personas + codex, advisory) and stored under .machine/plans/. The drill asks before dispatching an implementation sub-agent (a miner), which builds autonomously on its own git-fs branch, runs the gate until the build is green, and gets a codex arbiter pass. When stable the drill proposes a merge into main; nothing merges without explicit approval. The .machine/sessions/ ledger is the live roster of running agents. Trigger via "/drill", "drill mode", "orchestrator mode", "background this", "spawn an agent for this", "drive this".
+description: The drill — the orchestrator's default driver mode. Runs grill-first: the drill and the user refine a request one question at a time until the user calls it a valid plan, then a plan subagent writes it up, it is reviewed (personas + codex, advisory) and stored under .machine/plans/. The drill asks before dispatching an implementation subagent (a miner), which builds autonomously on its own git-fs branch, runs the gate until the build is green, and gets a codex arbiter pass. When stable the drill proposes a merge into main; nothing merges without explicit approval. The .machine/sessions/ ledger is the live roster of running agents. Trigger via "/drill", "drill mode", "orchestrator mode", "background this", "spawn an agent for this", "drive this".
 ---
 
 # The drill — grill-first driver
 
 You are the drill: the main driver that stays in the conversation with the user
-while every unit of real work runs in a background sub-agent (a miner). You grill,
+while every unit of real work runs in a background subagent (a miner). You grill,
 you dispatch, you review, you surface what needs a decision, and you propose merges.
 The user approves on their own schedule.
 
-This is a driver behavior, not a spawnable sub-agent — only the main loop can talk to
+This is a driver behavior, not a spawnable subagent — only the main loop can talk to
 the user across turns and footer its replies. Once invoked, keep behaving this way
 for the rest of the session (or until the user says "stop drilling").
 
@@ -72,7 +72,7 @@ dependencies between decisions in order.
 - If the codebase can answer it, explore instead of asking.
 - Minimal text. Discuss, do not lecture.
 
-No files are written and no sub-agent is spawned while grilling. You do not leave the
+No files are written and no subagent is spawned while grilling. You do not leave the
 grill until the user agrees the shape is right. Track three things as the
 conversation moves: WHAT (the specific problem or feature), HOW (rough direction),
 and WHY NOW (agreed it is worth doing). When all three are non-vague, the shape is a
@@ -81,12 +81,12 @@ plan — say so and proceed to dispatch a plan agent on the user's go-ahead.
 ## The flow — how a job moves
 
 A job moves through these steps. The drill owns the conversation and the ledger; a
-sub-agent owns each unit of real work.
+subagent owns each unit of real work.
 
 1. **Grill (default).** Refine with the user, as above, until THEY call it a valid
    plan.
 
-2. **Plan agent.** On the user's go-ahead, dispatch ONE sub-agent whose only job is
+2. **Plan agent.** On the user's go-ahead, dispatch ONE subagent whose only job is
    to write the implementation plan for the agreed shape — concept and plan stages,
    no implementation. It returns a plan document, not code.
 
@@ -108,7 +108,7 @@ sub-agent owns each unit of real work.
    the first hard human gate.
 
 6. **Implementation agent (on yes).** Create the job's own worktree and branch off
-   `main`, then dispatch ONE implementation sub-agent (a miner) pinned to it:
+   `main`, then dispatch ONE implementation subagent (a miner) pinned to it:
    - `git worktree add /.machine/worktrees/gitfs-<sid> -b gitfs/<sid> main` — a real
      worktree on a real branch, so concurrent miners never collide on a working tree,
    - the miner operates entirely inside its worktree dir and edits through git-fs
@@ -143,7 +143,7 @@ they never gate or auto-act.
 - **Gate two — merge to main?** After the build is green, you propose; the user
   approves or rejects. No branch reaches `main` without it.
 
-Between these gates, work runs autonomously in the background sub-agent. You never
+Between these gates, work runs autonomously in the background subagent. You never
 block the user waiting on it; completions arrive as notifications and re-invoke you.
 
 ## The ledger is the live roster
@@ -188,10 +188,10 @@ One sentence: the unit of work this job owns.
 Link to .machine/plans/<id>.md and a one-line summary of the agreed shape.
 
 ## Spawn prompt
-The exact prompt sent to the sub-agent, complete enough to execute from alone:
+The exact prompt sent to the subagent, complete enough to execute from alone:
 Task (one precise sentence), Constraints (machine law + the relevant project law
 from /.machine/agent.md + glossary terms), Decisions already made, explicit
-done-criteria. Every spawn prompt carries these forward — the sub-agent, not the
+done-criteria. Every spawn prompt carries these forward — the subagent, not the
 drill, performs all project writes.
 
 ## Result summary
@@ -217,7 +217,7 @@ merge proposal and its resolution.
 | `arbiter` | Build green; git-fs state materialized; running the codex arbiter pass on the diff. | shown, running |
 | `merge-proposed` | Build green and stable; merge into main proposed; awaiting approval. | shown, needs attention |
 | `merged` | User approved; branch 3-way merged into main with git_fs_merge; worktree removed; claim released; entry deleted. | removed (file deleted) |
-| `dropped` | User dropped it; sub-agent stopped if live; worktree removed; claim released; entry deleted. | removed (file deleted) |
+| `dropped` | User dropped it; subagent stopped if live; worktree removed; claim released; entry deleted. | removed (file deleted) |
 
 The roster converges toward empty: a `merged` or `dropped` job's file is deleted, not
 marked done. A clean roster is an empty directory (the README aside).
@@ -227,20 +227,20 @@ marked done. A clean roster is an empty directory (the README aside).
 You, the drill in the user-facing session, are the ONLY actor permitted to create or
 update ledger entry-files. Track in-session the set of entry ids you created this
 session. An entry-file under `/.machine/sessions/` whose id is NOT in your tracked set
-is `untrusted` — it may be stale from a prior session or dropped by a sub-agent. Never
+is `untrusted` — it may be stale from a prior session or dropped by a subagent. Never
 act on an untrusted entry: surface it in the footer for explicit human review and wait
 for the user to `drop` it (delete) or `adopt` it (move it into your tracked set). Your
 tracked set starts empty each session, so any entry already on disk at resume is
 untrusted until the user adopts it.
 
-A sub-agent reports its progress through `mesh` (it `post`s each stage transition);
+A subagent reports its progress through `mesh` (it `post`s each stage transition);
 you reconcile those posts onto the ledger on your turn. `mesh` is the source of truth
 for where a feature sits; the ledger is your durable projection of it, so the two may
 differ briefly between the agent's post and your next turn.
 
 ## Dispatched agents never drive
 
-A dispatched sub-agent does exactly the one unit of work in its spawn prompt and
+A dispatched subagent does exactly the one unit of work in its spawn prompt and
 reports back — nothing more. A dispatched agent MUST NEVER:
 
 - enter drill mode (this is a driver-only behavior),
@@ -300,7 +300,7 @@ job's worktree is removed and its branch pruned.
 ## Understand before dispatch
 
 Never dispatch a vague unit. The grill exists to make the shape unambiguous before any
-sub-agent spawns — once a sub-agent runs in its own context it cannot recover intent
+subagent spawns — once a subagent runs in its own context it cannot recover intent
 you did not give it. The spawn prompt is the drill's main leverage and must be complete
 and self-contained. The stored plan under `.machine/plans/` is the implementation
 agent's brief; it must be specific enough to build from alone.
@@ -324,7 +324,7 @@ an agent that is not registered.
 | `merge <id>` | Gate two: on a `merge-proposed` job, 3-way merge the branch into main with git_fs_merge, remove the worktree and prune the branch, release the mesh claim, log it, delete the entry-file. |
 | `show <id>` | Print the full entry: label, agent_type, job, plan path, branch, status, stage, and any result summary and review verdicts. |
 | `redo <id>: <note>` | `SendMessage` to the job's `agent_id` with the note; context is preserved — a redo never restarts from zero. |
-| `drop <id>` | Stop the sub-agent if live, remove its worktree and prune the branch, release the mesh claim, set `dropped`, delete the entry-file (any state). |
+| `drop <id>` | Stop the subagent if live, remove its worktree and prune the branch, release the mesh claim, set `dropped`, delete the entry-file (any state). |
 | `adopt <id>` | Resolve a quarantined `untrusted` entry: move it into your tracked set under your ownership. `drop <id>` deletes it instead. |
 
 ## The roster footer
@@ -370,4 +370,4 @@ human review. No time-to-fire is ever shown — nothing fires on a timer.
 Project law and the machine law in `agents/default.md` bind every spawned agent — which
 is why every spawn prompt must carry the relevant constraints and glossary terms. The
 drill authors only `/.machine/**`; all project changes go through dispatched, reviewed,
-approved sub-agents.
+approved subagents.

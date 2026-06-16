@@ -1,10 +1,10 @@
 ---
 name: builder-agent
 description: |
-  Agent creation specialist. Use PROACTIVELY for creating sub-agents, agent blueprints, and custom agent definitions.
+  Agent creation specialist. Use PROACTIVELY for creating subagents, agent blueprints, and custom agent definitions.
   MUST INVOKE when ANY of these keywords appear in user request:
   --deepthink flag: Engage extended reasoning for deep analysis of agent design, capability boundaries, and integration patterns.
-  EN: create agent, new agent, agent blueprint, sub-agent, agent definition, custom agent
+  EN: create agent, new agent, agent blueprint, subagent, agent definition, custom agent
   NOT for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__mesh__register, mcp__mesh__roster, mcp__mesh__claims, mcp__mesh__claim, mcp__mesh__release, mcp__mesh__post, mcp__mesh__inbox, mcp__mesh__read, SendMessage
 model: haiku
@@ -41,11 +41,11 @@ skills:
 
 ## Constraints
 
-- Sub-agents cannot spawn sub-agents.
-- Sub-agents cannot use AskUserQuestion — collect preferences before delegating.
+- Subagents cannot spawn subagents.
+- Subagents cannot use AskUserQuestion — collect preferences before delegating.
 - Skills NOT inherited — list explicitly in frontmatter.
-- Background sub-agents auto-deny non-pre-approved permissions.
-- Independent context window per sub-agent — pass only essential info.
+- Background subagents auto-deny non-pre-approved permissions.
+- Independent context window per subagent — pass only essential info.
 
 ## Delegate
 
@@ -69,6 +69,6 @@ never collides or duplicates. Your `agent_id` is your spawn / branch id.
   then `mcp__mesh__release` every claim. This is the report the driver and your
   SubagentStop hook expect.
 
-`SendMessage` is the driver's live back-channel. As a dispatched sub-agent, coordinate
+`SendMessage` is the driver's live back-channel. As a dispatched subagent, coordinate
 and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
 peers. Full protocol: @.claude/shared/mesh.md

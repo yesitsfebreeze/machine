@@ -78,8 +78,8 @@ changelog):
 | `--safe-mode` / `CLAUDE_CODE_SAFE_MODE` | v2.1.169 | Disables customizations (hooks, skills, settings overrides) |
 | `ultracode` keyword | v2.1.161 | Workflow trigger keyword (renamed from `workflow`) |
 | Stop/SubagentStop `additionalContext` | v2.1.163 | Hooks may return `hookSpecificOutput.additionalContext` |
-| Nested subagents | v2.1.172 | Sub-agents can spawn up to 5 levels deep |
-| `ScheduleWakeup` | built-in | Harness built-in driver/main-loop tool (loop dynamic-pacing): re-invokes the main-loop driver after a delay (timed wakeup); used by the taskboard to wake at the soonest pending `fire_at`. NOT available to dispatched sub-agents — only the main-loop driver can call it, which is why a sub-agent inspecting its own tool registry will not find it |
+| Nested subagents | v2.1.172 | Subagents can spawn up to 5 levels deep |
+| `ScheduleWakeup` | built-in | Harness built-in driver/main-loop tool (loop dynamic-pacing): re-invokes the main-loop driver after a delay (timed wakeup); used by the taskboard to wake at the soonest pending `fire_at`. NOT available to dispatched subagents — only the main-loop driver can call it, which is why a subagent inspecting its own tool registry will not find it |
 
 ## Paths Frontmatter
 
