@@ -19,7 +19,7 @@
 
 import {
   mkdirSync, readFileSync, writeFileSync, renameSync, rmdirSync, existsSync,
-  unlinkSync,
+  unlinkSync, watch,
 } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -485,12 +485,33 @@ function serveStdio(board) {
 // The verbs the HTTP POST surface exposes (the full domain, thin JSON wrappers).
 function serveHttp(dataPath, port) {
   const clients = new Set(); // open SSE responses
-  const board = new Board(dataPath, {
-    onMutate: (rev) => {
-      const frame = `data:${JSON.stringify({ rev })}\n\n`;
-      for (const res of clients) res.write(frame);
-    },
-  });
+  let lastRev = -1;
+  const broadcast = (rev) => {
+    if (rev == null || rev <= lastRev) return;
+    lastRev = rev;
+    const frame = `data:${JSON.stringify({ rev })}\n\n`;
+    for (const res of clients) res.write(frame);
+  };
+  const board = new Board(dataPath, { onMutate: broadcast });
+
+  // Cross-process live updates. The MCP server writes state.json from a SEPARATE
+  // process, so its mutations never reach the in-process onMutate hook above —
+  // without this watch, drill/MCP card changes would not live-refresh the page.
+  // #save does writeFile(tmp)+rename, replacing the inode, so watch the data dir
+  // (not the file) and re-broadcast whenever the persisted rev advances; rev
+  // dedup in broadcast() collapses the duplicate from our own in-process writes.
+  const statePath = join(dataPath, STATE_FILE);
+  const readRev = () => {
+    try { return JSON.parse(readFileSync(statePath, "utf8")).rev || 0; }
+    catch { return null; }
+  };
+  lastRev = readRev() ?? -1;
+  try {
+    watch(dataPath, (_evt, file) => {
+      if (file && file !== STATE_FILE) return;
+      broadcast(readRev());
+    });
+  } catch { /* fs.watch unsupported here: in-process onMutate still works */ }
 
   let indexHtml = "";
   try { indexHtml = readFileSync(WEB_INDEX, "utf8"); } catch { /* served as 500 below */ }
