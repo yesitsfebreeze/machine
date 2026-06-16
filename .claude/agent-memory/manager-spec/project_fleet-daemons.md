@@ -17,7 +17,7 @@ The machine fleet uses sibling per-cwd MCP daemons plus an external git plugin.
   live coordination: roster, atomic claims/locks, durable messages. Mirrors kern's
   language/storage/lifecycle. Owns ONLY dynamic coordination state, never code or chat-in-git.
 - **git-fs** is a SEPARATE companion plugin (`yesitsfebreeze/git-fs`), NOT bundled by
-  the machine and NOT a daemon — each agent on branch `agent/<id>`, every edit a
+  the machine and NOT a daemon — each agent on branch `gitfs/<sid>`, every edit a
   commit, Stop hook merges to main; carries a per-agent `.machine-prompt` intent file.
 
 **Why:** these are the binding facts for any coordination/fleet SPEC — what each layer

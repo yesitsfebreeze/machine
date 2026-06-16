@@ -26,34 +26,14 @@
       ]
     },
     {
-      "path": ".claude/skills/drill/SKILL.md",
-      "rating": [6, 7, 7, 5, 6, 7],
-      "score": 6.0,
+      "path": "mesh/README.md + .machine/specs/comm-daemon/SPEC.md",
+      "rating": [6, 6, 7, 4, 6, 6],
+      "score": 5.5,
       "measured": ["truthfulness"],
       "todos": [
-        "Reconcile agent/<id> worktree-branch naming vs git-fs gitfs/<sid> (see TERMS.md Pending reconciliation); pick one canonical name and apply.",
-        "If drill worktrees are distinct from git-fs branches, state the distinction once where the worktree is created; otherwise rename agent/<id> -> gitfs/<sid> throughout.",
-        "Cross-check the worktree-add commands against the actual git-fs v3.1.2 Stop-hook materialize model in HANDOFF.md."
-      ]
-    },
-    {
-      "path": ".claude/agents/default.md",
-      "rating": [5, 7, 7, 5, 6, 7],
-      "score": 6.0,
-      "measured": ["truthfulness"],
-      "todos": [
-        "git-fs companion-plugin block (lines ~143-147, 245) says agent/<id>; align to gitfs/<sid> once the SKILL.md reconciliation lands.",
-        "Confirm the description matches git-fs v3.1.2 (Stop-hook merge to main)."
-      ]
-    },
-    {
-      "path": ".claude/agents/drill.md",
-      "rating": [6, 7, 7, 5, 6, 7],
-      "score": 6.2,
-      "measured": ["truthfulness"],
-      "todos": [
-        "Lines ~52,67 use agent/<id>; apply the same branch-name decision as SKILL.md.",
-        "Keep drill/<sid> (orchestrator worktree) distinct and correct."
+        "OPEN DECISION (touches code): mesh agent_id is described as 'the git-fs agent/<id> identity' but mesh/test.mjs uses agent/<id> while git-fs branch is gitfs/<sid> — conflated.",
+        "Either make agent_id = git-fs branch gitfs/<sid> (update test.mjs + SPEC body + add a SPEC version-history row) or keep agent/<id> as mesh's own id scheme and stop labeling it 'the git-fs identity'.",
+        "comm-daemon/SPEC.md:41 calls the git-fs branch agent/<id> (wrong); fix as part of whichever path is chosen, keeping the SPEC internally consistent."
       ]
     },
     {

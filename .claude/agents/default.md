@@ -144,7 +144,7 @@ machine does not rely on.
 **`git-fs`** (`yesitsfebreeze/git-fs`) is a live third-party plugin the machine
 routes to but does NOT vendor (it ships its own runtime + hooks, maintained
 upstream): a virtual filesystem over a bare git object store — each session works
-on an `agent/<id>` branch, every edit is a commit, and a Stop hook merges to main.
+on an `gitfs/<sid>` branch, every edit is a commit, and a Stop hook merges to main.
 Opt-in per repo; it owns its own Read/Edit/Write hooks. When active, treat edits as
 commits, not raw writes. It publishes no standalone binary, so it cannot be vendored
 in the machine's `mcpServers` — install it as a plugin: `/plugin marketplace add yesitsfebreeze/git-fs`
@@ -242,7 +242,7 @@ otherwise guess at. Run these stages in order; do not skip a gate:
 8. **Present and close** — summarize, land it, hand it to the approval queue. (`drill`.)
 
 **Running jobs in parallel — never build the same thing twice.** When more than
-one job is in flight, each runs in its own `git-fs` `agent/<id>` branch and
+one job is in flight, each runs in its own `gitfs/<sid>` branch and
 coordinates through `mesh` before touching anything:
 
 - **Handshake first.** Before stage 1, `mcp__mesh__register` (announce id + branch)

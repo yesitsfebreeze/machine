@@ -49,7 +49,7 @@ auto-fires; work starts only when the user chooses to start it.
   (personas + codex, both advisory) and store it under `.machine/plans/`. Then you ask
   the user whether to dispatch an implementation agent. No plan becomes code without it.
 - **Gate two — merge to main?** The implementation agent builds in its own worktree
-  (`/.machine/worktrees/agent-<id>`) on its own `agent/<id>` branch, editing via git-fs;
+  (`/.machine/worktrees/gitfs-<sid>`) on its own `gitfs/<sid>` branch, editing via git-fs;
   it runs the `gate` until green and gets a codex arbiter pass (advisory). When stable
   you present the diff and verdicts and propose a merge. No branch reaches `main`
   without the user's approval; on approval you 3-way merge with `git_fs_merge` and then
@@ -64,7 +64,7 @@ You work from your own worktree (`/.machine/worktrees/drill-<sid>` on branch
 `drill/<sid>`), never the human's main checkout, which stays free. You write your own
 ledger and the stored plans under the repo-root `/.machine/` — nothing else. You do not
 edit project source in place. Every change to the codebase goes through a dispatched
-sub-agent in its own worktree on its own `agent/<id>` branch; the one project-level
+sub-agent in its own worktree on its own `gitfs/<sid>` branch; the one project-level
 action you perform yourself is the approved 3-way `git_fs_merge` into `main` at gate
 two, after which you remove that worktree. Bash is for read-only inspection, worktree
 lifecycle (`git worktree add/remove`), and invoking codex; never use it to mutate

@@ -59,12 +59,16 @@ old name.
 
 Term divergences found across the docs — each must be unified before any rename:
 
-- **git-fs branch name.** Real plugin (v3.1.2) creates `gitfs/<sid>` in `.git-fs/`
-  (verified on disk). Corrected in glossary + above. But `.claude/skills/drill/SKILL.md`,
-  `.claude/agents/drill.md`, and `.claude/agents/default.md` still describe drill-managed
-  **main-repo worktree** branches as `agent/<id>`. Decide whether those are the same
-  branches (rename to `gitfs/<sid>`) or a distinct main-repo namespace (keep, but document
-  the distinction). HANDOFF.md treats them as one renamed `agent/<id>` → `gitfs/<sid>`.
+- **git-fs branch name.** RESOLVED → canonical `gitfs/<sid>` (real plugin v3.1.2,
+  verified on disk). Renamed across the drill layer (`drill/SKILL.md`, `agents/drill.md`,
+  `agents/default.md`, agent-memory) and worktree dirs (`gitfs-<sid>`). `drill/<sid>`
+  (orchestrator worktree) is intentionally separate and kept.
+- **mesh identity vs git-fs branch (open).** `mesh/README.md` and the comm-daemon SPEC
+  describe the mesh `agent_id` *as* "the git-fs `agent/<id>` identity", but mesh tests
+  (`mesh/test.mjs`) use `agent/<id>` while the git-fs branch is `gitfs/<sid>` — the two
+  are conflated. Decide whether mesh's `agent_id` should be the git-fs branch
+  (`gitfs/<sid>`, needs a `test.mjs` change) or its own scheme (then stop calling it the
+  git-fs identity). Not a docs-only fix — touches code.
 - **git-fs version drift.** HANDOFF.md says v3.0.1; installed plugin is v3.1.2.
 - **subagent spelling.** Canonical is one word **`subagent`** (matches Claude Code's
   official term; the law source `default.md` already prefers it). Source files

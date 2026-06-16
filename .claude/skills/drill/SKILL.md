@@ -109,7 +109,7 @@ sub-agent owns each unit of real work.
 
 6. **Implementation agent (on yes).** Create the job's own worktree and branch off
    `main`, then dispatch ONE implementation sub-agent (a miner) pinned to it:
-   - `git worktree add /.machine/worktrees/agent-<id> -b agent/<id> main` — a real
+   - `git worktree add /.machine/worktrees/gitfs-<sid> -b gitfs/<sid> main` — a real
      worktree on a real branch, so concurrent miners never collide on a working tree,
    - the miner operates entirely inside its worktree dir and edits through git-fs
      (per-edit commits on its branch), not raw disk writes,
@@ -126,9 +126,9 @@ sub-agent owns each unit of real work.
    hard human gate. Nothing merges until the user approves.
 
 8. **Merge and close (on approval).** On the user's approval, 3-way merge the agent's
-   branch into `main` with `git_fs_merge` (`ours: main`, `theirs: agent/<id>`, `base:`
+   branch into `main` with `git_fs_merge` (`ours: main`, `theirs: gitfs/<sid>`, `base:`
    the common ancestor, `into: main`); surface any conflicts. Then tear down the job's
-   worktree (`git worktree remove /.machine/worktrees/agent-<id>`), prune the branch,
+   worktree (`git worktree remove /.machine/worktrees/gitfs-<sid>`), prune the branch,
    release the feature's `mesh` claim, log it, and delete the ledger entry. The
    acceptance invariant holds: the work is merged into `main` and the worktree is gone.
 
@@ -168,8 +168,8 @@ agent_id: ""               # id returned by the background Agent call, for SendM
 status: grilling           # grilling | planning | plan-review | plan-ready | implementing | arbiter | merge-proposed | merged | dropped
 stage: concept             # job-lifecycle position: concept | plan | implement | test | personas | evaluate | fix | present
 plan: ""                   # path to .machine/plans/<id>.md once stored; "" before
-branch: ""                 # agent/<id> branch the job's worktree sits on; "" until dispatched
-worktree: ""               # /.machine/worktrees/agent-<id> path; "" until dispatched
+branch: ""                 # gitfs/<sid> branch the job's worktree sits on; "" until dispatched
+worktree: ""               # /.machine/worktrees/gitfs-<sid> path; "" until dispatched
 claim_id: ""               # mesh claim handle held for this feature (dedup); "" if unclaimed
 isolation: true            # implementation writes files => miner runs in its own worktree, edits via git-fs
 added_at: 2026-06-15T10:00:00Z
@@ -213,7 +213,7 @@ merge proposal and its resolution.
 | `planning` | Plan agent dispatched; writing concept + plan. | shown, running |
 | `plan-review` | Plan returned; running personas + codex (advisory). | shown, running |
 | `plan-ready` | Plan stored under .machine/plans/; awaiting the dispatch-implementation gate. | shown, needs attention |
-| `implementing` | Miner building autonomously in its worktree on `agent/<id>`; gate iterating. | shown, running |
+| `implementing` | Miner building autonomously in its worktree on `gitfs/<sid>`; gate iterating. | shown, running |
 | `arbiter` | Build green; git-fs state materialized; running the codex arbiter pass on the diff. | shown, running |
 | `merge-proposed` | Build green and stable; merge into main proposed; awaiting approval. | shown, needs attention |
 | `merged` | User approved; branch 3-way merged into main with git_fs_merge; worktree removed; claim released; entry deleted. | removed (file deleted) |
@@ -273,8 +273,8 @@ tree. Everything happens in dedicated worktrees under `/.machine/worktrees/`
 repo main checkout (the human's, source = main)   <- LEFT FREE, never touched
 /.machine/worktrees/
   drill-<sid>/    <- the orchestrator's own worktree, branch drill/<sid> off main
-  agent-<id>/     <- one miner's worktree, branch agent/<id> off main
-       miner edits here via git-fs (per-edit commits) on agent/<id>
+  gitfs-<sid>/     <- one miner's worktree, branch gitfs/<sid> off main
+       miner edits here via git-fs (per-edit commits) on gitfs/<sid>
   agent-<id2>/    <- another miner, branch agent/<id2> ...
 ```
 
@@ -282,16 +282,16 @@ repo main checkout (the human's, source = main)   <- LEFT FREE, never touched
   (`/.machine/sessions/`) and stored plans (`/.machine/plans/`) are written to the
   real repo-root `/.machine/` as runtime state — the `drill/<sid>` worktree is the
   git-fs/merge staging ground, not where bookkeeping persists.
-- **Each miner** gets its own real worktree on its own `agent/<id>` branch, so two
+- **Each miner** gets its own real worktree on its own `gitfs/<sid>` branch, so two
   miners never share a working tree. Inside it the miner edits through git-fs, giving a
   per-edit commit journal and a live diff the drill can read.
 
 ## Everything ends up in git-fs
 
 The second acceptance invariant. Each implementation agent works in its own worktree
-on its own `agent/<id>` branch and edits via git-fs; on a green build it materializes
+on its own `gitfs/<sid>` branch and edits via git-fs; on a green build it materializes
 that branch state onto the worktree. The drill merges into `main` only on the user's
-approval, with a 3-way `git_fs_merge` (`ours: main`, `theirs: agent/<id>`, `base:` the
+approval, with a 3-way `git_fs_merge` (`ours: main`, `theirs: gitfs/<sid>`, `base:` the
 common ancestor, `into: main`). On a conflict, `git_fs_merge` returns conflict details;
 surface them and route the resolution back to the implementation agent via
 `SendMessage` rather than resolving project code yourself. After a successful merge the
@@ -320,7 +320,7 @@ an agent that is not registered.
 |---------|--------|
 | `grill <desc>` | Start (or resume) the grill for a request; no entry until the shape is agreed. |
 | `plan <id>` | The shape is agreed: dispatch the plan agent, set `status: planning`; on return review (personas + codex) and store under .machine/plans/. |
-| `implement <id>` | Gate one: create the job's worktree + `agent/<id>` branch, dispatch the implementation agent into it with the stored plan, set `status: implementing`. |
+| `implement <id>` | Gate one: create the job's worktree + `gitfs/<sid>` branch, dispatch the implementation agent into it with the stored plan, set `status: implementing`. |
 | `merge <id>` | Gate two: on a `merge-proposed` job, 3-way merge the branch into main with git_fs_merge, remove the worktree and prune the branch, release the mesh claim, log it, delete the entry-file. |
 | `show <id>` | Print the full entry: label, agent_type, job, plan path, branch, status, stage, and any result summary and review verdicts. |
 | `redo <id>: <note>` | `SendMessage` to the job's `agent_id` with the note; context is preserved — a redo never restarts from zero. |
@@ -363,7 +363,7 @@ human review. No time-to-fire is ever shown — nothing fires on a timer.
   agents (the acceptance invariant), a durable projection of mesh state — not a timed
   dispatch queue. Disk state survives a restart; no daemon, cron, or OS timer.
 - **Main is always free.** The orchestrator works in its own `drill/<sid>` worktree and
-  each miner in its own `agent/<id>` worktree under `/.machine/worktrees/`; the human's
+  each miner in its own `gitfs/<sid>` worktree under `/.machine/worktrees/`; the human's
   main checkout is never touched. Implementation reaches `main` only through an approved
   3-way `git_fs_merge`, after which the worktree is removed.
 
