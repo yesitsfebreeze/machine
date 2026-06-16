@@ -8,6 +8,10 @@
 #   context-mode vendored MCP server    (npx on demand; needs Node >=22.5.0)
 #   context7     vendored MCP server    (needs CONTEXT7_API_KEY)
 #   pdf-reader   vendored MCP server    (npx on demand)
+#   taskboard    addon: kanban MCP+web  (build from source; needs Go 1.24 + Node 22)
+#
+# taskboard is an optional addon, not a core daemon: if Go or Node is missing it
+# warns and skips (board projection disabled this session) — it never aborts the run.
 #
 # Idempotent: already-satisfied dependencies are skipped. Safe to re-run.
 # Usage: scripts/bootstrap.sh   (or: just bootstrap)
@@ -200,6 +204,162 @@ HOOK
   if have node; then node scripts/graphify.mjs >/dev/null 2>&1 && ok "graphify hook installed + initial graph built (.machine/graph.json)" || ok "graphify hook installed (initial build deferred)"; else warn "node not found — graphify hook installed but cannot run until node is present"; fi
 }
 
+# --- taskboard (addon: local kanban MCP + web) -----------------------------
+# Provisioning is prebuilt-first: upstream ships statically-linked release binaries
+# with the web frontend embedded, so the common path needs neither Go nor Node. The
+# source build is a fallback only when the download fails. Both paths pin a version
+# (never track latest); bump TASKBOARD_VERSION / TASKBOARD_REF deliberately to upgrade.
+# Rollback: remove the plugin.json `taskboard` mcpServers entry and
+# mine/skills/taskboard/; optionally `taskboard stop`; the SQLite DB at
+# ~/.config/taskboard/taskboard.db is left untouched.
+TASKBOARD_VERSION="v0.6.0"   # pinned release tag for the prebuilt binary
+TASKBOARD_REPO="https://github.com/tcarac/taskboard"
+TASKBOARD_REF="$TASKBOARD_VERSION"   # source-build fallback checks out this ref
+TASKBOARD_PORT="3010"
+
+# Go >= 1.24 ?  (taskboard go.mod requires 1.24.0)
+go_ok() {
+  have go || return 1
+  local v major minor
+  v="$(go env GOVERSION 2>/dev/null | sed 's/^go//')"
+  [ -n "$v" ] || v="$(go version 2>/dev/null | sed -n 's/.*go\([0-9.]*\).*/\1/p')"
+  major="${v%%.*}"; minor="$(echo "$v" | cut -d. -f2)"
+  [ "${major:-0}" -gt 1 ] && return 0
+  [ "${major:-0}" -eq 1 ] && [ "${minor:-0}" -ge 24 ] && return 0
+  return 1
+}
+
+# Poll the pidfile + web API until the daemon is listening (bounded). daemonize
+# returns before the server binds, so confirm readiness before declaring it up.
+taskboard_ready() {
+  local pidfile="${XDG_CONFIG_HOME:-$HOME/.config}/taskboard/taskboard.pid"
+  local i
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    if [ -f "$pidfile" ] && have curl \
+       && curl -fsS "http://localhost:${TASKBOARD_PORT}/api/board" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+# Map uname to the release asset's os-arch token (echo it), else return non-zero.
+taskboard_platform() {
+  local os arch
+  case "$(uname -s)" in
+    Linux)  os="linux" ;;
+    Darwin) os="darwin" ;;
+    *) return 1 ;;
+  esac
+  case "$(uname -m)" in
+    x86_64|amd64)  arch="amd64" ;;
+    arm64|aarch64) arch="arm64" ;;
+    *) return 1 ;;
+  esac
+  echo "${os}-${arch}"
+}
+
+# Download + install the pinned prebuilt binary into $LOCAL_BIN. Returns non-zero
+# on any failure so the caller can fall back to a source build.
+taskboard_install_prebuilt() {
+  have curl || return 1
+  have tar  || return 1
+  local plat; plat="$(taskboard_platform)" || return 1
+  local url="$TASKBOARD_REPO/releases/download/$TASKBOARD_VERSION/taskboard-${plat}.tar.gz"
+  local tmp; tmp="$(mktemp -d)" || return 1
+  echo "  downloading taskboard $TASKBOARD_VERSION ($plat) ..."
+  if ! curl -fsSL "$url" -o "$tmp/taskboard.tar.gz" 2>/dev/null; then
+    rm -rf "$tmp"; return 1
+  fi
+  if ! tar -xzf "$tmp/taskboard.tar.gz" -C "$tmp" 2>/dev/null; then
+    rm -rf "$tmp"; return 1
+  fi
+  # The archive may hold the binary as taskboard-<plat> or plain taskboard. Find the
+  # first match without piping through `head` — bootstrap.sh defines a `head()`
+  # function that shadows the coreutils binary, so a `| head` here would misbehave.
+  local bin="" cand
+  while IFS= read -r cand; do bin="$cand"; break; done < <(
+    find "$tmp" -type f \( -name 'taskboard' -o -name "taskboard-${plat}" \) 2>/dev/null
+  )
+  if [ -z "$bin" ]; then rm -rf "$tmp"; return 1; fi
+  mkdir -p "$LOCAL_BIN"
+  if ! install -m 0755 "$bin" "$LOCAL_BIN/taskboard" 2>/dev/null; then
+    cp "$bin" "$LOCAL_BIN/taskboard" && chmod +x "$LOCAL_BIN/taskboard" || { rm -rf "$tmp"; return 1; }
+  fi
+  rm -rf "$tmp"
+  return 0
+}
+
+# Source build (fallback only). The //go:embed web/dist makes the frontend a hard
+# build dependency, so a bare `go install` cannot work — needs Go + Node + make + git.
+taskboard_build_source() {
+  go_ok || return 1
+  node_ok || return 1
+  have make || return 1
+  have git  || return 1
+  local src="${XDG_CACHE_HOME:-$HOME/.cache}/machine/taskboard"
+  echo "  building taskboard from $TASKBOARD_REPO @ $TASKBOARD_REF ..."
+  if [ -d "$src/.git" ]; then
+    git -C "$src" fetch --quiet origin 2>/dev/null || true
+  else
+    mkdir -p "$(dirname "$src")"
+    git clone --quiet "$TASKBOARD_REPO" "$src" 2>/dev/null || return 1
+  fi
+  git -C "$src" checkout --quiet "$TASKBOARD_REF" 2>/dev/null || return 1
+  ( cd "$src" && make build >/dev/null 2>&1 ) || return 1
+  mkdir -p "$LOCAL_BIN"
+  cp "$src/taskboard" "$LOCAL_BIN/taskboard" 2>/dev/null || return 1
+  chmod +x "$LOCAL_BIN/taskboard"
+  return 0
+}
+
+install_taskboard() {
+  head "taskboard (addon: kanban MCP + web board)"
+
+  # 1. Already installed → skip straight to the daemon.
+  if have taskboard; then
+    ok "taskboard present ($(command -v taskboard))"
+  else
+    # 2. Primary: pinned prebuilt binary (no Go, no Node).
+    # 3. Fallback: source build, only if the download failed.
+    local how=""
+    if taskboard_install_prebuilt; then
+      how="prebuilt $TASKBOARD_VERSION"
+    elif taskboard_build_source; then
+      how="source build"
+    else
+      warn "taskboard install skipped (prebuilt download failed; source build needs Go 1.24 + Node 22) — board projection off"
+      return
+    fi
+    if ! on_path "$LOCAL_BIN"; then
+      warn "taskboard installed to $LOCAL_BIN but it is not on PATH — add it and re-run"
+      return
+    fi
+    if ! have taskboard; then
+      warn "taskboard installed to $LOCAL_BIN but not resolvable on PATH"
+      return
+    fi
+    if ! taskboard --help >/dev/null 2>&1; then
+      warn "taskboard binary installed but does not run — board projection off"
+      return
+    fi
+    did "taskboard installed via $how ($LOCAL_BIN/taskboard)"
+  fi
+
+  # 4. Daemon start ("one server if not up"). `taskboard start` daemonizes and
+  #    refuses a double-start, so treat "already running" as ok.
+  local out
+  out="$(taskboard start 2>&1)" || true
+  if printf '%s' "$out" | grep -qi 'already running'; then
+    ok "taskboard daemon already running (:$TASKBOARD_PORT)"
+  elif taskboard_ready; then
+    did "taskboard daemon up (http://localhost:$TASKBOARD_PORT)"
+  else
+    warn "taskboard daemon did not become ready on :$TASKBOARD_PORT — MCP card ops still work without the web UI"
+  fi
+}
+
 # --- run --------------------------------------------------------------------
 echo "${bold}machine bootstrap${rst} ${dim}(idempotent — re-run anytime)${rst}"
 install_kern
@@ -208,6 +368,7 @@ install_gitfs
 ensure_gitfs_shim
 ensure_node
 check_others
+install_taskboard
 install_graphify
 
 head "summary"
