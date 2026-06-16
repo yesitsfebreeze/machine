@@ -33,6 +33,9 @@ when the machine plugin is installed elsewhere.
   config. Never treats a report as a target-code feature request.
 - One report per run. Do not batch-fix; each defect deserves its own verification and
   commit.
+- The fix and the report deletion land on the shared `main` tree: hold the `mesh`
+  `branch:main` claim while you edit and commit, release after, and stand down if a
+  live peer holds it (@.claude/shared/main-lock.md).
 - Root cause, never a patch (machine law). If a report only has symptoms, investigate
   until the actual cause is found before editing.
 

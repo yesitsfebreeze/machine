@@ -36,7 +36,10 @@ After every file is rated, aggregate **bottom-up**: a folder's per-category scor
 3. Build the folder `tree` + `ranking`.
 4. Set `"indexed": true`.
 5. Improve worst→best (worst folder, its worst file first): fix, then **delete that file's entry from `files`** (drop it from `tree`/`ranking` too). Re-rate only if you leave it unfinished — otherwise it's gone. While improving, strip unnecessary comments: keep only those a competent reader would need to avoid reading the code twice to understand it; delete comments that merely restate what the code plainly says. Never strip docstrings, public-API doc comments, or license headers.
-6. Small commit per file improved. Repeat until budget exhausted.
+6. Small commit per file improved. Hold the `mesh` `branch:main` claim across each
+   edit-and-commit and release it right after — the shared `main` tree is serialized
+   (@.claude/shared/main-lock.md); stand down if a live peer holds it. Repeat until
+   budget exhausted.
 
 **The json only holds outstanding work.** A finished file is deleted, not marked done — so the file shrinks over time and a clean codebase converges to an empty `files` list. Never accumulate `status:"done"` records or completed-work logs.
 

@@ -64,6 +64,12 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   or agent hangs, errors, or misbehaves (a defect in the machine itself, not the
   target code), file a `/report` into `/.machine/reports/` before working around it.
   Binds the driver and dispatched agents alike — note it, then continue your task.
+- **Serialize writes to the shared `main` tree.** The repo-root working tree on
+  `main` is shared by every session; concurrent edits/commits/merges clobber each
+  other silently. Before you edit, commit, merge, or `update-ref` the shared `main`
+  tree you MUST hold the `mesh` claim on `branch:main`, and release it the moment you
+  land. Work in your own `gitfs/<sid>` worktree needs no lock. Protocol:
+  @.claude/shared/main-lock.md.
 - **Project law lives in `/.machine/agent.md`** — domain-specific hard rules (e.g.
   real-time/safety constraints, platform limits). Treat its rules as binding as
   these.

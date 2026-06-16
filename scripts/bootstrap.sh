@@ -212,8 +212,11 @@ HOOK
 # Rollback: remove the plugin.json `taskboard` mcpServers entry and
 # mine/skills/taskboard/; optionally `taskboard stop`; the SQLite DB at
 # ~/.config/taskboard/taskboard.db is left untouched.
-TASKBOARD_VERSION="v0.6.0"   # pinned release tag for the prebuilt binary
-TASKBOARD_REPO="https://github.com/tcarac/taskboard"
+# Pinned version, platform detection, the prebuilt download/install, binary
+# resolution, and the version marker all live in the single-source installer that is
+# shared with taskboard/launch.sh — so a foreign-repo MCP launch self-heals with the
+# exact same logic bring-up uses. Source it here rather than re-defining any of it.
+. "$REPO_ROOT/taskboard/install.sh"
 TASKBOARD_REF="$TASKBOARD_VERSION"   # source-build fallback checks out this ref
 TASKBOARD_PORT="3010"
 
@@ -244,52 +247,8 @@ taskboard_ready() {
   return 1
 }
 
-# Map uname to the release asset's os-arch token (echo it), else return non-zero.
-taskboard_platform() {
-  local os arch
-  case "$(uname -s)" in
-    Linux)  os="linux" ;;
-    Darwin) os="darwin" ;;
-    *) return 1 ;;
-  esac
-  case "$(uname -m)" in
-    x86_64|amd64)  arch="amd64" ;;
-    arm64|aarch64) arch="arm64" ;;
-    *) return 1 ;;
-  esac
-  echo "${os}-${arch}"
-}
-
-# Download + install the pinned prebuilt binary into $LOCAL_BIN. Returns non-zero
-# on any failure so the caller can fall back to a source build.
-taskboard_install_prebuilt() {
-  have curl || return 1
-  have tar  || return 1
-  local plat; plat="$(taskboard_platform)" || return 1
-  local url="$TASKBOARD_REPO/releases/download/$TASKBOARD_VERSION/taskboard-${plat}.tar.gz"
-  local tmp; tmp="$(mktemp -d)" || return 1
-  echo "  downloading taskboard $TASKBOARD_VERSION ($plat) ..."
-  if ! curl -fsSL "$url" -o "$tmp/taskboard.tar.gz" 2>/dev/null; then
-    rm -rf "$tmp"; return 1
-  fi
-  if ! tar -xzf "$tmp/taskboard.tar.gz" -C "$tmp" 2>/dev/null; then
-    rm -rf "$tmp"; return 1
-  fi
-  # The archive may hold the binary as taskboard-<plat> or plain taskboard. Find the
-  # first match without piping through `head` — bootstrap.sh defines a `head()`
-  # function that shadows the coreutils binary, so a `| head` here would misbehave.
-  local bin="" cand
-  while IFS= read -r cand; do bin="$cand"; break; done < <(
-    find "$tmp" -type f \( -name 'taskboard' -o -name "taskboard-${plat}" \) 2>/dev/null
-  )
-  if [ -z "$bin" ]; then rm -rf "$tmp"; return 1; fi
-  mkdir -p "$LOCAL_BIN"
-  if ! install -m 0755 "$bin" "$LOCAL_BIN/taskboard" 2>/dev/null; then
-    cp "$bin" "$LOCAL_BIN/taskboard" && chmod +x "$LOCAL_BIN/taskboard" || { rm -rf "$tmp"; return 1; }
-  fi
-  rm -rf "$tmp"
-  return 0
-}
+# taskboard_platform and taskboard_install_prebuilt are provided by the sourced
+# taskboard/install.sh (single source, shared with launch.sh).
 
 # Source build (fallback only). The //go:embed web/dist makes the frontend a hard
 # build dependency, so a bare `go install` cannot work — needs Go + Node + make + git.

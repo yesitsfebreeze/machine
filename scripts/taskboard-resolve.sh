@@ -16,6 +16,11 @@
 # update_project tools, which accept a description field — the `taskboard project
 # create` CLI used here does not. This helper is the deterministic fallback path.
 #
+# Card-face metadata: this helper sets --icon and --color at create time (the CLI
+# supports both). Override per repo with TASKBOARD_ICON / TASKBOARD_COLOR. taskboard
+# has no project-update CLI, so icon and color apply only on creation — an existing
+# project keeps whatever it was created with.
+#
 # Degrades cleanly: if the `taskboard` binary is absent it prints a clear message
 # and exits non-zero without touching taskboard.json.
 
@@ -34,6 +39,8 @@ HASH="$(printf '%s' "$CWD" | sha1sum | cut -c1-6 | tr '[:lower:]' '[:upper:]')"
 PREFIX="P${HASH}"
 URL="http://localhost:3010"
 OUT=".machine/taskboard.json"
+ICON="${TASKBOARD_ICON:-⚙️}"
+COLOR="${TASKBOARD_COLOR:-#4F46E5}"
 
 # `project list` prints one line per project, the id last after " - ":
 #   <name> [<prefix>] (<status>) - <id>
@@ -51,7 +58,7 @@ done < <(taskboard project list 2>/dev/null)
 if [ -n "$existing_id" ]; then
   project_id="$existing_id"
 else
-  created="$(taskboard project create "$NAME" --prefix "$PREFIX" 2>&1)" || {
+  created="$(taskboard project create "$NAME" --prefix "$PREFIX" --icon "$ICON" --color "$COLOR" 2>&1)" || {
     echo "taskboard-resolve: project create failed: $created" >&2
     exit 1
   }
@@ -72,6 +79,8 @@ cat > "$OUT" <<JSON
   "name": "$NAME",
   "prefix": "$PREFIX",
   "projectId": "$project_id",
+  "icon": "$ICON",
+  "color": "$COLOR",
   "url": "$URL",
   "resolvedAt": "$resolved_at"
 }

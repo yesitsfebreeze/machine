@@ -32,8 +32,18 @@ frontend embedded), so the common path needs neither Go nor Node. A source build
 attempted only if the download fails and Go 1.24 plus Node 22 are present (the
 embedded frontend makes Node a build-time dependency). When neither path is
 available, bootstrap warns and skips — taskboard is an addon, so a failed install
-never aborts the run; board projection is simply off for that session. The pinned
-release version is a constant in `bootstrap.sh`; bump it deliberately to upgrade.
+never aborts the run; board projection is simply off for that session.
+
+The pinned version, platform detection, and the prebuilt download live in
+`taskboard/install.sh` — the single source shared by `bootstrap.sh` and the MCP
+launcher. Bump `TASKBOARD_VERSION` there to upgrade. The launcher
+(`taskboard/launch.sh`) sources that installer and **self-heals**: when the MCP
+server starts in a repo that was never bootstrapped, it installs the pinned binary on
+demand, so a consuming repo no longer needs a manual `scripts/bootstrap.sh` first. A
+version-marker file beside the binary lets the launcher detect and replace a
+protocol-skewed (stale) install — the binary itself exposes no version subcommand.
+This is why taskboard no longer fails with an opaque `-32000` reconnect error in a
+fresh repo.
 
 ## Rollback
 
@@ -58,28 +68,54 @@ cwd        absolute working directory this project belongs to
 name       basename of cwd — the project name
 prefix     "P" + first 6 upper hex chars of sha1(absolute cwd) — the lookup key
 projectId  server-generated ULID — required by every ticket/board call
+icon       emoji shown on the board card face (set at create time)
+color      hex accent color for the project (set at create time)
 url        web board URL (http://localhost:3010)
 resolvedAt ISO-8601 timestamp of resolution
 ```
 
-## Resolve or provision the project
+## Setting up a project
 
-When `.machine/taskboard.json` is missing or stale, resolve the project before any
-card work. Two equivalent paths:
+A board is one taskboard **project** bound to this repo's cwd. Set it up once; every
+later board call reads its id from `.machine/taskboard.json`. The binary must be
+installed first (`scripts/bootstrap.sh`; see Provisioning). Resolve the project
+whenever `.machine/taskboard.json` is missing or stale, before any card work. Two
+equivalent paths:
 
-- Deterministic helper: run `scripts/taskboard-resolve.sh`. It computes the name and
-  prefix, lists projects, matches on prefix, creates the project if absent, and writes
-  `.machine/taskboard.json`. Use this when a plain shell path is wanted.
-- MCP path (richer disambiguation): call `list_projects` and match a project whose
-  `prefix` equals this repo's prefix AND whose `description` carries this repo's
-  absolute cwd. On zero matches, `create_project` with the name, the prefix, and the
-  absolute cwd written into `description` (the canonical remote disambiguator). On
-  exactly one match, use it. On more than one match, do not guess — require a persisted
-  `projectId` or create with a more specific name. Persist the returned id into
-  `.machine/taskboard.json`.
+### Shell path — `scripts/taskboard-resolve.sh` (default)
+
+Run `scripts/taskboard-resolve.sh` from the repo root. It is idempotent: it computes
+`name` (basename of cwd) and `prefix` (`P` + first 6 upper hex of sha1(absolute cwd)),
+lists projects, reuses the one matching this prefix, creates it if absent, and writes
+`.machine/taskboard.json`. This is the deterministic path and needs no MCP connection
+or running web daemon — the `project` subcommands operate on the SQLite DB directly.
+
+Card-face metadata at create time: the helper passes `--icon` (emoji) and `--color`
+(hex) to `project create`. Defaults brand the machine's own board (a gear emoji and `#4F46E5`, defined in the
+resolver); override per repo with the `TASKBOARD_ICON` / `TASKBOARD_COLOR` env vars. taskboard
+exposes **no project-update CLI** and `project create` has **no `--description` flag**,
+so: icon and color can only be set at creation, and the project description (the
+canonical remote disambiguator — this repo's absolute cwd) is set through the MCP path
+below. To change an existing project's icon, color, or name from the shell, delete and
+recreate it (safe while it holds no cards) — the resolver writes the new id back.
+
+### MCP path — richer, when the taskboard MCP is connected
+
+Call `list_projects` and match a project whose `prefix` equals this repo's prefix AND
+whose `description` carries this repo's absolute cwd. On zero matches, `create_project`
+with the `name`, `prefix`, `icon`, `color`, and the absolute cwd written into
+`description`. On exactly one match, use it; on more than one, do not guess — require a
+persisted `projectId` or create with a more specific name. Use `update_project` to set
+or repair `description`, `icon`, `color`, or `name` on an existing project (the
+capability the CLI lacks). Persist the returned id into `.machine/taskboard.json`.
 
 The persisted `cwd` guards the local file against a prefix collision; the project
 `description` is the canonical remote disambiguator across projects.
+
+### Viewing the board
+
+Project setup does not start the web UI. Run `taskboard start` (default
+`http://localhost:3010`) to view the kanban; card operations work without it.
 
 ## Three columns
 

@@ -1,38 +1,35 @@
 #!/usr/bin/env bash
-# taskboard launcher — mirrors mesh's plugin-dir-prefixed entry point.
+# taskboard launcher — self-healing MCP entry point.
 #
-# Why this exists: Claude Code launches MCP servers with a minimal environment
-# whose PATH often omits ~/.local/bin, so a bare `taskboard` command fails to
-# resolve and the server never starts. mesh sidesteps this by referencing an
-# absolute ${CLAUDE_PLUGIN_ROOT}/mesh/mesh.mjs path; taskboard is a downloaded
-# binary (installed by scripts/bootstrap.sh into ~/.local/bin), so this committed
-# launcher ships inside the plugin and locates the binary by absolute path before
-# exec-ing it. plugin.json invokes this via ${CLAUDE_PLUGIN_ROOT}/taskboard/launch.sh.
+# Why this exists: Claude Code launches MCP servers with a minimal environment whose
+# PATH often omits ~/.local/bin, and in a repo that was never bootstrapped the binary
+# may be absent entirely (or a stale, protocol-skewed version) — all of which the
+# harness collapses to an opaque `Failed to reconnect: -32000`. mesh avoids this by
+# shipping its runtime in-plugin; taskboard is a downloaded binary, so this launcher
+# sources the shared installer (install.sh, the single source for the pinned version
+# and the prebuilt download), ensures a correct binary is present — installing it on
+# demand the way a fresh foreign repo needs — and only then exec's it by absolute path.
+# plugin.json invokes this via ${CLAUDE_PLUGIN_ROOT}/taskboard/launch.sh.
 #
 # All arguments (e.g. `mcp`) are forwarded verbatim to the taskboard binary.
 set -euo pipefail
 
-# Resolve the taskboard binary by absolute path, not PATH lookup.
-candidates=(
-  "${HOME}/.local/bin/taskboard"
-  "/usr/local/bin/taskboard"
-  "/opt/homebrew/bin/taskboard"
-)
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=install.sh
+. "$HERE/install.sh"
 
-bin=""
-for cand in "${candidates[@]}"; do
-  if [ -x "$cand" ]; then bin="$cand"; break; fi
-done
-
-# Last resort: a PATH lookup, in case the install landed somewhere bespoke.
-if [ -z "$bin" ]; then
-  bin="$(command -v taskboard 2>/dev/null || true)"
-fi
-
-if [ -z "$bin" ]; then
-  echo "taskboard binary not found (looked in ~/.local/bin, /usr/local/bin, /opt/homebrew/bin, PATH)." >&2
-  echo "Install it with scripts/bootstrap.sh, then restart Claude." >&2
+# Self-heal: install the pinned prebuilt if the binary is missing or version-skewed.
+if ! taskboard_ensure; then
+  {
+    echo "taskboard: no usable binary, and the pinned prebuilt ($TASKBOARD_VERSION) could not be installed."
+    echo "  Needs curl + tar + network access, or run scripts/bootstrap.sh on this host, then restart Claude."
+  } >&2
   exit 127
 fi
+
+bin="$(taskboard_bin_path)" || {
+  echo "taskboard: binary not found after install attempt (looked in $TASKBOARD_LOCAL_BIN, /usr/local/bin, /opt/homebrew/bin, PATH)." >&2
+  exit 127
+}
 
 exec "$bin" "$@"

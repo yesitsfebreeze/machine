@@ -15,7 +15,8 @@ process,thin command pattern,Slash-command files must be routing wrappers under 
 process,dispatch integrity,Agents resolve by name: frontmatter not path; names must be unique and skills: refs must resolve.
 artifact,improve.json,Live worklist in /.machine/ (tracked in git) for the machine-unification /improve loop; holds outstanding work only and shrinks toward empty.
 process,slice,A numbered unit of the unification sweep; referenced in improve.json and commit messages (e.g. "Slice 6").
-law,sole driver,Only one session may drive the /improve loop; improve.json has no lock and concurrent writers lose updates (incident e193515d).
+law,sole driver,Only one session may drive the /improve loop; improve.json has no lock and concurrent writers lose updates (incident e193515d). Generalized by the main-lock law to the whole shared main tree.
+law,main-lock,Any session must hold the mesh claim on resource branch:main before editing/committing/merging/update-ref'ing the shared repo-root main working tree, and release after landing; isolated gitfs/<sid> worktrees need no lock. Prevents concurrent sessions clobbering each other's working tree (incidents e193515d, e0afc0d). Protocol: .claude/shared/main-lock.md.
 quality,five-dimension quality gate,The machine's code-quality bar defined in the foundation-quality skill; enforced by manager-quality and /gate.
 identity,personas panel,The data-driven review panel defined by files in /.machine/personas/; run in parallel via /personas after non-trivial work.
 drill,the drill,The orchestrator surface — the grill-first main-loop driver (agent and skill both named drill); refines a request by grilling, dispatches a plan agent then an implementation subagent (a miner), and proposes a merge into main. Only the surface is themed; everything underneath keeps plain names (job, git-fs, subagent).

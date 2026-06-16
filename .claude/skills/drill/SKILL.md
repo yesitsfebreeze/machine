@@ -125,9 +125,13 @@ subagent owns each unit of real work.
    and the codex arbiter verdict. Then PROPOSE a merge into `main`. This is the second
    hard human gate. Nothing merges until the user approves.
 
-8. **Merge and close (on approval).** On the user's approval, 3-way merge the agent's
-   branch into `main` with `git_fs_merge` (`ours: main`, `theirs: gitfs/<sid>`, `base:`
-   the common ancestor, `into: main`); surface any conflicts. Then tear down the job's
+8. **Merge and close (on approval).** On the user's approval, first take the `mesh`
+   `branch:main` claim — the shared `main` tree is serialized so a concurrent session
+   cannot reset it mid-merge (@.claude/shared/main-lock.md). Holding it, 3-way merge
+   the agent's branch into `main` with `git_fs_merge` (`ours: main`, `theirs:
+   gitfs/<sid>`, `base:` the common ancestor, `into: main`), recomputing against the
+   current `main` tip; surface any conflicts. Release the `branch:main` claim once the
+   merge lands. Then tear down the job's
    worktree (`git worktree remove /.machine/worktrees/gitfs-<sid>`), prune the branch,
    release the feature's `mesh` claim, log it, and delete the ledger entry. The
    acceptance invariant holds: the work is merged into `main` and the worktree is gone.
@@ -300,6 +304,21 @@ common ancestor, `into: main`). On a conflict, `git_fs_merge` returns conflict d
 surface them and route the resolution back to the implementation agent via
 `SendMessage` rather than resolving project code yourself. After a successful merge the
 job's worktree is removed and its branch pruned.
+
+The merge operates on refs and the object store from the drill's own `drill/<sid>`
+worktree — never on the human's shared `main` checkout. The close step MUST NOT run
+`git update-ref`, `checkout`, `reset`, or `git add` against that shared checkout: doing
+so leaves it with a stale index that reads as a phantom staged revert, and computes the
+merged tree against whatever `main` revision the checkout happened to hold (a stale
+`main` if a peer just moved it — a lost-update). If a miner bypassed git-fs and committed
+its branch with plain git, still merge that branch by ref from the drill worktree; do not
+fall back to hand surgery on the shared tree. Any ref update that does land must be a
+bounded recompute-and-CAS loop: read the current `main` tip, compute the 3-way tree with
+`--merge-base=<feature-parent>` against that exact tip, `commit-tree`, then
+`update-ref main <new> <old-oid>`; on a CAS failure recompute against the new tip and
+retry, never committing a tree built against a stale `main`. The `branch:main` claim
+(@.claude/shared/main-lock.md) serializes drivers so this loop contends with at most one
+landing at a time.
 
 ## Understand before dispatch
 
