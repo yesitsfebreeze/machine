@@ -515,6 +515,39 @@ fn attach(agent: &Arc<Agent>) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Centered launch hint, shown while the orchestrator Claude boots in its PTY
+/// behind it. Returns once Claude has produced enough output (booted) or a max
+/// wait elapses, so the user lands in a ready session, not a blank screen.
+fn splash(agent: &Arc<Agent>) -> std::io::Result<()> {
+    let (_dkey, label) = detach_key();
+    let msg = format!("Double-tap {} to overview", label);
+    let mut out = std::io::stdout();
+    execute!(out, cursor::Hide)?;
+    let start = Instant::now();
+    let (min, max) = (Duration::from_millis(700), Duration::from_millis(2500));
+    loop {
+        let (cols, rows) = terminal::size().unwrap_or((80, 24));
+        let col = cols.saturating_sub(msg.chars().count() as u16) / 2;
+        let row = rows / 2;
+        queue!(
+            out,
+            Clear(ClearType::All),
+            cursor::MoveTo(col, row),
+            SetAttribute(Attribute::Bold),
+            Print(&msg),
+            SetAttribute(Attribute::Reset)
+        )?;
+        out.flush()?;
+        let booted = agent.scrollback.lock().map(|s| s.len() > 1500).unwrap_or(false);
+        if (booted && start.elapsed() >= min) || start.elapsed() >= max {
+            break;
+        }
+        thread::sleep(Duration::from_millis(60));
+    }
+    execute!(out, cursor::Show)?;
+    Ok(())
+}
+
 /// Entry point for `hub machine`.
 pub fn run(rest: &[String]) -> std::io::Result<()> {
     let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
@@ -525,6 +558,11 @@ pub fn run(rest: &[String]) -> std::io::Result<()> {
     let orchestrator = Agent::spawn("orchestrator", &cwd, rest)?;
     let mut agents: Vec<Arc<Agent>> = vec![orchestrator];
     let counter = AtomicUsize::new(1);
+
+    // Launch hint over the booting Claude, then drop straight into the session.
+    // The overview is reached on demand via the double-tap detach.
+    splash(&agents[0])?;
+    attach(&agents[0])?;
 
     loop {
         match switcher(&agents, &native)? {
