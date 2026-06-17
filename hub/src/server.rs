@@ -26,13 +26,13 @@ pub const SERVER_VERSION: &str = "0.8.0";
 fn invoke_mesh_verb(mesh: &Mesh, name: &str, args: &Value) -> Result<Value> {
     match name {
         "register" => mesh.register(args),
-        "roster"   => mesh.roster(args),
-        "claim"    => mesh.claim(args),
-        "release"  => mesh.release(args),
-        "claims"   => mesh.claims(args),
-        "post"     => mesh.post(args),
-        "inbox"    => mesh.inbox(args),
-        "read"     => mesh.read(args),
+        "roster" => mesh.roster(args),
+        "claim" => mesh.claim(args),
+        "release" => mesh.release(args),
+        "claims" => mesh.claims(args),
+        "post" => mesh.post(args),
+        "inbox" => mesh.inbox(args),
+        "read" => mesh.read(args),
         _ => Err(HubError::new(format!("unknown mesh verb '{name}'"))),
     }
 }
@@ -59,22 +59,35 @@ fn dispatch(
         "tools/call" => {
             let params = params.ok_or_else(|| HubError::new("missing params"))?;
             let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
-            let args = params.get("arguments").cloned().unwrap_or_else(|| json!({}));
+            let args = params
+                .get("arguments")
+                .cloned()
+                .unwrap_or_else(|| json!({}));
 
             let result = match name {
                 // Registry management verbs
                 "hub_register_tool" => {
-                    let n = args.get("name").and_then(|v| v.as_str())
-                        .ok_or_else(|| HubError::new("name is required"))?.to_string();
-                    let d = args.get("description").and_then(|v| v.as_str())
-                        .ok_or_else(|| HubError::new("description is required"))?.to_string();
-                    let s = args.get("input_schema").cloned()
+                    let n = args
+                        .get("name")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| HubError::new("name is required"))?
+                        .to_string();
+                    let d = args
+                        .get("description")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| HubError::new("description is required"))?
+                        .to_string();
+                    let s = args
+                        .get("input_schema")
+                        .cloned()
                         .ok_or_else(|| HubError::new("input_schema is required"))?;
                     let is_new = registry.register(n.clone(), d, s);
                     json!({ "registered": n, "is_new": is_new })
                 }
                 "hub_unregister_tool" => {
-                    let n = args.get("name").and_then(|v| v.as_str())
+                    let n = args
+                        .get("name")
+                        .and_then(|v| v.as_str())
                         .ok_or_else(|| HubError::new("name is required"))?;
                     let removed = registry.unregister(n);
                     json!({ "name": n, "removed": removed })
@@ -83,27 +96,33 @@ fn dispatch(
                 verb if crate::registry::BUILTIN_VERBS.contains(&verb) => {
                     invoke_mesh_verb(mesh, verb, &args)?
                 }
-                // All 11 board verbs
-                verb if crate::board::BOARD_VERBS.contains(&verb) => {
-                    board.invoke(verb, &args)?
-                }
+                // All 21 board verbs
+                verb if crate::board::BOARD_VERBS.contains(&verb) => board.invoke(verb, &args)?,
                 "hub_mine_list" => {
-                    let root = plugin_root
-                        .ok_or_else(|| HubError::new("plugin root not resolved — mine catalog unavailable"))?;
+                    let root = plugin_root.ok_or_else(|| {
+                        HubError::new("plugin root not resolved — mine catalog unavailable")
+                    })?;
                     mine::list_json(root, project_cwd)
                 }
                 "hub_mine_install" => {
-                    let ty = args.get("type").and_then(|v| v.as_str()).and_then(MineType::parse)
+                    let ty = args
+                        .get("type")
+                        .and_then(|v| v.as_str())
+                        .and_then(MineType::parse)
                         .ok_or_else(|| HubError::new("type must be 'skill' or 'agent'"))?;
-                    let n = args.get("name").and_then(|v| v.as_str())
+                    let n = args
+                        .get("name")
+                        .and_then(|v| v.as_str())
                         .ok_or_else(|| HubError::new("name is required"))?;
-                    let root = plugin_root
-                        .ok_or_else(|| HubError::new("plugin root not resolved — mine catalog unavailable"))?;
+                    let root = plugin_root.ok_or_else(|| {
+                        HubError::new("plugin root not resolved — mine catalog unavailable")
+                    })?;
                     mine::install_item(root, project_cwd, ty, n)?
                 }
                 "hub_mine_restore" => {
-                    let root = plugin_root
-                        .ok_or_else(|| HubError::new("plugin root not resolved — mine catalog unavailable"))?;
+                    let root = plugin_root.ok_or_else(|| {
+                        HubError::new("plugin root not resolved — mine catalog unavailable")
+                    })?;
                     mine::mine_restore(root, project_cwd)?
                 }
                 other => return Err(HubError::new(format!("unknown verb '{other}'"))),
@@ -146,7 +165,15 @@ fn handle_line(
     let method = req.get("method").and_then(|v| v.as_str()).unwrap_or("");
     let params = req.get("params");
 
-    match dispatch(mesh, board, registry, plugin_root, project_cwd, method, params) {
+    match dispatch(
+        mesh,
+        board,
+        registry,
+        plugin_root,
+        project_cwd,
+        method,
+        params,
+    ) {
         Ok(None) => {
             if is_notification {
                 None
@@ -173,10 +200,7 @@ fn handle_line(
 /// Spawn the notification pump task. It drains the broadcast receiver and
 /// emits a single `notifications/tools/list_changed` per burst to the shared
 /// stdout writer.
-fn spawn_notification_pump(
-    registry: &Registry,
-    stdout_tx: Arc<AsyncMutex<tokio::io::Stdout>>,
-) {
+fn spawn_notification_pump(registry: &Registry, stdout_tx: Arc<AsyncMutex<tokio::io::Stdout>>) {
     let mut rx = registry.subscribe();
     tokio::spawn(async move {
         loop {
@@ -277,7 +301,14 @@ mod tests {
     #[test]
     fn initialize_reports_hub_identity_and_list_changed() {
         let (m, b, r, cwd) = setup();
-        let resp = call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#).unwrap();
+        let resp = call(
+            &m,
+            &b,
+            &r,
+            &cwd,
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#,
+        )
+        .unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert_eq!(v["result"]["serverInfo"]["name"], "hub");
         assert_eq!(v["result"]["serverInfo"]["version"], "0.8.0");
@@ -285,11 +316,18 @@ mod tests {
     }
 
     #[test]
-    fn tools_list_has_twenty_four_tools() {
+    fn tools_list_has_all_builtin_tools() {
         let (m, b, r, cwd) = setup();
-        let resp = call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#).unwrap();
+        let resp = call(
+            &m,
+            &b,
+            &r,
+            &cwd,
+            r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#,
+        )
+        .unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
-        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 24);
+        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 34);
     }
 
     #[test]
@@ -305,41 +343,54 @@ mod tests {
                     "input_schema": { "type": "object" }
                 }
             }
-        }).to_string();
+        })
+        .to_string();
         let resp = call(&m, &b, &r, &cwd, &req).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         // Should succeed (no error key)
         assert!(v.get("error").is_none());
 
-        // tools/list should now have 25 entries
-        let resp2 = call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","id":4,"method":"tools/list"}"#).unwrap();
+        // tools/list should now have 35 entries
+        let resp2 = call(
+            &m,
+            &b,
+            &r,
+            &cwd,
+            r#"{"jsonrpc":"2.0","id":4,"method":"tools/list"}"#,
+        )
+        .unwrap();
         let v2: Value = serde_json::from_str(&resp2).unwrap();
-        assert_eq!(v2["result"]["tools"].as_array().unwrap().len(), 25);
+        assert_eq!(v2["result"]["tools"].as_array().unwrap().len(), 35);
     }
 
     #[test]
     fn hub_unregister_tool_removes_entry() {
         let (m, b, r, cwd) = setup();
         r.register("temp".into(), "desc".into(), json!({}));
-        assert_eq!(r.list().len(), 25);
+        assert_eq!(r.list().len(), 35);
 
         let req = json!({
             "jsonrpc": "2.0", "id": 5, "method": "tools/call",
             "params": { "name": "hub_unregister_tool", "arguments": { "name": "temp" } }
-        }).to_string();
+        })
+        .to_string();
         let resp = call(&m, &b, &r, &cwd, &req).unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
         assert!(v.get("error").is_none());
-        assert_eq!(r.list().len(), 24);
+        assert_eq!(r.list().len(), 34);
     }
 
     #[test]
     fn notification_yields_no_reply() {
         let (m, b, r, cwd) = setup();
-        assert!(
-            call(&m, &b, &r, &cwd, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
-                .is_none()
-        );
+        assert!(call(
+            &m,
+            &b,
+            &r,
+            &cwd,
+            r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#
+        )
+        .is_none());
     }
 
     #[test]
@@ -372,7 +423,9 @@ mod tests {
         )
         .unwrap();
         let v: Value = serde_json::from_str(&resp).unwrap();
-        let items = v["result"]["structuredContent"]["items"].as_array().unwrap();
+        let items = v["result"]["structuredContent"]["items"]
+            .as_array()
+            .unwrap();
         assert_eq!(items.len(), 1);
         assert_eq!(items[0]["name"], "alpha");
         assert_eq!(items[0]["installed"], false);
@@ -404,7 +457,9 @@ mod tests {
             r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"hub_mine_list","arguments":{}}}"#,
         ).unwrap();
         let lv: Value = serde_json::from_str(&list).unwrap();
-        let items = lv["result"]["structuredContent"]["items"].as_array().unwrap();
+        let items = lv["result"]["structuredContent"]["items"]
+            .as_array()
+            .unwrap();
         assert_eq!(items[0]["installed"], true);
     }
 }

@@ -258,7 +258,11 @@ pub fn scan_catalog(plugin_root: &Path, project_cwd: &Path) -> Vec<MineItem> {
                 }
             };
             let (_pname, pdesc) = parse_frontmatter(&content);
-            let installed = project_cwd.join(".claude").join("skills").join(&name).is_dir();
+            let installed = project_cwd
+                .join(".claude")
+                .join("skills")
+                .join(&name)
+                .is_dir();
             items.push(MineItem {
                 name,
                 item_type: MineType::Skill,
@@ -294,8 +298,8 @@ pub fn list_json(plugin_root: &Path, project_cwd: &Path) -> Value {
 pub fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
     fs::create_dir_all(dst)
         .map_err(|e| HubError::new(format!("create dir {}: {e}", dst.display())))?;
-    for entry in fs::read_dir(src)
-        .map_err(|e| HubError::new(format!("read dir {}: {e}", src.display())))?
+    for entry in
+        fs::read_dir(src).map_err(|e| HubError::new(format!("read dir {}: {e}", src.display())))?
     {
         let entry = entry.map_err(|e| HubError::new(format!("read entry: {e}")))?;
         let from = entry.path();
@@ -303,8 +307,9 @@ pub fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
         if from.is_dir() {
             copy_dir_recursive(&from, &to)?;
         } else {
-            fs::copy(&from, &to)
-                .map_err(|e| HubError::new(format!("copy {} -> {}: {e}", from.display(), to.display())))?;
+            fs::copy(&from, &to).map_err(|e| {
+                HubError::new(format!("copy {} -> {}: {e}", from.display(), to.display()))
+            })?;
         }
     }
     Ok(())
@@ -379,14 +384,20 @@ impl InstallManifest {
         skills.insert(
             "installed".into(),
             toml::Value::Array(
-                self.skills_installed.iter().map(|s| toml::Value::String(s.clone())).collect(),
+                self.skills_installed
+                    .iter()
+                    .map(|s| toml::Value::String(s.clone()))
+                    .collect(),
             ),
         );
         let mut agents = toml::value::Table::new();
         agents.insert(
             "installed".into(),
             toml::Value::Array(
-                self.agents_installed.iter().map(|s| toml::Value::String(s.clone())).collect(),
+                self.agents_installed
+                    .iter()
+                    .map(|s| toml::Value::String(s.clone()))
+                    .collect(),
             ),
         );
         root.insert("skills".into(), toml::Value::Table(skills));
@@ -420,21 +431,32 @@ pub fn install_item(
     let item = catalog
         .iter()
         .find(|i| i.item_type == item_type && i.name == name)
-        .ok_or_else(|| HubError::new(format!("mine item not found: {} {name}", item_type.as_str())))?;
+        .ok_or_else(|| {
+            HubError::new(format!(
+                "mine item not found: {} {name}",
+                item_type.as_str()
+            ))
+        })?;
 
     if item.installed {
-        return Ok(json!({ "status": "already_installed", "name": name, "type": item_type.as_str() }));
+        return Ok(
+            json!({ "status": "already_installed", "name": name, "type": item_type.as_str() }),
+        );
     }
 
     match item_type {
         MineType::Agent => {
-            let src = plugin_root.join("mine").join("agents").join(format!("{name}.md"));
+            let src = plugin_root
+                .join("mine")
+                .join("agents")
+                .join(format!("{name}.md"));
             let dst_dir = project_cwd.join(".claude").join("agents");
             fs::create_dir_all(&dst_dir)
                 .map_err(|e| HubError::new(format!("create dir {}: {e}", dst_dir.display())))?;
             let dst = dst_dir.join(format!("{name}.md"));
-            fs::copy(&src, &dst)
-                .map_err(|e| HubError::new(format!("copy {} -> {}: {e}", src.display(), dst.display())))?;
+            fs::copy(&src, &dst).map_err(|e| {
+                HubError::new(format!("copy {} -> {}: {e}", src.display(), dst.display()))
+            })?;
         }
         MineType::Skill => {
             let src = plugin_root.join("mine").join("skills").join(name);
@@ -463,12 +485,18 @@ pub fn mine_restore(plugin_root: &Path, project_cwd: &Path) -> Result<Value> {
     let mut skipped = 0u64;
 
     for name in &manifest.agents_installed {
-        let dst = project_cwd.join(".claude").join("agents").join(format!("{name}.md"));
+        let dst = project_cwd
+            .join(".claude")
+            .join("agents")
+            .join(format!("{name}.md"));
         if dst.exists() {
             skipped += 1;
             continue;
         }
-        let src = plugin_root.join("mine").join("agents").join(format!("{name}.md"));
+        let src = plugin_root
+            .join("mine")
+            .join("agents")
+            .join(format!("{name}.md"));
         if !src.is_file() {
             eprintln!("hub mine: restore skip agent {name} — source missing in mine");
             skipped += 1;
@@ -566,7 +594,10 @@ pub fn load_hub_toml(plugin_root: &Path, project_cwd: &Path) -> HubTomlConfig {
             eprintln!("hub.toml: mcp '{name}' is not a table — skipped");
             continue;
         };
-        let command = table.get("command").and_then(|v| v.as_str()).map(String::from);
+        let command = table
+            .get("command")
+            .and_then(|v| v.as_str())
+            .map(String::from);
         let url = table.get("url").and_then(|v| v.as_str()).map(String::from);
         if command.is_some() && url.is_some() {
             eprintln!("hub.toml: mcp '{name}' sets both command and url — skipped");
@@ -575,7 +606,11 @@ pub fn load_hub_toml(plugin_root: &Path, project_cwd: &Path) -> HubTomlConfig {
         let args = table
             .get("args")
             .and_then(|v| v.as_array())
-            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default();
         let env = table
             .get("env")
@@ -586,9 +621,15 @@ pub fn load_hub_toml(plugin_root: &Path, project_cwd: &Path) -> HubTomlConfig {
                     .collect()
             })
             .unwrap_or_default();
-        config
-            .mcps
-            .insert(name.clone(), McpEntry { command, args, url, env });
+        config.mcps.insert(
+            name.clone(),
+            McpEntry {
+                command,
+                args,
+                url,
+                env,
+            },
+        );
     }
 
     config
@@ -672,7 +713,10 @@ mod tests {
         let plugin = tempdir().unwrap();
         let cwd = tempdir().unwrap();
         // Agent with no frontmatter — still listed, empty description.
-        write(&plugin.path().join("mine/agents/raw.md"), "no frontmatter here");
+        write(
+            &plugin.path().join("mine/agents/raw.md"),
+            "no frontmatter here",
+        );
         // Skill dir with no SKILL.md — skipped entirely.
         fs::create_dir_all(plugin.path().join("mine/skills/empty")).unwrap();
 
@@ -719,7 +763,10 @@ mod tests {
     #[test]
     fn manifest_corrupt_toml_errors() {
         let cwd = tempdir().unwrap();
-        write(&cwd.path().join(".machine/install.toml"), "this is = = not toml");
+        write(
+            &cwd.path().join(".machine/install.toml"),
+            "this is = = not toml",
+        );
         assert!(InstallManifest::load(cwd.path()).is_err());
     }
 
@@ -736,7 +783,10 @@ mod tests {
         let r2 = install_item(plugin.path(), cwd.path(), MineType::Skill, "two").unwrap();
         assert_eq!(r2["status"], "installed");
         assert!(cwd.path().join(".claude/skills/two/SKILL.md").is_file());
-        assert!(cwd.path().join(".claude/skills/two/lib/helper.txt").is_file());
+        assert!(cwd
+            .path()
+            .join(".claude/skills/two/lib/helper.txt")
+            .is_file());
 
         // Second install is a no-op.
         let again = install_item(plugin.path(), cwd.path(), MineType::Agent, "alpha").unwrap();

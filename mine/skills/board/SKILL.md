@@ -1,16 +1,19 @@
 ---
 name: board
-description: Use when the user says "board", "kanban board", or "drill board" — explains the local board kanban workflow, board-per-cwd identity, the stage-to-column mapping, and the read-update-consult discipline that mirrors the drill ledger onto a card per feature.
+description: Use when the user says "board", "kanban board", or "drill board" — explains the local board kanban workflow, board-per-cwd identity, the stage-to-column mapping, labels/checklists/due-dates, and the read-update-consult discipline that mirrors the drill ledger onto a card per task, idea, or major step.
 ---
 
 # board — local kanban served by hub
 
 `board` is the machine's kanban surface, absorbed into the `hub` singleton daemon
-(a2). Hub exposes all 11 board verbs via MCP under the `mcp__plugin_machine_hub__`
+(a2). Hub exposes all 21 board verbs via MCP under the `mcp__plugin_machine_hub__`
 prefix, backed by one repo-scoped JSON state file under `.board/`. The data model is
-projects -> columns -> cards -> comments. The drill uses it to mirror the live
-`/.machine/sessions/` ledger: one card per in-flight feature, moved across columns as
-the feature crosses stages.
+projects -> columns -> cards -> comments, where a card also carries tags, an
+assignee, a due date, and named checklists (todo groups). On top sit a label color
+registry (`label_set`/`label_list`/`label_delete`) and `card_find` for querying cards
+by label. The driver uses the board as its living work surface and to mirror the live
+`/.machine/sessions/` ledger: a card per task, idea, or major step in flight, moved
+across columns as it changes state.
 
 The board is a projection of the ledger, not a second source of truth. The ledger
 under `/.machine/sessions/` remains the durable record; the board is the at-a-glance
@@ -128,13 +131,22 @@ All board verbs are served by hub at `http://localhost:7777/mcp` under the prefi
 - Projects: `project_resolve` (name) — get-or-create by name; `project_list`.
 - Board read: `board_get` (projectId) — the project plus its columns left-to-right,
   each carrying its cards by sort with a `commentCount`.
-- Columns: `column_create` (projectId, name), `column_delete` (id) — delete cascades
-  to the column's cards and their comments.
-- Cards: `card_create` (columnId, title; body?), `card_update` (id; title?, body?),
-  `card_move` (id, toColumnId; newIndex?) — 0-based slot in the destination,
-  `card_delete` (id) — also deletes the card's comments.
+- Columns: `column_create` (projectId, name), `column_update` (id; name) — rename,
+  `column_delete` (id) — delete cascades to the column's cards and their comments.
+- Cards: `card_create` (columnId, title; body?, tags?, assignee?, due?),
+  `card_update` (id; title?, body?, tags?, assignee?, due?) — `assignee`/`due` accept
+  null to clear, `tags` replaces the whole list; `card_move` (id, toColumnId;
+  newIndex?) — 0-based slot in the destination; `card_delete` (id) — also deletes the
+  card's comments; `card_find` (tag; projectId?) — cards carrying a tag/label.
+- Labels: `label_set` (name, color), `label_list`, `label_delete` (name) — the color
+  registry behind tag chips; an unregistered tag falls back to an auto color.
+- Checklists: `checklist_add` (cardId; title?), `checklist_remove` (cardId,
+  checklistId); items: `checkitem_add` (cardId, checklistId, text), `checkitem_set`
+  (cardId, checklistId, itemId; done?, text?) — toggle/edit, `checkitem_remove`
+  (cardId, checklistId, itemId).
 - Comments: `comment_add` (cardId, author, body), `comment_list` (cardId) —
-  oldest-first.
+  oldest-first. A comment on a card with an `assignee` posts a `board:comment` mesh
+  message to that agent.
 
 Every mutation bumps `state.rev` and pushes a full state snapshot over the WebSocket
 `/ws` channel so open browser tabs re-render immediately.

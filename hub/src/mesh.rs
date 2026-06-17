@@ -4,7 +4,9 @@
 //! tests.
 
 use crate::error::{HubError, Result};
-use crate::state::{ClaimRecord, Event, Holder, LogEntry, Message, RosterEntry, State, Store, Ticket};
+use crate::state::{
+    ClaimRecord, Event, Holder, LogEntry, Message, RosterEntry, State, Store, Ticket,
+};
 use crate::ulid_gen::UlidGen;
 use serde_json::{json, Value};
 use std::path::Path;
@@ -90,7 +92,10 @@ impl Mesh {
     pub fn register(&self, req: &Value) -> Result<Value> {
         require_fields(req, &["agent_id", "branch", "prompt_ptr"])?;
         let now = self.now();
-        let ttl = std::cmp::max(1, opt_i64(req, "ttl_seconds").unwrap_or(DEFAULT_TTL_SECONDS));
+        let ttl = std::cmp::max(
+            1,
+            opt_i64(req, "ttl_seconds").unwrap_or(DEFAULT_TTL_SECONDS),
+        );
         let agent_id = str_field(req, "agent_id");
         let branch = str_field(req, "branch");
         let prompt_ptr = str_field(req, "prompt_ptr");
@@ -129,7 +134,10 @@ impl Mesh {
     pub fn roster(&self, req: &Value) -> Result<Value> {
         require_fields(req, &["agent_id"])?;
         let now = self.now();
-        let include_stale = req.get("include_stale").and_then(|v| v.as_bool()).unwrap_or(false);
+        let include_stale = req
+            .get("include_stale")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
 
         self.store.txn(|state| {
             let changed = sweep(state, now);
@@ -141,8 +149,7 @@ impl Mesh {
                 if liveness == "dead" && !include_stale {
                     continue;
                 }
-                let mut claims: Vec<String> =
-                    held.get(&rec.agent_id).cloned().unwrap_or_default();
+                let mut claims: Vec<String> = held.get(&rec.agent_id).cloned().unwrap_or_default();
                 claims.sort();
                 let mut entry = json!({
                     "agent_id": rec.agent_id,
@@ -158,9 +165,7 @@ impl Mesh {
                 }
                 agents.push(entry);
             }
-            agents.sort_by(|a, b| {
-                a["agent_id"].as_str().cmp(&b["agent_id"].as_str())
-            });
+            agents.sort_by(|a, b| a["agent_id"].as_str().cmp(&b["agent_id"].as_str()));
             Ok((changed, json!({ "agents": agents })))
         })
     }
@@ -175,18 +180,24 @@ impl Mesh {
         }
         let now = self.now();
         let mode = opt_str(req, "mode").unwrap_or_else(|| "exclusive".to_string());
-        let lease = std::cmp::max(1, opt_i64(req, "lease_seconds").unwrap_or(DEFAULT_LEASE_SECONDS));
+        let lease = std::cmp::max(
+            1,
+            opt_i64(req, "lease_seconds").unwrap_or(DEFAULT_LEASE_SECONDS),
+        );
         let wait = opt_str(req, "wait").unwrap_or_else(|| "no_wait".to_string());
         let note = opt_str(req, "note");
 
         self.store.txn(|state| {
-            let mut rec = state.claims.remove(&resource).unwrap_or_else(|| ClaimRecord {
-                resource: resource.clone(),
-                mode: mode.clone(),
-                holders: Vec::new(),
-                queue: Vec::new(),
-                fence: *state.fence_floor.get(&resource).unwrap_or(&0),
-            });
+            let mut rec = state
+                .claims
+                .remove(&resource)
+                .unwrap_or_else(|| ClaimRecord {
+                    resource: resource.clone(),
+                    mode: mode.clone(),
+                    holders: Vec::new(),
+                    queue: Vec::new(),
+                    fence: *state.fence_floor.get(&resource).unwrap_or(&0),
+                });
             reap_record(&state.roster, &mut rec, now);
 
             // Idempotent renewal by the current holder.
@@ -468,7 +479,11 @@ impl Mesh {
                 .get(&agent_id)
                 .cloned()
                 .unwrap_or_else(|| ZERO_CURSOR.to_string());
-            let new_cursor = if up_to > current { up_to.clone() } else { current };
+            let new_cursor = if up_to > current {
+                up_to.clone()
+            } else {
+                current
+            };
             state.cursors.insert(agent_id.clone(), new_cursor.clone());
             let remaining = pending_after(state, &agent_id, &new_cursor, &[], now).len() as i64;
             Ok((
@@ -524,7 +539,10 @@ fn require_fields(req: &Value, fields: &[&str]) -> Result<()> {
 }
 
 fn str_field(req: &Value, key: &str) -> String {
-    req.get(key).and_then(|v| v.as_str()).unwrap_or("").to_string()
+    req.get(key)
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string()
 }
 
 fn opt_str(req: &Value, key: &str) -> Option<String> {
@@ -562,7 +580,11 @@ fn liveness_at(expires_at: i64, now: i64) -> &'static str {
     }
 }
 
-fn agent_is_dead(roster: &std::collections::BTreeMap<String, RosterEntry>, agent_id: &str, now: i64) -> bool {
+fn agent_is_dead(
+    roster: &std::collections::BTreeMap<String, RosterEntry>,
+    agent_id: &str,
+    now: i64,
+) -> bool {
     match roster.get(agent_id) {
         Some(rec) => liveness_at(rec.expires_at, now) == "dead",
         None => false,
@@ -595,7 +617,12 @@ fn promote_queue(rec: &mut ClaimRecord, now: i64) -> Option<String> {
     let first = ticket.agent_id.clone();
     rec.holders.push(holder_from_ticket(ticket, now));
     if rec.mode == "shared" {
-        while rec.queue.first().map(|t| t.mode == "shared").unwrap_or(false) {
+        while rec
+            .queue
+            .first()
+            .map(|t| t.mode == "shared")
+            .unwrap_or(false)
+        {
             let t = rec.queue.remove(0);
             rec.holders.push(holder_from_ticket(t, now));
         }
@@ -615,7 +642,8 @@ fn reap_record(
     let before_q = rec.queue.len();
     rec.holders
         .retain(|h| h.lease_expires_at > now && !agent_is_dead(roster, &h.agent_id, now));
-    rec.queue.retain(|t| !agent_is_dead(roster, &t.agent_id, now));
+    rec.queue
+        .retain(|t| !agent_is_dead(roster, &t.agent_id, now));
     let mut changed = rec.holders.len() != before_h || rec.queue.len() != before_q;
     if rec.holders.is_empty() && !rec.queue.is_empty() && promote_queue(rec, now).is_some() {
         changed = true;
@@ -648,15 +676,16 @@ fn persist_or_delete(state: &mut State, resource: &str, rec: ClaimRecord) {
     }
 }
 
-fn held_claims_index(
-    state: &State,
-    now: i64,
-) -> std::collections::BTreeMap<String, Vec<String>> {
-    let mut index: std::collections::BTreeMap<String, Vec<String>> = std::collections::BTreeMap::new();
+fn held_claims_index(state: &State, now: i64) -> std::collections::BTreeMap<String, Vec<String>> {
+    let mut index: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
     for rec in state.claims.values() {
         for h in &rec.holders {
             if h.lease_expires_at > now {
-                index.entry(h.agent_id.clone()).or_default().push(rec.resource.clone());
+                index
+                    .entry(h.agent_id.clone())
+                    .or_default()
+                    .push(rec.resource.clone());
             }
         }
     }
@@ -665,7 +694,11 @@ fn held_claims_index(
 
 fn claim_view(rec: &ClaimRecord) -> Value {
     let holders: Vec<String> = rec.holders.iter().map(|h| h.agent_id.clone()).collect();
-    let claim_id = rec.holders.first().map(|h| h.claim_id.clone()).unwrap_or_default();
+    let claim_id = rec
+        .holders
+        .first()
+        .map(|h| h.claim_id.clone())
+        .unwrap_or_default();
     let min_lease = rec
         .holders
         .iter()
@@ -769,7 +802,11 @@ mod tests {
         let now: Clock = Arc::new(move || *c2.lock().unwrap());
         let dir = tmp.join(".mesh");
         let mesh = Mesh::open_with_clock(&dir, now).unwrap();
-        Fixture { mesh, _tmp: tmp, clock }
+        Fixture {
+            mesh,
+            _tmp: tmp,
+            clock,
+        }
     }
 
     impl Fixture {
@@ -796,13 +833,19 @@ mod tests {
         assert_eq!(roster["agents"][0]["liveness"], "alive");
 
         f.advance(75); // past ttl into grace
-        let roster = f.mesh.roster(&json!({"agent_id":"a","include_stale":true})).unwrap();
+        let roster = f
+            .mesh
+            .roster(&json!({"agent_id":"a","include_stale":true}))
+            .unwrap();
         assert_eq!(roster["agents"][0]["liveness"], "stale");
 
         f.advance(30); // past grace -> dead
         let roster = f.mesh.roster(&json!({"agent_id":"a"})).unwrap();
         assert_eq!(roster["agents"].as_array().unwrap().len(), 0, "dead hidden");
-        let roster = f.mesh.roster(&json!({"agent_id":"a","include_stale":true})).unwrap();
+        let roster = f
+            .mesh
+            .roster(&json!({"agent_id":"a","include_stale":true}))
+            .unwrap();
         assert_eq!(roster["agents"][0]["liveness"], "dead");
 
         let r2 = f
@@ -815,10 +858,16 @@ mod tests {
     #[test]
     fn exclusive_grant_deny_queue_promote_fence() {
         let f = fixture();
-        let g = f.mesh.claim(&json!({"agent_id":"a","resource":"R"})).unwrap();
+        let g = f
+            .mesh
+            .claim(&json!({"agent_id":"a","resource":"R"}))
+            .unwrap();
         assert_eq!(g["status"], "granted");
         assert_eq!(g["fence"], 1);
-        let d = f.mesh.claim(&json!({"agent_id":"b","resource":"R"})).unwrap();
+        let d = f
+            .mesh
+            .claim(&json!({"agent_id":"b","resource":"R"}))
+            .unwrap();
         assert_eq!(d["status"], "denied");
         assert_eq!(d["holder"], "a");
         let q = f
@@ -858,15 +907,21 @@ mod tests {
     fn shared_co_holders_exclusive_blocked() {
         let f = fixture();
         assert_eq!(
-            f.mesh.claim(&json!({"agent_id":"a","resource":"S","mode":"shared"})).unwrap()["status"],
+            f.mesh
+                .claim(&json!({"agent_id":"a","resource":"S","mode":"shared"}))
+                .unwrap()["status"],
             "granted"
         );
         assert_eq!(
-            f.mesh.claim(&json!({"agent_id":"b","resource":"S","mode":"shared"})).unwrap()["status"],
+            f.mesh
+                .claim(&json!({"agent_id":"b","resource":"S","mode":"shared"}))
+                .unwrap()["status"],
             "granted"
         );
         assert_eq!(
-            f.mesh.claim(&json!({"agent_id":"c","resource":"S","mode":"exclusive"})).unwrap()["status"],
+            f.mesh
+                .claim(&json!({"agent_id":"c","resource":"S","mode":"exclusive"}))
+                .unwrap()["status"],
             "denied"
         );
         let v = f.mesh.claims(&json!({"agent_id":"x"})).unwrap();
@@ -888,7 +943,10 @@ mod tests {
             .claim(&json!({"agent_id":"a","resource":"R","lease_seconds":10}))
             .unwrap();
         f.advance(20);
-        let g2 = f.mesh.claim(&json!({"agent_id":"b","resource":"R"})).unwrap();
+        let g2 = f
+            .mesh
+            .claim(&json!({"agent_id":"b","resource":"R"}))
+            .unwrap();
         assert_eq!(g2["status"], "granted");
         assert!(g2["fence"].as_i64().unwrap() > g["fence"].as_i64().unwrap());
     }
@@ -904,7 +962,9 @@ mod tests {
             .unwrap();
         f.advance(200); // a is dead (60 + 30 grace)
         assert_eq!(
-            f.mesh.claim(&json!({"agent_id":"b","resource":"R"})).unwrap()["status"],
+            f.mesh
+                .claim(&json!({"agent_id":"b","resource":"R"}))
+                .unwrap()["status"],
             "granted"
         );
     }
@@ -912,17 +972,26 @@ mod tests {
     #[test]
     fn not_holder_vs_unknown_on_release() {
         let f = fixture();
-        let g = f.mesh.claim(&json!({"agent_id":"a","resource":"R"})).unwrap();
+        let g = f
+            .mesh
+            .claim(&json!({"agent_id":"a","resource":"R"}))
+            .unwrap();
         assert_eq!(
-            f.mesh.release(&json!({"agent_id":"b","claim_id":g["claim_id"],"resource":"R"})).unwrap()["status"],
+            f.mesh
+                .release(&json!({"agent_id":"b","claim_id":g["claim_id"],"resource":"R"}))
+                .unwrap()["status"],
             "not_holder"
         );
         assert_eq!(
-            f.mesh.release(&json!({"agent_id":"a","claim_id":"ZZZ","resource":"R"})).unwrap()["status"],
+            f.mesh
+                .release(&json!({"agent_id":"a","claim_id":"ZZZ","resource":"R"}))
+                .unwrap()["status"],
             "unknown"
         );
         assert_eq!(
-            f.mesh.release(&json!({"agent_id":"a","claim_id":"ZZZ","resource":"NOPE"})).unwrap()["status"],
+            f.mesh
+                .release(&json!({"agent_id":"a","claim_id":"ZZZ","resource":"NOPE"}))
+                .unwrap()["status"],
             "unknown"
         );
     }
@@ -930,10 +999,16 @@ mod tests {
     #[test]
     fn post_inbox_read_cursor_advance() {
         let f = fixture();
-        let p = f.mesh.post(&json!({"agent_id":"a","to":"b","body":"hi"})).unwrap();
+        let p = f
+            .mesh
+            .post(&json!({"agent_id":"a","to":"b","body":"hi"}))
+            .unwrap();
         assert_eq!(p["fanout"], 1);
         assert_eq!(
-            f.mesh.inbox(&json!({"agent_id":"c"})).unwrap()["messages"].as_array().unwrap().len(),
+            f.mesh.inbox(&json!({"agent_id":"c"})).unwrap()["messages"]
+                .as_array()
+                .unwrap()
+                .len(),
             0,
             "privacy: c does not see a->b"
         );
@@ -941,9 +1016,14 @@ mod tests {
         assert_eq!(ib["messages"].as_array().unwrap().len(), 1);
         assert_eq!(ib["messages"][0]["body"], "hi");
         assert_eq!(ib["unread"], 0);
-        f.mesh.read(&json!({"agent_id":"b","up_to":p["message_id"]})).unwrap();
+        f.mesh
+            .read(&json!({"agent_id":"b","up_to":p["message_id"]}))
+            .unwrap();
         assert_eq!(
-            f.mesh.inbox(&json!({"agent_id":"b"})).unwrap()["messages"].as_array().unwrap().len(),
+            f.mesh.inbox(&json!({"agent_id":"b"})).unwrap()["messages"]
+                .as_array()
+                .unwrap()
+                .len(),
             0,
             "cursor consumes exactly once"
         );
@@ -952,15 +1032,27 @@ mod tests {
     #[test]
     fn broadcast_and_topic_addressing() {
         let f = fixture();
-        f.mesh.register(&json!({"agent_id":"a","branch":"x","prompt_ptr":"p"})).unwrap();
-        f.mesh.register(&json!({"agent_id":"b","branch":"x","prompt_ptr":"p"})).unwrap();
-        let bc = f.mesh.post(&json!({"agent_id":"a","to":"*","body":"all"})).unwrap();
+        f.mesh
+            .register(&json!({"agent_id":"a","branch":"x","prompt_ptr":"p"}))
+            .unwrap();
+        f.mesh
+            .register(&json!({"agent_id":"b","branch":"x","prompt_ptr":"p"}))
+            .unwrap();
+        let bc = f
+            .mesh
+            .post(&json!({"agent_id":"a","to":"*","body":"all"}))
+            .unwrap();
         assert_eq!(bc["fanout"], 2);
         assert_eq!(
-            f.mesh.inbox(&json!({"agent_id":"b"})).unwrap()["messages"].as_array().unwrap().len(),
+            f.mesh.inbox(&json!({"agent_id":"b"})).unwrap()["messages"]
+                .as_array()
+                .unwrap()
+                .len(),
             1
         );
-        f.mesh.post(&json!({"agent_id":"a","to":"topic:build","body":"t"})).unwrap();
+        f.mesh
+            .post(&json!({"agent_id":"a","to":"topic:build","body":"t"}))
+            .unwrap();
         let none = f.mesh.inbox(&json!({"agent_id":"b"})).unwrap();
         let topic_msgs: Vec<_> = none["messages"]
             .as_array()
@@ -969,7 +1061,10 @@ mod tests {
             .filter(|m| m["to"] == "topic:build")
             .collect();
         assert_eq!(topic_msgs.len(), 0, "no topic without subscription");
-        let sub = f.mesh.inbox(&json!({"agent_id":"b","topics":["build"]})).unwrap();
+        let sub = f
+            .mesh
+            .inbox(&json!({"agent_id":"b","topics":["build"]}))
+            .unwrap();
         let topic_msgs: Vec<_> = sub["messages"]
             .as_array()
             .unwrap()
@@ -982,19 +1077,32 @@ mod tests {
     #[test]
     fn gc_reclaims_expired_messages() {
         let f = fixture();
-        f.mesh.post(&json!({"agent_id":"a","to":"*","body":"early"})).unwrap();
+        f.mesh
+            .post(&json!({"agent_id":"a","to":"*","body":"early"}))
+            .unwrap();
         assert_eq!(
-            f.mesh.inbox(&json!({"agent_id":"late"})).unwrap()["messages"].as_array().unwrap().len(),
+            f.mesh.inbox(&json!({"agent_id":"late"})).unwrap()["messages"]
+                .as_array()
+                .unwrap()
+                .len(),
             1
         );
-        f.mesh.post(&json!({"agent_id":"a","to":"late","body":"ttl","ttl_seconds":10})).unwrap();
+        f.mesh
+            .post(&json!({"agent_id":"a","to":"late","body":"ttl","ttl_seconds":10}))
+            .unwrap();
         assert_eq!(
-            f.mesh.inbox(&json!({"agent_id":"late"})).unwrap()["messages"].as_array().unwrap().len(),
+            f.mesh.inbox(&json!({"agent_id":"late"})).unwrap()["messages"]
+                .as_array()
+                .unwrap()
+                .len(),
             2
         );
         f.advance(20);
         assert_eq!(
-            f.mesh.inbox(&json!({"agent_id":"late"})).unwrap()["messages"].as_array().unwrap().len(),
+            f.mesh.inbox(&json!({"agent_id":"late"})).unwrap()["messages"]
+                .as_array()
+                .unwrap()
+                .len(),
             1
         );
         let reclaimed = f.mesh.gc().unwrap();
@@ -1004,7 +1112,10 @@ mod tests {
     #[test]
     fn state_persists_across_restart() {
         let f = fixture();
-        let g = f.mesh.claim(&json!({"agent_id":"a","resource":"R"})).unwrap();
+        let g = f
+            .mesh
+            .claim(&json!({"agent_id":"a","resource":"R"}))
+            .unwrap();
         let dir = f._tmp.join(".mesh");
         let clock: Clock = Arc::new(|| 1_000_000);
         let m2 = Mesh::open_with_clock(&dir, clock).unwrap();

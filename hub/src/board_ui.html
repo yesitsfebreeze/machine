@@ -18,18 +18,61 @@ header h1 { font-size: 14px; font-weight: 600; color: #fff; }
 
 .main { display: flex; flex: 1; overflow: hidden; }
 
+/* board column wrapper (filter bar + kanban) */
+#board-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* label filter bar */
+#filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 12px 0; }
+#filter-bar:empty { display: none; }
+.filter-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 2px; }
+.filter-chip { font-size: 10px; padding: 2px 9px; border-radius: 10px; border: 1px solid; cursor: pointer; font-weight: 500; background: transparent; }
+.filter-chip.on { font-weight: 600; }
+.filter-clear { font-size: 10px; color: #888; cursor: pointer; margin-left: 4px; }
+.filter-clear:hover { color: #ccc; }
+
 /* kanban */
 #kanban { flex: 1; display: flex; gap: 10px; padding: 12px; overflow-x: auto; align-items: flex-start; }
-.column { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; min-width: 220px; max-width: 260px; display: flex; flex-direction: column; max-height: 100%; }
-.col-header { padding: 8px 10px; font-size: 12px; font-weight: 600; color: #ccc; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: space-between; }
+.column { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; min-width: 240px; max-width: 280px; display: flex; flex-direction: column; max-height: 100%; flex-shrink: 0; }
+.col-header { padding: 8px 10px; font-size: 12px; font-weight: 600; color: #ccc; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; gap: 6px; }
+.col-name { flex: 1; cursor: text; outline: none; }
+.col-name:focus { background: #222; border-radius: 3px; }
 .col-count { font-size: 11px; color: #555; font-weight: normal; }
-.cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; }
-.card { background: #242424; border: 1px solid #333; border-radius: 4px; padding: 8px 10px; cursor: grab; }
+.col-menu { background: none; border: none; color: #555; cursor: pointer; font-size: 14px; padding: 0 3px; line-height: 1; border-radius: 3px; }
+.col-menu:hover { color: #ccc; background: #222; }
+.cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; min-height: 8px; }
+.card { background: #242424; border: 1px solid #333; border-radius: 4px; padding: 8px 10px; cursor: pointer; user-select: none; }
 .card:hover { border-color: #555; }
 .card.dragging { opacity: 0.4; }
+.card.selected { border-color: #2563eb; background: #1e2a3a; }
 .card-title { font-size: 12px; line-height: 1.4; color: #ddd; }
-.card-meta { display: flex; gap: 8px; margin-top: 4px; font-size: 10px; color: #555; }
-.card-body { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; max-height: 60px; overflow: hidden; }
+.card-meta { display: flex; gap: 8px; margin-top: 5px; font-size: 10px; color: #777; flex-wrap: wrap; align-items: center; }
+.card-meta .mi { display: inline-flex; align-items: center; gap: 3px; }
+.card-body { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; max-height: 48px; overflow: hidden; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.card-tag { font-size: 9px; padding: 1px 6px; border-radius: 8px; color: #fff; white-space: nowrap; font-weight: 500; }
+.due-badge { padding: 1px 6px; border-radius: 4px; font-weight: 600; background: #2a2a2a; color: #aaa; }
+.due-badge.overdue { background: #4c1d1d; color: #fca5a5; }
+.due-badge.soon { background: #4a3a18; color: #fcd34d; }
+.due-badge.done { background: #14361f; color: #86efac; }
+
+/* add-card composer */
+.add-card { margin: 0 8px 8px; }
+.add-card-btn { width: 100%; text-align: left; background: none; border: none; color: #666; font-size: 12px; padding: 6px 8px; cursor: pointer; border-radius: 4px; }
+.add-card-btn:hover { background: #222; color: #aaa; }
+.add-card-form textarea { width: 100%; background: #242424; border: 1px solid #2563eb; border-radius: 4px; color: #ddd; font-size: 12px; padding: 7px 8px; resize: vertical; font-family: inherit; min-height: 48px; }
+.add-card-actions { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+.btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 4px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-ghost { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; line-height: 1; }
+.btn-ghost:hover { color: #ccc; }
+
+/* add-list */
+.add-list { min-width: 240px; flex-shrink: 0; }
+.add-list-btn { width: 100%; background: #ffffff0a; border: 1px dashed #333; color: #888; font-size: 12px; padding: 10px; cursor: pointer; border-radius: 6px; }
+.add-list-btn:hover { background: #ffffff14; color: #ccc; }
+.add-list-form { background: #1a1a1a; border: 1px solid #2563eb; border-radius: 6px; padding: 8px; }
+.add-list-form input { width: 100%; background: #242424; border: 1px solid #333; border-radius: 4px; color: #ddd; font-size: 12px; padding: 6px 8px; }
+
 .tabs { display: flex; gap: 4px; margin-left: 16px; }
 .tab { background: #1a1a1a; color: #999; border: 1px solid #2a2a2a; border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
 .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
@@ -49,17 +92,86 @@ header h1 { font-size: 14px; font-weight: 600; color: #fff; }
 .drop-target { border: 1px dashed #4caf5088; background: #4caf5010; min-height: 40px; border-radius: 4px; }
 .col-empty { font-size: 11px; color: #444; text-align: center; padding: 12px 0; }
 
+/* project picker */
+#proj-picker { display: flex; align-items: center; gap: 6px; }
+#proj-picker select { background: #252525; border: 1px solid #333; color: #ccc; font-size: 12px; padding: 3px 6px; border-radius: 3px; }
+.proj-add { background: #252525; border: 1px solid #333; color: #aaa; font-size: 14px; cursor: pointer; border-radius: 3px; padding: 2px 8px; line-height: 1; }
+.proj-add:hover { color: #fff; border-color: #555; }
+
 /* roster panel */
-#roster { width: 200px; flex-shrink: 0; background: #141414; border-left: 1px solid #2a2a2a; padding: 10px; overflow-y: auto; }
+#roster { width: 170px; flex-shrink: 0; background: #141414; border-left: 1px solid #2a2a2a; padding: 10px; overflow-y: auto; }
 #roster h2 { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 .agent { font-size: 11px; padding: 4px 6px; border-radius: 3px; margin-bottom: 3px; background: #1e1e1e; border: 1px solid #2a2a2a; }
 .agent-id { color: #bbb; word-break: break-all; }
 .agent-branch { color: #5a9; font-size: 10px; }
 .roster-empty { font-size: 11px; color: #444; }
 
-/* project picker */
-#proj-picker { display: flex; align-items: center; gap: 6px; }
-#proj-picker select { background: #252525; border: 1px solid #333; color: #ccc; font-size: 12px; padding: 3px 6px; border-radius: 3px; }
+/* ---- detail panel ---- */
+#detail { width: 340px; flex-shrink: 0; background: #141414; border-left: 1px solid #2a2a2a; display: none; flex-direction: column; overflow: hidden; }
+#detail.open { display: flex; }
+.detail-head { padding: 8px 10px; border-bottom: 1px solid #252525; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.detail-head-label { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+.detail-close, .detail-del { background: none; border: none; color: #555; font-size: 14px; cursor: pointer; padding: 2px 5px; border-radius: 3px; line-height: 1; }
+.detail-close:hover { color: #ccc; background: #222; }
+.detail-del:hover { color: #fca5a5; background: #2a1a1a; }
+#detail-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.detail-field { padding: 8px 10px; border-bottom: 1px solid #1e1e1e; }
+.field-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.field-input { background: #1c1c1c; border: 1px solid #2a2a2a; color: #ccc; font-size: 12px; padding: 5px 7px; border-radius: 3px; width: 100%; }
+.field-input:focus { outline: none; border-color: #3a4a6a; background: #1a1e2a; }
+.field-textarea { background: #1c1c1c; border: 1px solid #2a2a2a; color: #ccc; font-size: 12px; padding: 5px 7px; border-radius: 3px; width: 100%; min-height: 64px; resize: vertical; font-family: inherit; line-height: 1.4; }
+.field-textarea:focus { outline: none; border-color: #3a4a6a; background: #1a1e2a; }
+.field-row { display: flex; gap: 8px; }
+.field-row > div { flex: 1; }
+
+/* tags */
+.tags-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tag-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 7px; border-radius: 10px; color: #fff; font-weight: 500; }
+.tag-chip-x { background: none; border: none; color: inherit; cursor: pointer; font-size: 12px; line-height: 1; padding: 0 1px; opacity: 0.65; }
+.tag-chip-x:hover { opacity: 1; }
+.tag-swatch { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.7); cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0; }
+.tag-swatch input[type=color] { position: absolute; inset: -4px; width: 200%; height: 200%; border: none; padding: 0; opacity: 0; cursor: pointer; }
+.tag-add-input { background: #1c1c1c; border: 1px solid #2a2a2a; color: #ccc; font-size: 10px; padding: 2px 6px; border-radius: 10px; width: 72px; }
+.tag-add-input:focus { outline: none; border-color: #3a4a6a; }
+
+/* checklists */
+.checklist { margin-bottom: 12px; }
+.checklist-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.checklist-title { font-size: 12px; font-weight: 600; color: #ccc; flex: 1; }
+.checklist-del { background: none; border: none; color: #444; cursor: pointer; font-size: 12px; }
+.checklist-del:hover { color: #fca5a5; }
+.progress-wrap { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.progress-bar { flex: 1; height: 5px; background: #2a2a2a; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: #4caf50; transition: width 0.2s; }
+.progress-pct { font-size: 10px; color: #666; min-width: 30px; text-align: right; }
+.check-item { display: flex; align-items: flex-start; gap: 7px; padding: 3px 0; }
+.check-item input[type=checkbox] { margin-top: 2px; cursor: pointer; accent-color: #4caf50; flex-shrink: 0; }
+.check-item .ci-text { font-size: 12px; color: #ccc; line-height: 1.4; flex: 1; word-break: break-word; }
+.check-item.done .ci-text { color: #555; text-decoration: line-through; }
+.check-item .ci-del { background: none; border: none; color: #333; cursor: pointer; font-size: 12px; opacity: 0; }
+.check-item:hover .ci-del { opacity: 1; }
+.check-item .ci-del:hover { color: #fca5a5; }
+.ci-add { display: flex; gap: 6px; margin-top: 4px; }
+.ci-add input { flex: 1; background: #1c1c1c; border: 1px solid #2a2a2a; color: #ccc; font-size: 11px; padding: 4px 7px; border-radius: 3px; }
+.ci-add input:focus { outline: none; border-color: #3a4a6a; }
+.add-checklist-btn { background: #232323; border: 1px solid #2a2a2a; color: #999; font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+.add-checklist-btn:hover { color: #ccc; border-color: #444; }
+
+/* comments */
+.comments-area { padding: 4px 10px 8px; display: flex; flex-direction: column; gap: 6px; }
+.comments-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px 4px; }
+.comment-item { background: #1c1c1c; border: 1px solid #252525; border-radius: 4px; padding: 7px 9px; }
+.comment-author { font-size: 10px; font-weight: 700; color: #5a9; letter-spacing: 0.2px; }
+.comment-body { font-size: 12px; color: #ccc; margin-top: 2px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.comment-time { font-size: 10px; color: #3a3a3a; margin-top: 3px; }
+.no-comments { font-size: 11px; color: #333; padding: 4px 0; }
+
+/* add-comment form */
+.add-comment { flex-shrink: 0; border-top: 1px solid #252525; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.add-comment-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+.post-btn { background: #2563eb; color: #fff; border: none; border-radius: 4px; padding: 5px 12px; font-size: 12px; cursor: pointer; align-self: flex-end; }
+.post-btn:hover { background: #1d4ed8; }
+.post-btn:disabled { opacity: 0.5; cursor: default; }
 </style>
 </head>
 <body>
@@ -68,6 +180,7 @@ header h1 { font-size: 14px; font-weight: 600; color: #fff; }
   <h1>hub board</h1>
   <div id="proj-picker">
     <select id="proj-sel" onchange="selectProject(this.value)"></select>
+    <button class="proj-add" title="New project" onclick="newProject()">+</button>
   </div>
   <span id="project-name"></span>
   <div class="tabs">
@@ -77,13 +190,72 @@ header h1 { font-size: 14px; font-weight: 600; color: #fff; }
   <span style="flex:1"></span>
   <span id="status-label">connecting...</span>
 </header>
+
 <div class="main" id="view-board">
-  <div id="kanban"></div>
+  <div id="board-col">
+    <div id="filter-bar"></div>
+    <div id="kanban"></div>
+  </div>
+
+  <!-- card detail panel -->
+  <div id="detail">
+    <div class="detail-head">
+      <span class="detail-head-label">Card</span>
+      <button class="detail-del" title="Delete card" onclick="deleteCard()">🗑</button>
+      <button class="detail-close" title="Close" onclick="closeCard()">✕</button>
+    </div>
+    <div id="detail-scroll">
+      <div class="detail-field">
+        <div class="field-label">Title</div>
+        <input id="d-title" class="field-input" onblur="saveCardField('title', this.value)" />
+      </div>
+      <div class="detail-field field-row">
+        <div>
+          <div class="field-label">Assignee <span style="color:#333;font-weight:normal;text-transform:none">(agent_id)</span></div>
+          <input id="d-assignee" class="field-input" placeholder="agent_id"
+                 onblur="saveCardField('assignee', this.value || null)" />
+        </div>
+        <div>
+          <div class="field-label">Due</div>
+          <input id="d-due" type="date" class="field-input"
+                 onchange="saveCardField('due', this.value || null)" />
+        </div>
+      </div>
+      <div class="detail-field">
+        <div class="field-label">Tags / labels</div>
+        <div class="tags-row" id="d-tags-row"></div>
+        <input id="d-tag-input" class="tag-add-input" placeholder="+ tag" style="margin-top:5px"
+               onkeydown="onTagKeydown(event)" />
+      </div>
+      <div class="detail-field">
+        <div class="field-label">Body</div>
+        <textarea id="d-body" class="field-textarea" onblur="saveCardField('body', this.value)"></textarea>
+      </div>
+
+      <div class="detail-field">
+        <div class="field-label">Checklists</div>
+        <div id="d-checklists"></div>
+        <button class="add-checklist-btn" onclick="addChecklist()">+ Add checklist</button>
+      </div>
+
+      <div class="comments-label" id="d-comments-label">Comments</div>
+      <div class="comments-area" id="d-comments"></div>
+    </div>
+
+    <div class="add-comment">
+      <div class="add-comment-label">Add comment</div>
+      <input id="d-author" class="field-input" placeholder="Your name / agent_id" />
+      <textarea id="d-comment-body" class="field-textarea" placeholder="Comment…" style="min-height:48px"></textarea>
+      <button class="post-btn" onclick="submitComment()">Post</button>
+    </div>
+  </div>
+
   <div id="roster">
     <h2>Roster</h2>
     <div id="roster-list"><span class="roster-empty">empty</span></div>
   </div>
 </div>
+
 <div class="main mine-view" id="view-mine" style="display:none">
   <div id="mine-grid"><span class="roster-empty">loading...</span></div>
 </div>
@@ -94,75 +266,113 @@ let reconnectDelay = 1000;
 let currentProjectId = null;
 let lastState = null;
 let dragCardId = null;
-let dragToColumnId = null;
+let dragJustHappened = false;
+let selectedCardId = null;
+let labelColors = {};
+let activeFilter = null;
+let composingCol = null;   // column id whose add-card composer is open
+let addingList = false;    // "+ Add list" form open
 
+// --- color palette (fallback for unregistered tags) ---
+const TAG_PALETTE = ['#7c3aed','#2563eb','#059669','#b45309','#dc2626','#9d174d','#0891b2','#65a30d','#7e22ce','#0369a1'];
+function autoColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = ((h * 31) + name.charCodeAt(i)) & 0xffff;
+  return TAG_PALETTE[h % TAG_PALETTE.length];
+}
+function tagColor(name) { return labelColors[name] || autoColor(name); }
+
+// --- websocket ---
 function connect() {
   ws = new WebSocket('ws://' + location.host + '/ws');
-  ws.onopen = () => {
-    setStatus(true);
-    reconnectDelay = 1000;
-  };
-  ws.onmessage = (e) => {
-    try {
-      const msg = JSON.parse(e.data);
-      lastState = msg;
-      render(msg);
-    } catch {}
-  };
-  ws.onclose = () => {
-    setStatus(false);
-    setTimeout(connect, reconnectDelay);
-    reconnectDelay = Math.min(reconnectDelay * 2, 16000);
-  };
+  ws.onopen = () => { setStatus(true); reconnectDelay = 1000; };
+  ws.onmessage = (e) => { try { const msg = JSON.parse(e.data); lastState = msg; render(msg); } catch {} };
+  ws.onclose = () => { setStatus(false); setTimeout(connect, reconnectDelay); reconnectDelay = Math.min(reconnectDelay * 2, 16000); };
   ws.onerror = () => ws.close();
 }
-
 function setStatus(ok) {
   document.getElementById('dot').className = 'status-dot ' + (ok ? 'connected' : 'disconnected');
   document.getElementById('status-label').textContent = ok ? 'live' : 'reconnecting...';
 }
 
 function render(msg) {
+  labelColors = {};
+  (msg.labels || []).forEach(l => { labelColors[l.name] = l.color; });
   renderProjects(msg.projects || []);
   renderRoster(msg.roster || {});
   const projects = (msg.projects || []);
-  if (!currentProjectId && projects.length > 0) {
-    currentProjectId = projects[0].id;
-  }
+  if (!currentProjectId && projects.length > 0) currentProjectId = projects[0].id;
   if (currentProjectId) {
+    renderFilterBar(msg, currentProjectId);
     renderKanban(msg, currentProjectId);
   } else {
-    document.getElementById('kanban').innerHTML = '<div style="color:#444;font-size:12px;padding:20px">No projects yet.</div>';
+    document.getElementById('kanban').innerHTML = '<div style="color:#444;font-size:12px;padding:20px">No projects yet. Click + to create one.</div>';
   }
+  if (selectedCardId) renderDetail(msg, selectedCardId);
 }
 
+// --- filter bar ---
+function renderFilterBar(state, projectId) {
+  const bar = document.getElementById('filter-bar');
+  const colIds = new Set((state.columns || []).filter(c => c.projectId === projectId).map(c => c.id));
+  const tagSet = new Set();
+  (state.cards || []).forEach(k => { if (colIds.has(k.columnId)) (k.tags || []).forEach(t => tagSet.add(t)); });
+  const tags = [...tagSet].sort();
+  if (!tags.length) { bar.innerHTML = ''; activeFilter = null; return; }
+  const chips = tags.map(t => {
+    const on = activeFilter === t;
+    return `<span class="filter-chip${on ? ' on' : ''}" style="${on ? `background:${tagColor(t)};border-color:${tagColor(t)};color:#fff` : `color:${tagColor(t)};border-color:${tagColor(t)}`}" onclick="toggleFilter('${jsq(t)}')">${esc(t)}</span>`;
+  }).join('');
+  const clear = activeFilter ? `<span class="filter-clear" onclick="toggleFilter(null)">clear ✕</span>` : '';
+  bar.innerHTML = `<span class="filter-label">Filter:</span>${chips}${clear}`;
+}
+function toggleFilter(tag) {
+  activeFilter = (tag === null || activeFilter === tag) ? null : tag;
+  if (lastState) { renderFilterBar(lastState, currentProjectId); renderKanban(lastState, currentProjectId); }
+}
+
+// --- projects ---
 function renderProjects(projects) {
   const sel = document.getElementById('proj-sel');
   const prev = sel.value;
   sel.innerHTML = '';
   if (!projects.length) {
-    const o = document.createElement('option');
-    o.value = '';
-    o.textContent = '(no projects)';
-    sel.appendChild(o);
-    return;
+    const o = document.createElement('option'); o.value = ''; o.textContent = '(no projects)'; sel.appendChild(o); return;
   }
-  projects.forEach(p => {
-    const o = document.createElement('option');
-    o.value = p.id;
-    o.textContent = p.name;
-    sel.appendChild(o);
-  });
+  projects.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); });
   if (prev && projects.find(p => p.id === prev)) sel.value = prev;
   else if (projects.length > 0) sel.value = projects[0].id;
   currentProjectId = sel.value || null;
 }
-
-function selectProject(id) {
-  currentProjectId = id;
-  if (lastState) renderKanban(lastState, id);
+function selectProject(id) { currentProjectId = id; if (lastState) { renderFilterBar(lastState, id); renderKanban(lastState, id); } }
+function newProject() {
+  const name = prompt('New project name:');
+  if (name && name.trim()) apiCall('project_resolve', { name: name.trim() });
 }
 
+// --- date helpers ---
+function dueClass(due, allDone) {
+  if (!due) return '';
+  if (allDone) return 'done';
+  const d = new Date(due + 'T23:59:59');
+  const now = new Date();
+  const days = (d - now) / 86400000;
+  if (days < 0) return 'overdue';
+  if (days < 2) return 'soon';
+  return '';
+}
+function dueLabel(due) {
+  if (!due) return '';
+  try { return new Date(due + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  catch { return due; }
+}
+function checklistStats(card) {
+  let total = 0, done = 0;
+  (card.checklists || []).forEach(cl => (cl.items || []).forEach(it => { total++; if (it.done) done++; }));
+  return { total, done };
+}
+
+// --- kanban ---
 function renderKanban(state, projectId) {
   const columns = (state.columns || []).filter(c => c.projectId === projectId)
     .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
@@ -175,12 +385,10 @@ function renderKanban(state, projectId) {
 
   const kanban = document.getElementById('kanban');
   kanban.innerHTML = '';
-  if (!columns.length) {
-    kanban.innerHTML = '<div style="color:#444;font-size:12px;padding:20px">No columns yet.</div>';
-    return;
-  }
+
   columns.forEach(col => {
     const colCards = cards.filter(k => k.columnId === col.id)
+      .filter(k => !activeFilter || (k.tags || []).includes(activeFilter))
       .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
 
     const colEl = document.createElement('div');
@@ -189,7 +397,11 @@ function renderKanban(state, projectId) {
 
     const header = document.createElement('div');
     header.className = 'col-header';
-    header.innerHTML = `<span>${esc(col.name)}</span><span class="col-count">${colCards.length}</span>`;
+    header.innerHTML = `<span class="col-name" contenteditable="true" spellcheck="false"
+        onblur="renameColumn('${col.id}', this.textContent)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(col.name)}</span>
+      <span class="col-count">${colCards.length}</span>
+      <button class="col-menu" title="Delete list" onclick="deleteColumn('${col.id}','${jsq(col.name)}')">🗑</button>`;
     colEl.appendChild(header);
 
     const cardsEl = document.createElement('div');
@@ -201,58 +413,148 @@ function renderKanban(state, projectId) {
     if (!colCards.length) {
       const empty = document.createElement('div');
       empty.className = 'col-empty';
-      empty.textContent = 'empty';
+      empty.textContent = activeFilter ? 'no matching cards' : 'empty';
       cardsEl.appendChild(empty);
     }
-    colCards.forEach((card, idx) => {
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card';
-      cardEl.draggable = true;
-      cardEl.dataset.cardId = card.id;
-      cardEl.dataset.idx = idx;
-      const cc = commentCounts[card.id] || 0;
-      cardEl.innerHTML = `<div class="card-title">${esc(card.title)}</div>${card.body ? `<div class="card-body">${esc(card.body)}</div>` : ''}<div class="card-meta">${cc ? `<span>${cc} comment${cc>1?'s':''}</span>` : ''}</div>`;
-      cardEl.addEventListener('dragstart', onDragStart);
-      cardEl.addEventListener('dragend', onDragEnd);
-      cardsEl.appendChild(cardEl);
-    });
+    colCards.forEach((card, idx) => cardsEl.appendChild(buildCardEl(card, idx, commentCounts[card.id] || 0)));
     colEl.appendChild(cardsEl);
+
+    // add-card composer
+    colEl.appendChild(buildAddCard(col.id));
     kanban.appendChild(colEl);
   });
+
+  // add-list
+  kanban.appendChild(buildAddList(projectId));
 }
 
+function buildCardEl(card, idx, cc) {
+  const el = document.createElement('div');
+  el.className = 'card' + (card.id === selectedCardId ? ' selected' : '');
+  el.draggable = true;
+  el.dataset.cardId = card.id;
+  el.dataset.idx = idx;
+
+  const tags = card.tags || [];
+  const tagsHtml = tags.length
+    ? `<div class="card-tags">${tags.map(t => `<span class="card-tag" style="background:${tagColor(t)}">${esc(t)}</span>`).join('')}</div>` : '';
+
+  const cs = checklistStats(card);
+  const meta = [];
+  if (card.due) {
+    const cls = dueClass(card.due, cs.total > 0 && cs.done === cs.total);
+    meta.push(`<span class="mi due-badge ${cls}">🕓 ${esc(dueLabel(card.due))}</span>`);
+  }
+  if (cs.total) meta.push(`<span class="mi">☑ ${cs.done}/${cs.total}</span>`);
+  if (cc) meta.push(`<span class="mi">💬 ${cc}</span>`);
+  if (card.assignee) meta.push(`<span class="mi" style="color:#5a9">@${esc(card.assignee)}</span>`);
+  const metaHtml = meta.length ? `<div class="card-meta">${meta.join('')}</div>` : '';
+
+  el.innerHTML = `<div class="card-title">${esc(card.title)}</div>
+    ${card.body ? `<div class="card-body">${esc(card.body)}</div>` : ''}${tagsHtml}${metaHtml}`;
+
+  el.addEventListener('dragstart', onDragStart);
+  el.addEventListener('dragend', onDragEnd);
+  el.addEventListener('click', () => {
+    if (dragJustHappened) return;
+    selectedCardId === card.id ? closeCard() : openCard(card.id);
+  });
+  return el;
+}
+
+function buildAddCard(colId) {
+  const wrap = document.createElement('div');
+  wrap.className = 'add-card';
+  if (composingCol === colId) {
+    wrap.innerHTML = `<div class="add-card-form">
+      <textarea placeholder="Card title…" id="composer-${colId}"></textarea>
+      <div class="add-card-actions">
+        <button class="btn-primary" onclick="submitNewCard('${colId}')">Add card</button>
+        <button class="btn-ghost" onclick="closeComposer()">✕</button>
+      </div></div>`;
+    setTimeout(() => { const t = document.getElementById('composer-' + colId); if (t) { t.focus();
+      t.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitNewCard(colId); } if (e.key === 'Escape') closeComposer(); }); } }, 0);
+  } else {
+    wrap.innerHTML = `<button class="add-card-btn" onclick="openComposer('${colId}')">+ Add a card</button>`;
+  }
+  return wrap;
+}
+function openComposer(colId) { composingCol = colId; if (lastState) renderKanban(lastState, currentProjectId); }
+function closeComposer() { composingCol = null; if (lastState) renderKanban(lastState, currentProjectId); }
+function submitNewCard(colId) {
+  const t = document.getElementById('composer-' + colId);
+  const title = (t && t.value || '').trim();
+  if (!title) return;
+  apiCall('card_create', { columnId: colId, title });
+  if (t) t.value = '';
+  // keep composer open for rapid entry
+}
+
+function buildAddList(projectId) {
+  const wrap = document.createElement('div');
+  wrap.className = 'add-list';
+  if (addingList) {
+    wrap.innerHTML = `<div class="add-list-form">
+      <input id="new-list-input" placeholder="List name…" />
+      <div class="add-card-actions">
+        <button class="btn-primary" onclick="submitNewList('${projectId}')">Add list</button>
+        <button class="btn-ghost" onclick="closeAddList()">✕</button>
+      </div></div>`;
+    setTimeout(() => { const i = document.getElementById('new-list-input'); if (i) { i.focus();
+      i.addEventListener('keydown', e => { if (e.key === 'Enter') submitNewList(projectId); if (e.key === 'Escape') closeAddList(); }); } }, 0);
+  } else {
+    wrap.innerHTML = `<button class="add-list-btn" onclick="openAddList()">+ Add list</button>`;
+  }
+  return wrap;
+}
+function openAddList() { addingList = true; if (lastState) renderKanban(lastState, currentProjectId); }
+function closeAddList() { addingList = false; if (lastState) renderKanban(lastState, currentProjectId); }
+function submitNewList(projectId) {
+  const i = document.getElementById('new-list-input');
+  const name = (i && i.value || '').trim();
+  if (!name) return;
+  apiCall('column_create', { projectId, name });
+  addingList = false;
+}
+
+function renameColumn(id, name) {
+  name = (name || '').trim();
+  if (!name) return;
+  const col = lastState && (lastState.columns || []).find(c => c.id === id);
+  if (col && col.name === name) return;
+  apiCall('column_update', { id, name });
+}
+function deleteColumn(id, name) {
+  if (confirm(`Delete list "${name}" and all its cards?`)) apiCall('column_delete', { id });
+}
+
+// --- roster ---
 function renderRoster(roster) {
   const list = document.getElementById('roster-list');
   const agents = Object.values(roster);
   if (!agents.length) { list.innerHTML = '<span class="roster-empty">empty</span>'; return; }
   list.innerHTML = agents.map(a => `<div class="agent"><div class="agent-id">${esc(a.agent_id)}</div><div class="agent-branch">${esc(a.branch || '')}</div></div>`).join('');
 }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Escape a value for safe embedding in a single-quoted JS string inside an HTML
+// attribute (e.g. onclick="fn('${jsq(x)}')"). esc() alone leaves single quotes
+// and backslashes through, which a user-controlled tag/label/name could exploit.
+function jsq(s) { return esc(String(s == null ? '' : s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }
 
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// --- drag and drop ----------------------------------------------------------
-function onDragStart(e) {
-  dragCardId = e.currentTarget.dataset.cardId;
-  e.currentTarget.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
+// --- drag and drop ---
+function onDragStart(e) { dragCardId = e.currentTarget.dataset.cardId; e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
 function onDragEnd(e) {
   e.currentTarget.classList.remove('dragging');
   document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+  dragJustHappened = true; setTimeout(() => { dragJustHappened = false; }, 120);
 }
-function onDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  const target = e.currentTarget;
-  target.classList.add('drop-target');
-}
+function onDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.currentTarget.classList.add('drop-target'); }
 function onDrop(e) {
   e.preventDefault();
   const cardsEl = e.currentTarget;
   cardsEl.classList.remove('drop-target');
   const toColumnId = cardsEl.dataset.colId;
   if (!dragCardId || !toColumnId) return;
-  // Find drop index from mouse position
   const cardEls = [...cardsEl.querySelectorAll('.card')].filter(el => el.dataset.cardId !== dragCardId);
   let newIndex = cardEls.length;
   for (let i = 0; i < cardEls.length; i++) {
@@ -263,12 +565,132 @@ function onDrop(e) {
   dragCardId = null;
 }
 
+// --- card detail ---
+function openCard(id) { selectedCardId = id; document.getElementById('detail').classList.add('open'); if (lastState) renderDetail(lastState, id); }
+function closeCard() { selectedCardId = null; document.getElementById('detail').classList.remove('open'); if (lastState) renderKanban(lastState, currentProjectId); }
+function deleteCard() {
+  if (!selectedCardId) return;
+  if (confirm('Delete this card?')) { apiCall('card_delete', { id: selectedCardId }); closeCard(); }
+}
+
+function renderDetail(state, cardId) {
+  const card = (state.cards || []).find(c => c.id === cardId);
+  if (!card) { closeCard(); return; }
+  setIfNotFocused('d-title', card.title || '');
+  setIfNotFocused('d-body', card.body || '');
+  setIfNotFocused('d-assignee', card.assignee || '');
+  setIfNotFocused('d-due', card.due || '');
+  renderDetailTags(card.tags || []);
+  renderChecklists(card);
+  const comments = (state.comments || []).filter(c => c.cardId === cardId).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  renderDetailComments(comments);
+}
+function setIfNotFocused(id, val) { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = val; }
+
+function renderDetailTags(tags) {
+  const row = document.getElementById('d-tags-row');
+  row.innerHTML = tags.map((t, i) => {
+    const c = tagColor(t);
+    return `<span class="tag-chip" style="background:${c}">
+      <label class="tag-swatch" title="Set label color" style="background:${c}">
+        <input type="color" value="${c}" oninput="setLabelColor('${jsq(t)}', this.value)"></label>
+      ${esc(t)}<button class="tag-chip-x" title="Remove" onclick="removeTag(${i})">×</button></span>`;
+  }).join('');
+}
+function setLabelColor(name, color) { apiCall('label_set', { name, color }); }
+
+function currentCard() { return lastState && (lastState.cards || []).find(c => c.id === selectedCardId); }
+function currentTags() { const c = currentCard(); return c ? (c.tags || []) : []; }
+function removeTag(idx) { if (!selectedCardId) return; apiCall('card_update', { id: selectedCardId, tags: currentTags().filter((_, i) => i !== idx) }); }
+function onTagKeydown(e) {
+  if (e.key !== 'Enter' && e.key !== ',') return;
+  e.preventDefault();
+  const val = e.target.value.trim().replace(/,/g, '');
+  if (!val || !selectedCardId) return;
+  const tags = [...currentTags()];
+  if (!tags.includes(val)) { tags.push(val); apiCall('card_update', { id: selectedCardId, tags }); }
+  e.target.value = '';
+}
+
+function saveCardField(field, value) {
+  if (!selectedCardId) return;
+  const card = currentCard(); if (!card) return;
+  if ((card[field] || '') === (value || '')) return;
+  apiCall('card_update', { id: selectedCardId, [field]: value });
+}
+
+// --- checklists ---
+function renderChecklists(card) {
+  const box = document.getElementById('d-checklists');
+  const lists = card.checklists || [];
+  box.innerHTML = lists.map(cl => {
+    const total = (cl.items || []).length;
+    const done = (cl.items || []).filter(i => i.done).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const items = (cl.items || []).map(it =>
+      `<div class="check-item${it.done ? ' done' : ''}">
+        <input type="checkbox" ${it.done ? 'checked' : ''} onchange="toggleItem('${cl.id}','${it.id}',this.checked)">
+        <span class="ci-text">${esc(it.text)}</span>
+        <button class="ci-del" title="Remove" onclick="removeItem('${cl.id}','${it.id}')">×</button>
+      </div>`).join('');
+    return `<div class="checklist">
+      <div class="checklist-head">
+        <span class="checklist-title">${esc(cl.title)}</span>
+        <button class="checklist-del" title="Delete checklist" onclick="removeChecklist('${cl.id}')">🗑</button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <span class="progress-pct">${done}/${total}</span>
+      </div>
+      ${items}
+      <div class="ci-add">
+        <input placeholder="Add item…" onkeydown="if(event.key==='Enter'){addItem('${cl.id}', this);}">
+      </div>
+    </div>`;
+  }).join('');
+}
+function addChecklist() {
+  if (!selectedCardId) return;
+  const title = prompt('Checklist title:', 'Checklist');
+  if (title !== null) apiCall('checklist_add', { cardId: selectedCardId, title: title.trim() || 'Checklist' });
+}
+function removeChecklist(clId) { if (selectedCardId && confirm('Delete this checklist?')) apiCall('checklist_remove', { cardId: selectedCardId, checklistId: clId }); }
+function addItem(clId, inp) {
+  const text = (inp.value || '').trim();
+  if (!text || !selectedCardId) return;
+  apiCall('checkitem_add', { cardId: selectedCardId, checklistId: clId, text });
+  inp.value = '';
+}
+function toggleItem(clId, itemId, done) { if (selectedCardId) apiCall('checkitem_set', { cardId: selectedCardId, checklistId: clId, itemId, done }); }
+function removeItem(clId, itemId) { if (selectedCardId) apiCall('checkitem_remove', { cardId: selectedCardId, checklistId: clId, itemId }); }
+
+// --- comments ---
+function renderDetailComments(comments) {
+  const area = document.getElementById('d-comments');
+  const label = document.getElementById('d-comments-label');
+  label.textContent = `Comments${comments.length ? ' (' + comments.length + ')' : ''}`;
+  area.innerHTML = comments.length
+    ? comments.map(c => `<div class="comment-item"><div class="comment-author">${esc(c.author)}</div><div class="comment-body">${esc(c.body)}</div><div class="comment-time">${esc(c.createdAt || '')}</div></div>`).join('')
+    : '<div class="no-comments">No comments yet</div>';
+}
+function submitComment() {
+  if (!selectedCardId) return;
+  const author = (document.getElementById('d-author').value || '').trim();
+  const body = (document.getElementById('d-comment-body').value || '').trim();
+  if (!author || !body) return;
+  const btn = document.querySelector('.post-btn');
+  btn.disabled = true;
+  fetch('/api/comment_add', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cardId: selectedCardId, author, body }) })
+    .then(r => r.json()).then(() => { document.getElementById('d-comment-body').value = ''; })
+    .catch(console.error).finally(() => { btn.disabled = false; });
+  try { localStorage.setItem('hub-comment-author', author); } catch {}
+}
+window.addEventListener('DOMContentLoaded', () => {
+  try { const s = localStorage.getItem('hub-comment-author'); if (s) document.getElementById('d-author').value = s; } catch {}
+});
+
 function apiCall(verb, body) {
-  fetch('/api/' + verb, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  }).catch(console.error);
+  fetch('/api/' + verb, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).catch(console.error);
 }
 
 // ---- Mine tab ----
@@ -280,54 +702,29 @@ function switchTab(tab) {
   document.getElementById('tab-mine').className = 'tab' + (isBoard ? '' : ' active');
   if (!isBoard) loadMine();
 }
-
 function loadMine() {
   const grid = document.getElementById('mine-grid');
   grid.innerHTML = '<span class="roster-empty">loading...</span>';
-  fetch('/api/mine/list')
-    .then(r => r.json())
-    .then(data => renderMine(data.items || []))
+  fetch('/api/mine/list').then(r => r.json()).then(data => renderMine(data.items || []))
     .catch(() => { grid.innerHTML = '<span class="mine-err">failed to load catalog</span>'; });
 }
-
 function renderMine(items) {
   const grid = document.getElementById('mine-grid');
   if (!items.length) { grid.innerHTML = '<span class="roster-empty">catalog empty</span>'; return; }
   grid.innerHTML = items.map(it => {
     const badge = it.type === 'agent' ? 'badge-agent' : 'badge-skill';
-    const action = it.installed
-      ? `<span class="badge badge-installed">installed</span>`
-      : `<button class="mine-install" onclick="installMine('${esc(it.type)}','${esc(it.name)}',this)">Install</button>`;
     const installedBadge = it.installed ? `<span class="badge badge-installed">installed</span>` : '';
-    return `<div class="mine-card">
-      <div class="mine-head"><span class="mine-name">${esc(it.name)}</span><span class="badge ${badge}">${esc(it.type)}</span>${installedBadge}</div>
-      <div class="mine-desc">${esc(it.description || '')}</div>
-      ${it.installed ? '' : action}
-    </div>`;
+    const action = it.installed ? '' : `<button class="mine-install" onclick="installMine('${jsq(it.type)}','${jsq(it.name)}',this)">Install</button>`;
+    return `<div class="mine-card"><div class="mine-head"><span class="mine-name">${esc(it.name)}</span><span class="badge ${badge}">${esc(it.type)}</span>${installedBadge}</div><div class="mine-desc">${esc(it.description || '')}</div>${action}</div>`;
   }).join('');
 }
-
 function installMine(type, name, btn) {
-  btn.disabled = true;
-  btn.textContent = 'installing...';
-  fetch('/api/mine/install', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type, name }),
-  })
-    .then(async r => {
-      if (!r.ok) {
-        const e = await r.json().catch(() => ({ error: 'install failed' }));
-        throw new Error(e.error || 'install failed');
-      }
-      loadMine();
-    })
+  btn.disabled = true; btn.textContent = 'installing...';
+  fetch('/api/mine/install', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type, name }) })
+    .then(async r => { if (!r.ok) { const e = await r.json().catch(() => ({ error: 'install failed' })); throw new Error(e.error || 'install failed'); } loadMine(); })
     .catch(err => {
-      const card = btn.closest('.mine-card');
-      btn.disabled = false;
-      btn.textContent = 'Install';
-      let el = card.querySelector('.mine-err');
-      if (!el) { el = document.createElement('div'); el.className = 'mine-err'; card.appendChild(el); }
+      const card = btn.closest('.mine-card'); btn.disabled = false; btn.textContent = 'Install';
+      let el = card.querySelector('.mine-err'); if (!el) { el = document.createElement('div'); el.className = 'mine-err'; card.appendChild(el); }
       el.textContent = err.message;
     });
 }

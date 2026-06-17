@@ -50,6 +50,35 @@ pub struct Card {
     pub sort: i64,
     #[serde(rename = "createdAt")]
     pub created_at: String,
+    /// Free-form string labels for filtering / categorisation.
+    #[serde(default)]
+    pub tags: Vec<String>,
+    /// Optional agent_id that "owns" this card.  When set, a mesh message is
+    /// posted to this agent whenever a new comment is added.
+    #[serde(default)]
+    pub assignee: Option<String>,
+    /// Optional due date (ISO-8601 string, as supplied by the client).
+    #[serde(default)]
+    pub due: Option<String>,
+    /// Named checklists (todo groups) attached to the card.
+    #[serde(default)]
+    pub checklists: Vec<Checklist>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Checklist {
+    pub id: String,
+    pub title: String,
+    #[serde(default)]
+    pub items: Vec<ChecklistItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChecklistItem {
+    pub id: String,
+    pub text: String,
+    #[serde(default)]
+    pub done: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,6 +92,13 @@ pub struct Comment {
     pub created_at: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Label {
+    pub name: String,
+    /// CSS color string (e.g. "#dc2626").
+    pub color: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BoardState {
     #[serde(default)]
@@ -73,6 +109,10 @@ pub struct BoardState {
     pub cards: BTreeMap<String, Card>,
     #[serde(default)]
     pub comments: BTreeMap<String, Comment>,
+    /// Label name -> color. A tag with a registered color renders as a label;
+    /// unregistered tags fall back to an auto-derived color in the UI.
+    #[serde(default)]
+    pub labels: BTreeMap<String, String>,
     #[serde(default)]
     pub rev: u64,
 }
@@ -91,7 +131,11 @@ impl BoardStore {
         fs::create_dir_all(&dir)?;
         let state_path = dir.join(STATE_FILE);
         let lock_path = dir.join(LOCK_DIR);
-        Ok(BoardStore { dir, state_path, lock_path })
+        Ok(BoardStore {
+            dir,
+            state_path,
+            lock_path,
+        })
     }
 
     pub fn load(&self) -> BoardState {
@@ -102,7 +146,9 @@ impl BoardStore {
     }
 
     pub fn save(&self, state: &BoardState) -> Result<()> {
-        let tmp = self.dir.join(format!("{STATE_FILE}.tmp.{}", std::process::id()));
+        let tmp = self
+            .dir
+            .join(format!("{STATE_FILE}.tmp.{}", std::process::id()));
         let bytes = serde_json::to_string(state)?;
         fs::write(&tmp, bytes)?;
         fs::rename(&tmp, &self.state_path)?;
@@ -172,7 +218,11 @@ pub struct Board {
 impl Board {
     pub fn open(dir: impl AsRef<Path>, clock: Clock) -> Result<Self> {
         let store = BoardStore::new(dir)?;
-        Ok(Board { store, clock, ulid: UlidGen::new() })
+        Ok(Board {
+            store,
+            clock,
+            ulid: UlidGen::new(),
+        })
     }
 
     fn now_iso(&self) -> String {
@@ -186,7 +236,9 @@ impl Board {
     // ---- projects ----------------------------------------------------------
 
     pub fn project_resolve(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let name = args.get("name").and_then(|v| v.as_str())
+        let name = args
+            .get("name")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("name is required"))?
             .to_string();
         self.store.txn(|state| {
@@ -194,7 +246,11 @@ impl Board {
                 return Ok((false, serde_json::json!({ "project": p })));
             }
             let id = self.new_id();
-            let project = Project { id: id.clone(), name, created_at: self.now_iso() };
+            let project = Project {
+                id: id.clone(),
+                name,
+                created_at: self.now_iso(),
+            };
             state.projects.insert(id, project.clone());
             Ok((true, serde_json::json!({ "project": project })))
         })
@@ -211,11 +267,16 @@ impl Board {
     // ---- board read --------------------------------------------------------
 
     pub fn board_get(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let project_id = args.get("projectId").and_then(|v| v.as_str())
+        let project_id = args
+            .get("projectId")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("projectId is required"))?
             .to_string();
         self.store.txn(|state| {
-            let project = state.projects.get(&project_id).cloned()
+            let project = state
+                .projects
+                .get(&project_id)
+                .cloned()
                 .ok_or_else(|| HubError::new(format!("unknown project '{project_id}'")))?;
 
             // Build comment counts
@@ -225,61 +286,110 @@ impl Board {
             }
 
             // Build columns with cards
-            let mut columns: Vec<_> = state.columns.values()
+            let mut columns: Vec<_> = state
+                .columns
+                .values()
                 .filter(|col| col.project_id == project_id)
                 .cloned()
                 .collect();
             columns.sort_by(|a, b| a.sort.cmp(&b.sort).then(a.id.cmp(&b.id)));
 
-            let columns_with_cards: Vec<serde_json::Value> = columns.into_iter().map(|col| {
-                let mut cards: Vec<_> = state.cards.values()
-                    .filter(|k| k.column_id == col.id)
-                    .cloned()
-                    .collect();
-                cards.sort_by(|a, b| a.sort.cmp(&b.sort).then(a.id.cmp(&b.id)));
-                let cards_with_counts: Vec<serde_json::Value> = cards.into_iter().map(|card| {
-                    let count = comment_counts.get(&card.id).copied().unwrap_or(0);
-                    let mut v = serde_json::to_value(&card).unwrap();
-                    v.as_object_mut().unwrap().insert("commentCount".to_string(), serde_json::json!(count));
+            let columns_with_cards: Vec<serde_json::Value> = columns
+                .into_iter()
+                .map(|col| {
+                    let mut cards: Vec<_> = state
+                        .cards
+                        .values()
+                        .filter(|k| k.column_id == col.id)
+                        .cloned()
+                        .collect();
+                    cards.sort_by(|a, b| a.sort.cmp(&b.sort).then(a.id.cmp(&b.id)));
+                    let cards_with_counts: Vec<serde_json::Value> = cards
+                        .into_iter()
+                        .map(|card| {
+                            let count = comment_counts.get(&card.id).copied().unwrap_or(0);
+                            let mut v = serde_json::to_value(&card).unwrap();
+                            v.as_object_mut()
+                                .unwrap()
+                                .insert("commentCount".to_string(), serde_json::json!(count));
+                            v
+                        })
+                        .collect();
+                    let mut v = serde_json::to_value(&col).unwrap();
+                    v.as_object_mut()
+                        .unwrap()
+                        .insert("cards".to_string(), serde_json::json!(cards_with_counts));
                     v
-                }).collect();
-                let mut v = serde_json::to_value(&col).unwrap();
-                v.as_object_mut().unwrap().insert("cards".to_string(), serde_json::json!(cards_with_counts));
-                v
-            }).collect();
+                })
+                .collect();
 
-            Ok((false, serde_json::json!({ "project": project, "columns": columns_with_cards })))
+            Ok((
+                false,
+                serde_json::json!({ "project": project, "columns": columns_with_cards }),
+            ))
         })
     }
 
     // ---- columns -----------------------------------------------------------
 
     pub fn column_create(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let project_id = args.get("projectId").and_then(|v| v.as_str())
+        let project_id = args
+            .get("projectId")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("projectId is required"))?
             .to_string();
-        let name = args.get("name").and_then(|v| v.as_str())
+        let name = args
+            .get("name")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("name is required"))?
             .to_string();
         self.store.txn(|state| {
             if !state.projects.contains_key(&project_id) {
                 return Err(HubError::new(format!("unknown project '{project_id}'")));
             }
-            let max_sort = state.columns.values()
+            let max_sort = state
+                .columns
+                .values()
                 .filter(|c| c.project_id == project_id)
                 .map(|c| c.sort)
                 .max()
                 .map(|s| s + 1)
                 .unwrap_or(0);
             let id = self.new_id();
-            let column = Column { id: id.clone(), project_id, name, sort: max_sort };
+            let column = Column {
+                id: id.clone(),
+                project_id,
+                name,
+                sort: max_sort,
+            };
             state.columns.insert(id, column.clone());
             Ok((true, serde_json::json!({ "column": column })))
         })
     }
 
+    pub fn column_update(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let id = args
+            .get("id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("id is required"))?
+            .to_string();
+        self.store.txn(|state| {
+            let column = state
+                .columns
+                .get_mut(&id)
+                .ok_or_else(|| HubError::new(format!("unknown column '{id}'")))?;
+            if let Some(name) = args.get("name").and_then(|v| v.as_str()) {
+                column.name = name.to_string();
+            }
+            let column = column.clone();
+            Ok((true, serde_json::json!({ "column": column })))
+        })
+    }
+
     pub fn column_delete(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let id = args.get("id").and_then(|v| v.as_str())
+        let id = args
+            .get("id")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("id is required"))?
             .to_string();
         self.store.txn(|state| {
@@ -288,7 +398,9 @@ impl Board {
             }
             state.columns.remove(&id);
             // Cascade: delete all cards in this column, and their comments
-            let card_ids: Vec<String> = state.cards.values()
+            let card_ids: Vec<String> = state
+                .cards
+                .values()
                 .filter(|k| k.column_id == id)
                 .map(|k| k.id.clone())
                 .collect();
@@ -303,36 +415,75 @@ impl Board {
     // ---- cards -------------------------------------------------------------
 
     pub fn card_create(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let column_id = args.get("columnId").and_then(|v| v.as_str())
+        let column_id = args
+            .get("columnId")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("columnId is required"))?
             .to_string();
-        let title = args.get("title").and_then(|v| v.as_str())
+        let title = args
+            .get("title")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("title is required"))?
             .to_string();
-        let body = args.get("body").and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let body = args
+            .get("body")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let tags: Vec<String> = args
+            .get("tags")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let assignee: Option<String> = args
+            .get("assignee")
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        let due: Option<String> = args.get("due").and_then(|v| v.as_str()).map(String::from);
         self.store.txn(|state| {
             if !state.columns.contains_key(&column_id) {
                 return Err(HubError::new(format!("unknown column '{column_id}'")));
             }
-            let max_sort = state.cards.values()
+            let max_sort = state
+                .cards
+                .values()
                 .filter(|k| k.column_id == column_id)
                 .map(|k| k.sort)
                 .max()
                 .map(|s| s + 1)
                 .unwrap_or(0);
             let id = self.new_id();
-            let card = Card { id: id.clone(), column_id, title, body, sort: max_sort, created_at: self.now_iso() };
+            let card = Card {
+                id: id.clone(),
+                column_id,
+                title,
+                body,
+                sort: max_sort,
+                created_at: self.now_iso(),
+                tags,
+                assignee,
+                due,
+                checklists: Vec::new(),
+            };
             state.cards.insert(id, card.clone());
             Ok((true, serde_json::json!({ "card": card })))
         })
     }
 
     pub fn card_update(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let id = args.get("id").and_then(|v| v.as_str())
+        let id = args
+            .get("id")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("id is required"))?
             .to_string();
         self.store.txn(|state| {
-            let card = state.cards.get_mut(&id)
+            let card = state
+                .cards
+                .get_mut(&id)
                 .ok_or_else(|| HubError::new(format!("unknown card '{id}'")))?;
             if let Some(title) = args.get("title").and_then(|v| v.as_str()) {
                 card.title = title.to_string();
@@ -340,16 +491,34 @@ impl Board {
             if let Some(body) = args.get("body").and_then(|v| v.as_str()) {
                 card.body = body.to_string();
             }
+            if let Some(arr) = args.get("tags").and_then(|v| v.as_array()) {
+                card.tags = arr
+                    .iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect();
+            }
+            // `null` clears assignee; a string sets it; absence leaves it unchanged.
+            if let Some(v) = args.get("assignee") {
+                card.assignee = v.as_str().map(String::from);
+            }
+            // Same null/string/absent semantics for the due date.
+            if let Some(v) = args.get("due") {
+                card.due = v.as_str().map(String::from);
+            }
             let card = card.clone();
             Ok((true, serde_json::json!({ "card": card })))
         })
     }
 
     pub fn card_move(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let id = args.get("id").and_then(|v| v.as_str())
+        let id = args
+            .get("id")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("id is required"))?
             .to_string();
-        let to_column_id = args.get("toColumnId").and_then(|v| v.as_str())
+        let to_column_id = args
+            .get("toColumnId")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("toColumnId is required"))?
             .to_string();
         let new_index = args.get("newIndex").and_then(|v| v.as_i64());
@@ -363,7 +532,9 @@ impl Board {
             // Update the card's column
             state.cards.get_mut(&id).unwrap().column_id = to_column_id.clone();
             // Collect siblings (excluding the card itself), sorted by sort then id
-            let mut siblings: Vec<_> = state.cards.values()
+            let mut siblings: Vec<_> = state
+                .cards
+                .values()
                 .filter(|k| k.column_id == to_column_id && k.id != id)
                 .cloned()
                 .collect();
@@ -384,7 +555,9 @@ impl Board {
     }
 
     pub fn card_delete(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let id = args.get("id").and_then(|v| v.as_str())
+        let id = args
+            .get("id")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("id is required"))?
             .to_string();
         self.store.txn(|state| {
@@ -400,32 +573,54 @@ impl Board {
     // ---- comments ----------------------------------------------------------
 
     pub fn comment_add(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let card_id = args.get("cardId").and_then(|v| v.as_str())
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("cardId is required"))?
             .to_string();
-        let author = args.get("author").and_then(|v| v.as_str())
+        let author = args
+            .get("author")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("author is required"))?
             .to_string();
-        let body = args.get("body").and_then(|v| v.as_str())
+        let body = args
+            .get("body")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("body is required"))?
             .to_string();
         self.store.txn(|state| {
             if !state.cards.contains_key(&card_id) {
                 return Err(HubError::new(format!("unknown card '{card_id}'")));
             }
+            // Capture assignee before borrowing state mutably for comments.
+            let assignee = state.cards.get(&card_id).and_then(|k| k.assignee.clone());
             let id = self.new_id();
-            let comment = Comment { id: id.clone(), card_id, author, body, created_at: self.now_iso() };
+            let comment = Comment {
+                id: id.clone(),
+                card_id,
+                author,
+                body,
+                created_at: self.now_iso(),
+            };
             state.comments.insert(id, comment.clone());
-            Ok((true, serde_json::json!({ "comment": comment })))
+            // Include `assignee` so the HTTP layer can fire a mesh notification.
+            Ok((
+                true,
+                serde_json::json!({ "comment": comment, "assignee": assignee }),
+            ))
         })
     }
 
     pub fn comment_list(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
-        let card_id = args.get("cardId").and_then(|v| v.as_str())
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| HubError::new("cardId is required"))?
             .to_string();
         self.store.txn(|state| {
-            let mut comments: Vec<_> = state.comments.values()
+            let mut comments: Vec<_> = state
+                .comments
+                .values()
                 .filter(|c| c.card_id == card_id)
                 .cloned()
                 .collect();
@@ -434,30 +629,335 @@ impl Board {
         })
     }
 
+    // ---- labels ------------------------------------------------------------
+
+    /// Define or update a label's color. The label name is the identity that
+    /// card `tags` reference.
+    pub fn label_set(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let name = args
+            .get("name")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("name is required"))?
+            .to_string();
+        let color = args
+            .get("color")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("color is required"))?
+            .to_string();
+        if name.is_empty() || color.is_empty() {
+            return Err(HubError::new("name and color must be non-empty"));
+        }
+        self.store.txn(move |state| {
+            state.labels.insert(name.clone(), color.clone());
+            Ok((true, serde_json::json!({ "label": Label { name, color } })))
+        })
+    }
+
+    /// Remove a label's color definition. Cards keep the tag string; it just
+    /// reverts to an auto-derived color in the UI.
+    pub fn label_delete(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let name = args
+            .get("name")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("name is required"))?
+            .to_string();
+        self.store.txn(|state| {
+            let removed = state.labels.remove(&name).is_some();
+            Ok((
+                removed,
+                serde_json::json!({ "status": if removed { "deleted" } else { "unknown" } }),
+            ))
+        })
+    }
+
+    /// List all defined labels (name + color), sorted by name.
+    pub fn label_list(&self, _args: &serde_json::Value) -> Result<serde_json::Value> {
+        self.store.txn(|state| {
+            let labels: Vec<Label> = state
+                .labels
+                .iter()
+                .map(|(name, color)| Label {
+                    name: name.clone(),
+                    color: color.clone(),
+                })
+                .collect();
+            Ok((false, serde_json::json!({ "labels": labels })))
+        })
+    }
+
+    /// Find cards carrying a given tag, optionally scoped to one project.
+    /// Returns cards oldest-first with their column and project ids resolved.
+    pub fn card_find(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let tag = args
+            .get("tag")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("tag is required"))?
+            .to_string();
+        let project_filter = args
+            .get("projectId")
+            .and_then(|v| v.as_str())
+            .map(String::from);
+        self.store.txn(|state| {
+            // Map column id -> project id for scoping/annotation.
+            let col_project: BTreeMap<&String, &String> = state
+                .columns
+                .values()
+                .map(|c| (&c.id, &c.project_id))
+                .collect();
+            let mut matches: Vec<serde_json::Value> = state
+                .cards
+                .values()
+                .filter(|k| k.tags.iter().any(|t| t == &tag))
+                .filter(|k| match &project_filter {
+                    None => true,
+                    Some(pid) => col_project
+                        .get(&k.column_id)
+                        .map(|p| *p == pid)
+                        .unwrap_or(false),
+                })
+                .map(|card| {
+                    let project_id = col_project.get(&card.column_id).map(|p| p.to_string());
+                    let mut v = serde_json::to_value(card).unwrap();
+                    v.as_object_mut()
+                        .unwrap()
+                        .insert("projectId".to_string(), serde_json::json!(project_id));
+                    v
+                })
+                .collect();
+            matches.sort_by(|a, b| {
+                a["createdAt"]
+                    .as_str()
+                    .unwrap_or("")
+                    .cmp(b["createdAt"].as_str().unwrap_or(""))
+                    .then(
+                        a["id"]
+                            .as_str()
+                            .unwrap_or("")
+                            .cmp(b["id"].as_str().unwrap_or("")),
+                    )
+            });
+            Ok((false, serde_json::json!({ "tag": tag, "cards": matches })))
+        })
+    }
+
+    // ---- checklists --------------------------------------------------------
+
+    /// Mutable access to a card by id, or a uniform "unknown card" error.
+    fn card_mut<'a>(state: &'a mut BoardState, id: &str) -> Result<&'a mut Card> {
+        state
+            .cards
+            .get_mut(id)
+            .ok_or_else(|| HubError::new(format!("unknown card '{id}'")))
+    }
+
+    /// Mutable access to a checklist on a card by ids, or a uniform error.
+    fn checklist_mut<'a>(
+        state: &'a mut BoardState,
+        card_id: &str,
+        checklist_id: &str,
+    ) -> Result<&'a mut Checklist> {
+        Self::card_mut(state, card_id)?
+            .checklists
+            .iter_mut()
+            .find(|c| c.id == checklist_id)
+            .ok_or_else(|| HubError::new(format!("unknown checklist '{checklist_id}'")))
+    }
+
+    /// Add a named checklist (todo group) to a card.
+    pub fn checklist_add(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("cardId is required"))?
+            .to_string();
+        let title = args
+            .get("title")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Checklist")
+            .to_string();
+        self.store.txn(|state| {
+            let id = self.new_id();
+            let checklist = Checklist {
+                id: id.clone(),
+                title,
+                items: Vec::new(),
+            };
+            Self::card_mut(state, &card_id)?
+                .checklists
+                .push(checklist.clone());
+            Ok((true, serde_json::json!({ "checklist": checklist })))
+        })
+    }
+
+    /// Remove a checklist from a card.
+    pub fn checklist_remove(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("cardId is required"))?
+            .to_string();
+        let checklist_id = args
+            .get("checklistId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("checklistId is required"))?
+            .to_string();
+        self.store.txn(|state| {
+            let card = Self::card_mut(state, &card_id)?;
+            let before = card.checklists.len();
+            card.checklists.retain(|c| c.id != checklist_id);
+            let removed = card.checklists.len() < before;
+            Ok((
+                removed,
+                serde_json::json!({ "status": if removed { "deleted" } else { "unknown" } }),
+            ))
+        })
+    }
+
+    /// Add an item (todo) to a checklist.
+    pub fn checkitem_add(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("cardId is required"))?
+            .to_string();
+        let checklist_id = args
+            .get("checklistId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("checklistId is required"))?
+            .to_string();
+        let text = args
+            .get("text")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("text is required"))?
+            .to_string();
+        self.store.txn(|state| {
+            let checklist = Self::checklist_mut(state, &card_id, &checklist_id)?;
+            let id = self.new_id();
+            let item = ChecklistItem {
+                id: id.clone(),
+                text,
+                done: false,
+            };
+            checklist.items.push(item.clone());
+            Ok((true, serde_json::json!({ "item": item })))
+        })
+    }
+
+    /// Update a checklist item: toggle `done` and/or edit `text`.
+    pub fn checkitem_set(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("cardId is required"))?
+            .to_string();
+        let checklist_id = args
+            .get("checklistId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("checklistId is required"))?
+            .to_string();
+        let item_id = args
+            .get("itemId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("itemId is required"))?
+            .to_string();
+        self.store.txn(|state| {
+            let checklist = Self::checklist_mut(state, &card_id, &checklist_id)?;
+            let item = checklist
+                .items
+                .iter_mut()
+                .find(|i| i.id == item_id)
+                .ok_or_else(|| HubError::new(format!("unknown item '{item_id}'")))?;
+            if let Some(done) = args.get("done").and_then(|v| v.as_bool()) {
+                item.done = done;
+            }
+            if let Some(text) = args.get("text").and_then(|v| v.as_str()) {
+                item.text = text.to_string();
+            }
+            let item = item.clone();
+            Ok((true, serde_json::json!({ "item": item })))
+        })
+    }
+
+    /// Remove an item from a checklist.
+    pub fn checkitem_remove(&self, args: &serde_json::Value) -> Result<serde_json::Value> {
+        let card_id = args
+            .get("cardId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("cardId is required"))?
+            .to_string();
+        let checklist_id = args
+            .get("checklistId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("checklistId is required"))?
+            .to_string();
+        let item_id = args
+            .get("itemId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| HubError::new("itemId is required"))?
+            .to_string();
+        self.store.txn(|state| {
+            let checklist = Self::checklist_mut(state, &card_id, &checklist_id)?;
+            let before = checklist.items.len();
+            checklist.items.retain(|i| i.id != item_id);
+            let removed = checklist.items.len() < before;
+            Ok((
+                removed,
+                serde_json::json!({ "status": if removed { "deleted" } else { "unknown" } }),
+            ))
+        })
+    }
+
     /// Dispatch a board verb by name.
     pub fn invoke(&self, name: &str, args: &serde_json::Value) -> Result<serde_json::Value> {
         match name {
             "project_resolve" => self.project_resolve(args),
-            "project_list"    => self.project_list(args),
-            "board_get"       => self.board_get(args),
-            "column_create"   => self.column_create(args),
-            "column_delete"   => self.column_delete(args),
-            "card_create"     => self.card_create(args),
-            "card_update"     => self.card_update(args),
-            "card_move"       => self.card_move(args),
-            "card_delete"     => self.card_delete(args),
-            "comment_add"     => self.comment_add(args),
-            "comment_list"    => self.comment_list(args),
+            "project_list" => self.project_list(args),
+            "board_get" => self.board_get(args),
+            "column_create" => self.column_create(args),
+            "column_update" => self.column_update(args),
+            "column_delete" => self.column_delete(args),
+            "card_create" => self.card_create(args),
+            "card_update" => self.card_update(args),
+            "card_move" => self.card_move(args),
+            "card_delete" => self.card_delete(args),
+            "comment_add" => self.comment_add(args),
+            "comment_list" => self.comment_list(args),
+            "label_set" => self.label_set(args),
+            "label_delete" => self.label_delete(args),
+            "label_list" => self.label_list(args),
+            "card_find" => self.card_find(args),
+            "checklist_add" => self.checklist_add(args),
+            "checklist_remove" => self.checklist_remove(args),
+            "checkitem_add" => self.checkitem_add(args),
+            "checkitem_set" => self.checkitem_set(args),
+            "checkitem_remove" => self.checkitem_remove(args),
             _ => Err(HubError::new(format!("unknown board verb '{name}'"))),
         }
     }
 }
 
-pub const BOARD_VERBS: [&str; 11] = [
-    "project_resolve", "project_list", "board_get",
-    "column_create", "column_delete",
-    "card_create", "card_update", "card_move", "card_delete",
-    "comment_add", "comment_list",
+pub const BOARD_VERBS: [&str; 21] = [
+    "project_resolve",
+    "project_list",
+    "board_get",
+    "column_create",
+    "column_update",
+    "column_delete",
+    "card_create",
+    "card_update",
+    "card_move",
+    "card_delete",
+    "comment_add",
+    "comment_list",
+    "label_set",
+    "label_delete",
+    "label_list",
+    "card_find",
+    "checklist_add",
+    "checklist_remove",
+    "checkitem_add",
+    "checkitem_set",
+    "checkitem_remove",
 ];
 
 // ---- tests -----------------------------------------------------------------
@@ -487,8 +987,12 @@ mod tests {
     fn project_resolve_idempotency() {
         let dir = tmp_dir("proj-resolve");
         let b = make_board(&dir, 1_000_000);
-        let r1 = b.project_resolve(&serde_json::json!({"name": "myproject"})).unwrap();
-        let r2 = b.project_resolve(&serde_json::json!({"name": "myproject"})).unwrap();
+        let r1 = b
+            .project_resolve(&serde_json::json!({"name": "myproject"}))
+            .unwrap();
+        let r2 = b
+            .project_resolve(&serde_json::json!({"name": "myproject"}))
+            .unwrap();
         assert_eq!(r1["project"]["id"], r2["project"]["id"]);
         // rev only increments on first creation
         let state = b.store.load();
@@ -499,11 +1003,17 @@ mod tests {
     fn project_list_ordering() {
         let dir = tmp_dir("proj-list");
         let b = make_board(&dir, 1_000_000);
-        b.project_resolve(&serde_json::json!({"name": "alpha"})).unwrap();
-        b.project_resolve(&serde_json::json!({"name": "beta"})).unwrap();
+        b.project_resolve(&serde_json::json!({"name": "alpha"}))
+            .unwrap();
+        b.project_resolve(&serde_json::json!({"name": "beta"}))
+            .unwrap();
         let r = b.project_list(&serde_json::json!({})).unwrap();
-        let names: Vec<&str> = r["projects"].as_array().unwrap()
-            .iter().map(|p| p["name"].as_str().unwrap()).collect();
+        let names: Vec<&str> = r["projects"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| p["name"].as_str().unwrap())
+            .collect();
         // ordered by createdAt; same timestamp -> id order (ULID time order)
         assert_eq!(names.len(), 2);
     }
@@ -512,12 +1022,18 @@ mod tests {
     fn board_get_structure() {
         let dir = tmp_dir("board-get");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap().to_string();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "Todo"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "Todo"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap().to_string();
-        b.card_create(&serde_json::json!({"columnId": cid, "title": "Task 1"})).unwrap();
-        b.card_create(&serde_json::json!({"columnId": cid, "title": "Task 2"})).unwrap();
+        b.card_create(&serde_json::json!({"columnId": cid, "title": "Task 1"}))
+            .unwrap();
+        b.card_create(&serde_json::json!({"columnId": cid, "title": "Task 2"}))
+            .unwrap();
         let r = b.board_get(&serde_json::json!({"projectId": pid})).unwrap();
         let cols = r["columns"].as_array().unwrap();
         assert_eq!(cols.len(), 1);
@@ -529,11 +1045,19 @@ mod tests {
     fn column_create_sort_ordering() {
         let dir = tmp_dir("col-sort");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let c0 = b.column_create(&serde_json::json!({"projectId": pid, "name": "A"})).unwrap();
-        let c1 = b.column_create(&serde_json::json!({"projectId": pid, "name": "B"})).unwrap();
-        let c2 = b.column_create(&serde_json::json!({"projectId": pid, "name": "C"})).unwrap();
+        let c0 = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "A"}))
+            .unwrap();
+        let c1 = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "B"}))
+            .unwrap();
+        let c2 = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
         assert_eq!(c0["column"]["sort"], 0);
         assert_eq!(c1["column"]["sort"], 1);
         assert_eq!(c2["column"]["sort"], 2);
@@ -543,13 +1067,20 @@ mod tests {
     fn column_delete_cascade() {
         let dir = tmp_dir("col-cascade");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "X"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "X"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap();
-        let card = b.card_create(&serde_json::json!({"columnId": cid, "title": "T"})).unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T"}))
+            .unwrap();
         let kid = card["card"]["id"].as_str().unwrap();
-        b.comment_add(&serde_json::json!({"cardId": kid, "author": "a", "body": "b"})).unwrap();
+        b.comment_add(&serde_json::json!({"cardId": kid, "author": "a", "body": "b"}))
+            .unwrap();
         let r = b.column_delete(&serde_json::json!({"id": cid})).unwrap();
         assert_eq!(r["status"], "deleted");
         let state = b.store.load();
@@ -561,14 +1092,22 @@ mod tests {
     fn card_create_default_body_and_sort() {
         let dir = tmp_dir("card-create");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "C"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap();
-        let r = b.card_create(&serde_json::json!({"columnId": cid, "title": "X"})).unwrap();
+        let r = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "X"}))
+            .unwrap();
         assert_eq!(r["card"]["body"], "");
         assert_eq!(r["card"]["sort"], 0);
-        let r2 = b.card_create(&serde_json::json!({"columnId": cid, "title": "Y"})).unwrap();
+        let r2 = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "Y"}))
+            .unwrap();
         assert_eq!(r2["card"]["sort"], 1);
     }
 
@@ -576,20 +1115,28 @@ mod tests {
     fn card_update_partial() {
         let dir = tmp_dir("card-update");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "C"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap();
-        let card = b.card_create(&serde_json::json!({"columnId": cid, "title": "Old", "body": "original"})).unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "Old", "body": "original"}))
+            .unwrap();
         let kid = card["card"]["id"].as_str().unwrap();
         // title only
-        b.card_update(&serde_json::json!({"id": kid, "title": "New"})).unwrap();
+        b.card_update(&serde_json::json!({"id": kid, "title": "New"}))
+            .unwrap();
         let state = b.store.load();
         let c = state.cards.get(kid).unwrap();
         assert_eq!(c.title, "New");
         assert_eq!(c.body, "original");
         // body only
-        b.card_update(&serde_json::json!({"id": kid, "body": "updated"})).unwrap();
+        b.card_update(&serde_json::json!({"id": kid, "body": "updated"}))
+            .unwrap();
         let state = b.store.load();
         let c = state.cards.get(kid).unwrap();
         assert_eq!(c.title, "New");
@@ -600,15 +1147,24 @@ mod tests {
     fn card_move_across_columns() {
         let dir = tmp_dir("card-move");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col1 = b.column_create(&serde_json::json!({"projectId": pid, "name": "A"})).unwrap();
-        let col2 = b.column_create(&serde_json::json!({"projectId": pid, "name": "B"})).unwrap();
+        let col1 = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "A"}))
+            .unwrap();
+        let col2 = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "B"}))
+            .unwrap();
         let c1id = col1["column"]["id"].as_str().unwrap();
         let c2id = col2["column"]["id"].as_str().unwrap();
-        let card = b.card_create(&serde_json::json!({"columnId": c1id, "title": "T"})).unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": c1id, "title": "T"}))
+            .unwrap();
         let kid = card["card"]["id"].as_str().unwrap();
-        b.card_move(&serde_json::json!({"id": kid, "toColumnId": c2id, "newIndex": 0})).unwrap();
+        b.card_move(&serde_json::json!({"id": kid, "toColumnId": c2id, "newIndex": 0}))
+            .unwrap();
         let state = b.store.load();
         assert_eq!(state.cards.get(kid).unwrap().column_id, c2id);
         assert_eq!(state.cards.get(kid).unwrap().sort, 0);
@@ -618,18 +1174,29 @@ mod tests {
     fn card_move_within_column() {
         let dir = tmp_dir("card-move-within");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "A"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "A"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap();
-        let k0 = b.card_create(&serde_json::json!({"columnId": cid, "title": "First"})).unwrap();
-        let k1 = b.card_create(&serde_json::json!({"columnId": cid, "title": "Second"})).unwrap();
-        let k2 = b.card_create(&serde_json::json!({"columnId": cid, "title": "Third"})).unwrap();
+        let k0 = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "First"}))
+            .unwrap();
+        let k1 = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "Second"}))
+            .unwrap();
+        let k2 = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "Third"}))
+            .unwrap();
         let kid0 = k0["card"]["id"].as_str().unwrap();
         let _kid1 = k1["card"]["id"].as_str().unwrap();
         let _kid2 = k2["card"]["id"].as_str().unwrap();
         // Move first card to position 2 (end)
-        b.card_move(&serde_json::json!({"id": kid0, "toColumnId": cid, "newIndex": 2})).unwrap();
+        b.card_move(&serde_json::json!({"id": kid0, "toColumnId": cid, "newIndex": 2}))
+            .unwrap();
         let state = b.store.load();
         assert_eq!(state.cards.get(kid0).unwrap().sort, 2);
     }
@@ -638,13 +1205,20 @@ mod tests {
     fn card_delete_cascade() {
         let dir = tmp_dir("card-del");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "C"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap();
-        let card = b.card_create(&serde_json::json!({"columnId": cid, "title": "T"})).unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T"}))
+            .unwrap();
         let kid = card["card"]["id"].as_str().unwrap();
-        b.comment_add(&serde_json::json!({"cardId": kid, "author": "a", "body": "b"})).unwrap();
+        b.comment_add(&serde_json::json!({"cardId": kid, "author": "a", "body": "b"}))
+            .unwrap();
         b.card_delete(&serde_json::json!({"id": kid})).unwrap();
         let state = b.store.load();
         assert!(state.cards.is_empty());
@@ -655,14 +1229,22 @@ mod tests {
     fn comment_add_and_list_oldest_first() {
         let dir = tmp_dir("comments");
         let b = make_board(&dir, 1_000_000);
-        let pr = b.project_resolve(&serde_json::json!({"name": "p"})).unwrap();
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
         let pid = pr["project"]["id"].as_str().unwrap();
-        let col = b.column_create(&serde_json::json!({"projectId": pid, "name": "C"})).unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
         let cid = col["column"]["id"].as_str().unwrap();
-        let card = b.card_create(&serde_json::json!({"columnId": cid, "title": "T"})).unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T"}))
+            .unwrap();
         let kid = card["card"]["id"].as_str().unwrap();
-        b.comment_add(&serde_json::json!({"cardId": kid, "author": "a", "body": "first"})).unwrap();
-        b.comment_add(&serde_json::json!({"cardId": kid, "author": "b", "body": "second"})).unwrap();
+        b.comment_add(&serde_json::json!({"cardId": kid, "author": "a", "body": "first"}))
+            .unwrap();
+        b.comment_add(&serde_json::json!({"cardId": kid, "author": "b", "body": "second"}))
+            .unwrap();
         let r = b.comment_list(&serde_json::json!({"cardId": kid})).unwrap();
         let comments = r["comments"].as_array().unwrap();
         assert_eq!(comments.len(), 2);
@@ -671,10 +1253,260 @@ mod tests {
     }
 
     #[test]
+    fn card_tags_and_assignee_roundtrip() {
+        let dir = tmp_dir("card-tags");
+        let b = make_board(&dir, 1_000_000);
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
+        let pid = pr["project"]["id"].as_str().unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
+        let cid = col["column"]["id"].as_str().unwrap();
+        let card = b.card_create(&serde_json::json!({"columnId": cid, "title": "T", "tags": ["bug","urgent"], "assignee": "agent-1"})).unwrap();
+        let kid = card["card"]["id"].as_str().unwrap();
+        let state = b.store.load();
+        let c = state.cards.get(kid).unwrap();
+        assert_eq!(c.tags, vec!["bug", "urgent"]);
+        assert_eq!(c.assignee.as_deref(), Some("agent-1"));
+        // Update: change tags, clear assignee
+        b.card_update(&serde_json::json!({"id": kid, "tags": ["done"], "assignee": null}))
+            .unwrap();
+        let state = b.store.load();
+        let c = state.cards.get(kid).unwrap();
+        assert_eq!(c.tags, vec!["done"]);
+        assert!(c.assignee.is_none());
+    }
+
+    #[test]
+    fn comment_add_returns_assignee() {
+        let dir = tmp_dir("comment-assignee");
+        let b = make_board(&dir, 1_000_000);
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
+        let pid = pr["project"]["id"].as_str().unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
+        let cid = col["column"]["id"].as_str().unwrap();
+        let card = b
+            .card_create(
+                &serde_json::json!({"columnId": cid, "title": "T", "assignee": "agent-42"}),
+            )
+            .unwrap();
+        let kid = card["card"]["id"].as_str().unwrap();
+        let r = b
+            .comment_add(&serde_json::json!({"cardId": kid, "author": "human", "body": "hello"}))
+            .unwrap();
+        assert_eq!(r["assignee"], "agent-42");
+        // Card without assignee returns null
+        let card2 = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T2"}))
+            .unwrap();
+        let kid2 = card2["card"]["id"].as_str().unwrap();
+        let r2 = b
+            .comment_add(&serde_json::json!({"cardId": kid2, "author": "human", "body": "hi"}))
+            .unwrap();
+        assert!(r2["assignee"].is_null());
+    }
+
+    #[test]
+    fn label_set_list_delete() {
+        let dir = tmp_dir("labels");
+        let b = make_board(&dir, 1_000_000);
+        b.label_set(&serde_json::json!({"name": "bug", "color": "#dc2626"}))
+            .unwrap();
+        b.label_set(&serde_json::json!({"name": "feat", "color": "#2563eb"}))
+            .unwrap();
+        // Upsert changes color, no duplicate
+        b.label_set(&serde_json::json!({"name": "bug", "color": "#991b1b"}))
+            .unwrap();
+        let r = b.label_list(&serde_json::json!({})).unwrap();
+        let labels = r["labels"].as_array().unwrap();
+        assert_eq!(labels.len(), 2);
+        // sorted by name: bug, feat
+        assert_eq!(labels[0]["name"], "bug");
+        assert_eq!(labels[0]["color"], "#991b1b");
+        assert_eq!(labels[1]["name"], "feat");
+        // delete
+        let d = b.label_delete(&serde_json::json!({"name": "bug"})).unwrap();
+        assert_eq!(d["status"], "deleted");
+        let d2 = b.label_delete(&serde_json::json!({"name": "bug"})).unwrap();
+        assert_eq!(d2["status"], "unknown");
+        let r = b.label_list(&serde_json::json!({})).unwrap();
+        assert_eq!(r["labels"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn card_find_by_tag_with_project_scope() {
+        let dir = tmp_dir("card-find");
+        let b = make_board(&dir, 1_000_000);
+        let p1 = b
+            .project_resolve(&serde_json::json!({"name": "p1"}))
+            .unwrap();
+        let p1id = p1["project"]["id"].as_str().unwrap().to_string();
+        let p2 = b
+            .project_resolve(&serde_json::json!({"name": "p2"}))
+            .unwrap();
+        let p2id = p2["project"]["id"].as_str().unwrap().to_string();
+        let c1 = b
+            .column_create(&serde_json::json!({"projectId": p1id, "name": "C1"}))
+            .unwrap();
+        let c1id = c1["column"]["id"].as_str().unwrap().to_string();
+        let c2 = b
+            .column_create(&serde_json::json!({"projectId": p2id, "name": "C2"}))
+            .unwrap();
+        let c2id = c2["column"]["id"].as_str().unwrap().to_string();
+        b.card_create(&serde_json::json!({"columnId": c1id, "title": "A", "tags": ["bug"]}))
+            .unwrap();
+        b.card_create(&serde_json::json!({"columnId": c1id, "title": "B", "tags": ["feat"]}))
+            .unwrap();
+        b.card_create(&serde_json::json!({"columnId": c2id, "title": "C", "tags": ["bug"]}))
+            .unwrap();
+        // unscoped: both bug cards across projects
+        let all = b.card_find(&serde_json::json!({"tag": "bug"})).unwrap();
+        assert_eq!(all["cards"].as_array().unwrap().len(), 2);
+        // scoped to p1: one card, with projectId annotated
+        let scoped = b
+            .card_find(&serde_json::json!({"tag": "bug", "projectId": p1id}))
+            .unwrap();
+        let cards = scoped["cards"].as_array().unwrap();
+        assert_eq!(cards.len(), 1);
+        assert_eq!(cards[0]["title"], "A");
+        assert_eq!(cards[0]["projectId"], p1id);
+        // no matches
+        let none = b.card_find(&serde_json::json!({"tag": "nope"})).unwrap();
+        assert_eq!(none["cards"].as_array().unwrap().len(), 0);
+    }
+
+    #[test]
+    fn column_update_renames() {
+        let dir = tmp_dir("col-update");
+        let b = make_board(&dir, 1_000_000);
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
+        let pid = pr["project"]["id"].as_str().unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "Old"}))
+            .unwrap();
+        let cid = col["column"]["id"].as_str().unwrap();
+        b.column_update(&serde_json::json!({"id": cid, "name": "New"}))
+            .unwrap();
+        let state = b.store.load();
+        assert_eq!(state.columns.get(cid).unwrap().name, "New");
+    }
+
+    #[test]
+    fn card_due_roundtrip() {
+        let dir = tmp_dir("card-due");
+        let b = make_board(&dir, 1_000_000);
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
+        let pid = pr["project"]["id"].as_str().unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
+        let cid = col["column"]["id"].as_str().unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T", "due": "2026-07-01"}))
+            .unwrap();
+        let kid = card["card"]["id"].as_str().unwrap();
+        assert_eq!(card["card"]["due"], "2026-07-01");
+        b.card_update(&serde_json::json!({"id": kid, "due": null}))
+            .unwrap();
+        let state = b.store.load();
+        assert!(state.cards.get(kid).unwrap().due.is_none());
+    }
+
+    #[test]
+    fn checklist_full_lifecycle() {
+        let dir = tmp_dir("checklist");
+        let b = make_board(&dir, 1_000_000);
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
+        let pid = pr["project"]["id"].as_str().unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
+        let cid = col["column"]["id"].as_str().unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T"}))
+            .unwrap();
+        let kid = card["card"]["id"].as_str().unwrap().to_string();
+        // add checklist
+        let cl = b
+            .checklist_add(&serde_json::json!({"cardId": kid, "title": "Steps"}))
+            .unwrap();
+        let clid = cl["checklist"]["id"].as_str().unwrap().to_string();
+        assert_eq!(cl["checklist"]["title"], "Steps");
+        // add two items
+        let it1 = b
+            .checkitem_add(
+                &serde_json::json!({"cardId": kid, "checklistId": clid, "text": "first"}),
+            )
+            .unwrap();
+        let it1id = it1["item"]["id"].as_str().unwrap().to_string();
+        b.checkitem_add(&serde_json::json!({"cardId": kid, "checklistId": clid, "text": "second"}))
+            .unwrap();
+        // toggle first done
+        let upd = b.checkitem_set(&serde_json::json!({"cardId": kid, "checklistId": clid, "itemId": it1id, "done": true})).unwrap();
+        assert_eq!(upd["item"]["done"], true);
+        // verify state
+        let state = b.store.load();
+        let card = state.cards.get(&kid).unwrap();
+        assert_eq!(card.checklists.len(), 1);
+        assert_eq!(card.checklists[0].items.len(), 2);
+        assert!(card.checklists[0].items[0].done);
+        assert!(!card.checklists[0].items[1].done);
+        // remove item
+        let r = b
+            .checkitem_remove(
+                &serde_json::json!({"cardId": kid, "checklistId": clid, "itemId": it1id}),
+            )
+            .unwrap();
+        assert_eq!(r["status"], "deleted");
+        // remove checklist
+        let r = b
+            .checklist_remove(&serde_json::json!({"cardId": kid, "checklistId": clid}))
+            .unwrap();
+        assert_eq!(r["status"], "deleted");
+        let state = b.store.load();
+        assert!(state.cards.get(&kid).unwrap().checklists.is_empty());
+    }
+
+    #[test]
+    fn checkitem_add_unknown_checklist_errors() {
+        let dir = tmp_dir("checklist-err");
+        let b = make_board(&dir, 1_000_000);
+        let pr = b
+            .project_resolve(&serde_json::json!({"name": "p"}))
+            .unwrap();
+        let pid = pr["project"]["id"].as_str().unwrap();
+        let col = b
+            .column_create(&serde_json::json!({"projectId": pid, "name": "C"}))
+            .unwrap();
+        let cid = col["column"]["id"].as_str().unwrap();
+        let card = b
+            .card_create(&serde_json::json!({"columnId": cid, "title": "T"}))
+            .unwrap();
+        let kid = card["card"]["id"].as_str().unwrap();
+        let r = b
+            .checkitem_add(&serde_json::json!({"cardId": kid, "checklistId": "NOPE", "text": "x"}));
+        assert!(r.is_err());
+    }
+
+    #[test]
     fn column_delete_unknown_returns_unknown() {
         let dir = tmp_dir("col-unknown");
         let b = make_board(&dir, 1_000_000);
-        let r = b.column_delete(&serde_json::json!({"id": "NONEXISTENT"})).unwrap();
+        let r = b
+            .column_delete(&serde_json::json!({"id": "NONEXISTENT"}))
+            .unwrap();
         assert_eq!(r["status"], "unknown");
     }
 
@@ -682,7 +1514,9 @@ mod tests {
     fn card_delete_unknown_returns_unknown() {
         let dir = tmp_dir("card-unknown");
         let b = make_board(&dir, 1_000_000);
-        let r = b.card_delete(&serde_json::json!({"id": "NONEXISTENT"})).unwrap();
+        let r = b
+            .card_delete(&serde_json::json!({"id": "NONEXISTENT"}))
+            .unwrap();
         assert_eq!(r["status"], "unknown");
     }
 }

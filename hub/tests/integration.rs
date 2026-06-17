@@ -35,7 +35,10 @@ fn mcp_initialize_and_register_roundtrip() {
         serde_json::from_str(line.trim()).unwrap()
     };
 
-    send(&mut stdin, r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#);
+    send(
+        &mut stdin,
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize"}"#,
+    );
     let init = recv(&mut stdout);
     assert_eq!(init["result"]["serverInfo"]["name"], "hub");
 

@@ -103,7 +103,7 @@ pub struct Event {
 
 /// The full coordination state. Top-level keys are always present even when
 /// empty (parity with the mesh.mjs JSON shape).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct State {
     #[serde(default)]
     pub roster: BTreeMap<String, RosterEntry>,
@@ -119,20 +119,6 @@ pub struct State {
     pub events: Vec<Event>,
     #[serde(default)]
     pub fence_floor: BTreeMap<String, i64>,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        State {
-            roster: BTreeMap::new(),
-            claims: BTreeMap::new(),
-            messages: BTreeMap::new(),
-            log: Vec::new(),
-            cursors: BTreeMap::new(),
-            events: Vec::new(),
-            fence_floor: BTreeMap::new(),
-        }
-    }
 }
 
 /// The on-disk store: data dir plus derived paths.

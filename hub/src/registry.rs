@@ -72,7 +72,11 @@ impl Registry {
     /// Sends a change notification. Returns `true` if a new entry was added,
     /// `false` if an existing entry was replaced.
     pub fn register(&self, name: String, description: String, input_schema: Value) -> bool {
-        let entry = ToolEntry { name: name.clone(), description, input_schema };
+        let entry = ToolEntry {
+            name: name.clone(),
+            description,
+            input_schema,
+        };
         let is_new = {
             let mut entries = self.entries.lock().unwrap();
             if let Some(pos) = entries.iter().position(|e| e.name == name) {
@@ -105,7 +109,7 @@ impl Registry {
         removed
     }
 
-    /// Pre-load the built-in hub verbs (8 mesh + 11 board + 2 registry + 3 mine tools).
+    /// Pre-load the built-in hub verbs (8 mesh + 21 board + 2 registry + 3 mine tools).
     fn preload_verbs(&self) {
         let verbs: &[(&str, &str, Value)] = &[
             // 8 mesh verbs
@@ -150,7 +154,7 @@ impl Registry {
                 "type":"object","required":["name"],
                 "properties":{"name":{"type":"string"}}
             })),
-            // 11 board verbs
+            // 21 board verbs
             ("project_resolve", "Get-or-create a board project by name (board-per-cwd).", json!({
                 "type":"object","required":["name"],
                 "properties":{"name":{"type":"string"}}
@@ -166,17 +170,35 @@ impl Registry {
                 "type":"object","required":["projectId","name"],
                 "properties":{"projectId":{"type":"string"},"name":{"type":"string"}}
             })),
+            ("column_update", "Rename a column.", json!({
+                "type":"object","required":["id"],
+                "properties":{"id":{"type":"string"},"name":{"type":"string"}}
+            })),
             ("column_delete", "Delete a column and cascade to its cards and comments.", json!({
                 "type":"object","required":["id"],
                 "properties":{"id":{"type":"string"}}
             })),
             ("card_create", "Create a card in a column.", json!({
                 "type":"object","required":["columnId","title"],
-                "properties":{"columnId":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"}}
+                "properties":{
+                    "columnId":{"type":"string"},
+                    "title":{"type":"string"},
+                    "body":{"type":"string"},
+                    "tags":{"type":"array","items":{"type":"string"},"description":"Free-form string labels"},
+                    "assignee":{"type":"string","description":"agent_id to notify on new comments"},
+                    "due":{"type":"string","description":"Due date (ISO-8601, e.g. 2026-07-01)"}
+                }
             })),
-            ("card_update", "Update a card's title and/or body.", json!({
+            ("card_update", "Update a card's title, body, tags, assignee, and/or due date.", json!({
                 "type":"object","required":["id"],
-                "properties":{"id":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"}}
+                "properties":{
+                    "id":{"type":"string"},
+                    "title":{"type":"string"},
+                    "body":{"type":"string"},
+                    "tags":{"type":"array","items":{"type":"string"},"description":"Replaces the full tag list"},
+                    "assignee":{"type":["string","null"],"description":"agent_id to notify on new comments; null clears it"},
+                    "due":{"type":["string","null"],"description":"Due date (ISO-8601); null clears it"}
+                }
             })),
             ("card_move", "Move a card to a column at a 0-based index (reorders the destination).", json!({
                 "type":"object","required":["id","toColumnId"],
@@ -193,6 +215,41 @@ impl Registry {
             ("comment_list", "List a card's comments oldest-first.", json!({
                 "type":"object","required":["cardId"],
                 "properties":{"cardId":{"type":"string"}}
+            })),
+            ("label_set", "Define or update a label's color (label name is referenced by card tags).", json!({
+                "type":"object","required":["name","color"],
+                "properties":{"name":{"type":"string"},"color":{"type":"string","description":"CSS color, e.g. #dc2626"}}
+            })),
+            ("label_delete", "Remove a label's color definition; cards keep the tag string.", json!({
+                "type":"object","required":["name"],
+                "properties":{"name":{"type":"string"}}
+            })),
+            ("label_list", "List all defined labels with their colors.", json!({
+                "type":"object","properties":{}
+            })),
+            ("card_find", "Find cards carrying a given tag/label, optionally scoped to one project.", json!({
+                "type":"object","required":["tag"],
+                "properties":{"tag":{"type":"string"},"projectId":{"type":"string"}}
+            })),
+            ("checklist_add", "Add a named checklist (todo group) to a card.", json!({
+                "type":"object","required":["cardId"],
+                "properties":{"cardId":{"type":"string"},"title":{"type":"string"}}
+            })),
+            ("checklist_remove", "Remove a checklist from a card.", json!({
+                "type":"object","required":["cardId","checklistId"],
+                "properties":{"cardId":{"type":"string"},"checklistId":{"type":"string"}}
+            })),
+            ("checkitem_add", "Add a todo item to a checklist.", json!({
+                "type":"object","required":["cardId","checklistId","text"],
+                "properties":{"cardId":{"type":"string"},"checklistId":{"type":"string"},"text":{"type":"string"}}
+            })),
+            ("checkitem_set", "Toggle a todo item's done state and/or edit its text.", json!({
+                "type":"object","required":["cardId","checklistId","itemId"],
+                "properties":{"cardId":{"type":"string"},"checklistId":{"type":"string"},"itemId":{"type":"string"},"done":{"type":"boolean"},"text":{"type":"string"}}
+            })),
+            ("checkitem_remove", "Remove a todo item from a checklist.", json!({
+                "type":"object","required":["cardId","checklistId","itemId"],
+                "properties":{"cardId":{"type":"string"},"checklistId":{"type":"string"},"itemId":{"type":"string"}}
             })),
             // 3 mine verbs
             ("hub_mine_list", "List the mine catalog (unregistered agents and skills) with install status.", json!({
@@ -228,9 +285,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn preloads_twenty_four_tools() {
+    fn preloads_all_builtin_tools() {
         let reg = Registry::new();
-        assert_eq!(reg.list().len(), 24); // 8 mesh + 11 board + 2 registry + 3 mine tools
+        assert_eq!(reg.list().len(), 34); // 8 mesh + 21 board + 2 registry + 3 mine tools
     }
 
     #[test]
@@ -248,10 +305,10 @@ mod tests {
         let reg = Registry::new();
         let was_new = reg.register("my_tool".into(), "desc".into(), json!({"type":"object"}));
         assert!(was_new);
-        assert_eq!(reg.list().len(), 25);
+        assert_eq!(reg.list().len(), 35);
         let removed = reg.unregister("my_tool");
         assert!(removed);
-        assert_eq!(reg.list().len(), 24);
+        assert_eq!(reg.list().len(), 34);
     }
 
     #[test]
@@ -259,7 +316,7 @@ mod tests {
         let reg = Registry::new();
         let removed = reg.unregister("register");
         assert!(!removed);
-        assert_eq!(reg.list().len(), 24);
+        assert_eq!(reg.list().len(), 34);
     }
 
     #[test]
@@ -268,7 +325,7 @@ mod tests {
         reg.register("dupe".into(), "v1".into(), json!({}));
         let was_new = reg.register("dupe".into(), "v2".into(), json!({}));
         assert!(!was_new); // replacement, not new
-        assert_eq!(reg.list().len(), 25); // count unchanged
+        assert_eq!(reg.list().len(), 35); // count unchanged
     }
 
     #[test]

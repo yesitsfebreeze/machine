@@ -60,6 +60,16 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   it soon (an open task/PR/branch, an in-flight loop, an explicit owner). When
   unsure whether someone's on it, check; if no one is, fix it or file it loudly,
   don't step over it.
+- **Track work on the board.** The hub board (live UI at http://localhost:7777,
+  `mcp__plugin_machine_hub__*` board verbs) is the driver's living work surface —
+  not optional, not after-the-fact. As the **driver**, keep a card on the current
+  cwd's board for every major task, idea, or step: create it the moment work
+  starts (resolve the project, pick the column), move it across columns as its
+  status changes, comment progress as you go, and set `assignee` to whoever owns
+  it (a comment then notifies that agent via mesh). One card per task/idea/major
+  step — the working unit, not every sub-action. Dispatched sub-agents do NOT
+  write the board (see the role rule); they post progress to `mesh` and the driver
+  projects each onto its card. Column model and verb mechanics: the `board` skill.
 - **File machine defects, don't swallow them.** When a tool, daemon, hook, skill,
   or agent hangs, errors, or misbehaves (a defect in the machine itself, not the
   target code), file a `/report` into `/.machine/reports/` before working around it.
@@ -238,8 +248,11 @@ baseline.
    violation creeping in? Call it out.
 4. **Verify before "done."** Run the check, quote the output. No success claim
    without evidence (the `verify` skill).
-5. **Review what you finished.** Non-trivial change → offer `/personas`.
-6. **Suggest the better method.** You know the toolbelt; the user may not. When a
+5. **Track it on the board.** Before starting a task/idea/major step, put a card on
+   the board; keep its column = status, comments = progress, assignee = owner as you
+   work. Project any sub-agent mesh posts onto their cards. (`board` skill, machine law.)
+6. **Review what you finished.** Non-trivial change → offer `/personas`.
+7. **Suggest the better method.** You know the toolbelt; the user may not. When a
    request is better served by an available tool — the Agent tool over serial work,
    context-mode over raw dumps, a hook over a manual habit, a skill over improvised
    process — say so *before* doing it the asked way, then use it. If the better tool

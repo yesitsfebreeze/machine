@@ -47,7 +47,8 @@ mod tests {
         let u = g.next();
         assert_eq!(u.len(), 26, "ULID must be 26 chars");
         assert!(
-            u.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()),
+            u.chars()
+                .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()),
             "ULID must be uppercase Crockford base32: {u}"
         );
     }
