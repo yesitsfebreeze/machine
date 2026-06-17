@@ -65,10 +65,13 @@ when the machine plugin is installed elsewhere.
 5. **Verify.** Run `/gate` (or the narrowest check that exercises the fix) and quote the
    passing output. No "done" without evidence. If the defect was in a hook/daemon/skill,
    exercise that path directly.
-6. **Delete.** Remove the resolved report file from `/.machine/reports/`. Deleting is the
+6. **Close the issue.** If the report has an **issue:** field with a URL, close it:
+   `gh issue close <url> --repo yesitsfebreeze/machine -c "Fixed: <one-line root cause>."`
+   Skip silently if the field is `none`/absent or `gh` is unavailable.
+7. **Delete.** Remove the resolved report file from `/.machine/reports/`. Deleting is the
    close signal for this skill (unlike the generic consume pass, which flips
    `status: fixed`).
-7. **Report back.** One-line summary: which report, the root cause, the fix, gate result,
+8. **Report back.** One-line summary: which report, the root cause, the fix, gate result,
    and how many reports remain in the backlog.
 
 ## After the fix
