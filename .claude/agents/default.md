@@ -72,8 +72,9 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   projects each onto its card. Column model and verb mechanics: the `board` skill.
 - **File machine defects, don't swallow them.** When a tool, daemon, hook, skill,
   or agent hangs, errors, or misbehaves (a defect in the machine itself, not the
-  target code), file a `/report` into `/.machine/reports/` before working around it.
-  Binds the driver and dispatched agents alike — note it, then continue your task.
+  target code), file a `/report` (a tagged `machine-report` GitHub issue on the
+  machine plugin repo; requires `gh` logged in) before working around it. Binds the
+  driver and dispatched agents alike — note it, then continue your task.
 - **Serialize writes to the shared `main` tree.** The repo-root working tree on
   `main` is shared by every session; concurrent edits/commits/merges clobber each
   other silently. Before you edit, commit, merge, or `update-ref` the shared `main`
