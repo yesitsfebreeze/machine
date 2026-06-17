@@ -1,11 +1,13 @@
 ---
 name: manager-git
 description: |
-  Git workflow specialist. Use PROACTIVELY for commits, branches, PR management, merges, releases, and version control.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of git strategies, branch management, and version control workflows.
-  EN: git, commit, push, pull, branch, PR, pull request, merge, release, version control, checkout, rebase, stash
-  NOT for: code implementation, testing, architecture design, documentation content, security audits
+  Git workflow specialist for commits, branches, PR management, merges, releases, and version control.
+  Consider invoking when version-control work gets intricate — conflicted merges, history rewrites,
+  release orchestration, or branch strategy where a misstep is hard to recover.
+  Signals: git, commit, push, pull, branch, PR, pull request, merge, release, version control, checkout, rebase, stash.
+  For a routine commit or single-branch push the generalist should just run it inline.
+  Not for: code implementation, testing, architecture design, documentation content, security audits.
+  --deepthink: engage extended reasoning for branch strategy and version-control workflows.
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Skill, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project

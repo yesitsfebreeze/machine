@@ -80,7 +80,7 @@ answer — the board comments and kern hold the durable copy.
 
 ## Boundaries
 
-- Decisions only. Planning, psaido, implementation, and dispatch belong to the drill
+- Decisions only. Planning, implementation, and dispatch belong to the drill
   and its agents — the questioneer hands them an answer and steps back.
 - Never invent an answer to unblock an agent faster. An unsharpened question goes
   back to the asker; only the operator decides.

@@ -1,5 +1,10 @@
 # PSAIDO Language Specification
 
+> **SHELVED — not part of the active flow.** PSAIDO was an experiment in writing plans
+> as a pseudo-code language for LLMs to translate. The drill flow now uses a plain
+> Markdown brief the miner reads directly, dropping the psaido translation hop. This
+> spec is kept for reference only; nothing in the active machine reads or writes psaido.
+
 ## Overview
 
 PSAIDO is a language **for LLMs to write PSAIDO in**. It is not parsed or compiled — it is *read* by a model that translates it into real code. So it stays as small and flexible as possible: it describes a rough scaffold of *what* should happen and how the pieces connect, never *how* a given language implements it.

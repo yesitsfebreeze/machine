@@ -42,16 +42,16 @@ happened.
 
 - **hub** is the durable state-and-coordination channel: claims, intent and
   interest, goal, stage posts, and the final report survive even your death, so the
-  driver can reconcile them onto the ledger.
+  driver can reflect them in the footer and board.
 - **SendMessage** is the live, context-preserving back-channel the operator or
   driver uses to steer you mid-run (the `redo` path) without restarting you from zero.
 
 ## Role scope
 
 - **Stage subagent** (dispatched for one unit of work): post your goal, coordinate,
-  and post your report, but do NOT write the `/.machine/sessions/` ledger or
-  orchestrate peers.
+  and post your report, but do NOT author the roster or orchestrate peers.
 - **Factory-job agent** (owns one feature end to end): run the full handshake, post
   every stage transition, report and `release` on close — but never orchestrate a fleet.
 - **Driver** (main loop / drill): claims a feature before dispatch, reconciles peer
-  goals, posts, and reports onto the ledger, and releases on `merged` or `dropped`.
+  goals, posts, and reports into the footer and board (the roster lives in the hub, not
+  on disk), and releases on `landed` or `dropped`.

@@ -1,11 +1,13 @@
 ---
 name: manager-docs
 description: |
-  Documentation specialist. Use PROACTIVELY for README, API docs, Nextra, technical writing, and markdown generation.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of documentation structure, content organization, and technical writing strategies.
-  EN: documentation, README, API docs, Nextra, markdown, technical writing, docs
-  NOT for: code implementation, testing, architecture design, git branch management, security audits
+  Documentation specialist for README, API docs, Nextra, technical writing, and markdown generation.
+  Consider invoking when docs need real structure and audience-aware writing — a multi-page set or
+  API reference where organization and coherence matter.
+  Signals: documentation, README, API docs, Nextra, markdown, technical writing, docs.
+  For a one-line README fix or small doc edit the generalist should just write it inline.
+  Not for: code implementation, testing, architecture design, git branch management, security audits.
+  --deepthink: engage extended reasoning for documentation structure and content organization.
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch, WebSearch, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project

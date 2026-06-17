@@ -66,9 +66,9 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
   cwd's board for every major task, idea, or step: create it the moment work
   starts (resolve the project, pick the column), move it across columns as its
   status changes, comment progress as you go, and set `assignee` to whoever owns
-  it (a comment then notifies that agent via mesh). One card per task/idea/major
+  it (a comment then notifies that agent via the hub). One card per task/idea/major
   step — the working unit, not every sub-action. Dispatched sub-agents do NOT
-  write the board (see the role rule); they post progress to `mesh` and the driver
+  write the board (see the role rule); they post progress to the hub and the driver
   projects each onto its card. Column model and verb mechanics: the `board` skill.
 - **File machine defects, don't swallow them.** When a tool, daemon, hook, skill,
   or agent hangs, errors, or misbehaves (a defect in the machine itself, not the
@@ -77,7 +77,7 @@ When these conflict with a convenient shortcut, the intent wins — and you say 
 - **Serialize writes to the shared `main` tree.** The repo-root working tree on
   `main` is shared by every session; concurrent edits/commits/merges clobber each
   other silently. Before you edit, commit, merge, or `update-ref` the shared `main`
-  tree you MUST hold the `mesh` claim on `branch:main`, and release it the moment you
+  tree you MUST hold the `hub` claim on `branch:main`, and release it the moment you
   land. Work in your own `gitfs/<sid>` worktree needs no lock. Protocol:
   @.claude/shared/main-lock.md.
 - **Project law lives in `/.machine/agent.md`** — domain-specific hard rules (e.g.
@@ -120,9 +120,9 @@ The active set is deliberately small:
 - **Review panel:** `/personas` (above) — adversarial review of finished work.
 - **Drive & set up:** `drill` (the single entry point — a drill-first driver that
   also runs session bring-up: on a cold repo it bootstraps daemons + dependencies and
-  oils the project layer before driving; spawns background subagents, persists one
-  state file per agent in `/.machine/sessions/`, validates via gate + personas, footers
-  the ones needing your approval); `oil` (specialize the project layer in `/.machine`).
+  oils the project layer before driving; spawns background subagents, tracks the live
+  roster in the hub (claims + board), validates via gate + personas, footers the ones
+  needing your approval); `oil` (specialize the project layer in `/.machine`).
   The former `ignite` and `assemble` skills are now reference files under `drill`.
 - If a skill *might* apply, invoke it rather than improvising the process.
 
@@ -201,17 +201,17 @@ were dispatched to do:
   module, review a file, run a single stage). Do ONLY that unit and report back.
   Every proactive habit below is suspended: you MUST NOT enter drill mode,
   MUST NOT run any autonomous/self-directed loop, MUST NOT spawn
-  unrequested subagents, MUST NOT write `/.machine/sessions/` or the board, and
+  unrequested subagents, MUST NOT write the board, and
   MUST NOT expand scope beyond your spawn prompt. Worthwhile work you notice goes in
   your final report for the driver to act on — you do not act on it yourself.
 - **Factory-job dispatch** — spawned to OWN one feature end to end and communicable
   while you run (the subagent of `target.md`). Here you DO drive the full eight-stage
   job lifecycle below on your own `git-fs` branch, pulling in stage-specialists for
-  depth and coordinating through `mesh`. You still MUST NOT run drill
+  depth and coordinating through the hub. You still MUST NOT run drill
   orchestration, MUST NOT spawn further factory-job agents, and MUST NOT expand beyond your one
-  feature. You own one lifecycle, not a fleet. You also MUST NOT write your own ledger
-  entry under `/.machine/sessions/` — you `post` your stage to `mesh` and the driver
-  projects it onto the ledger (board trust; see "The job lifecycle").
+  feature. You own one lifecycle, not a fleet. The live roster lives in the hub, not on
+  disk — you `post` your goal, stage transitions, and report to the hub and the driver
+  reflects them in the footer and board; you never write a roster file yourself.
 
 Owning one feature's lifecycle is NOT orchestrating: the `drill` skill's
 "Dispatched agents never orchestrate" rule still binds both cases — neither a stage
@@ -250,7 +250,7 @@ baseline.
    without evidence (the `verify` skill).
 5. **Track it on the board.** Before starting a task/idea/major step, put a card on
    the board; keep its column = status, comments = progress, assignee = owner as you
-   work. Project any sub-agent mesh posts onto their cards. (`board` skill, machine law.)
+   work. Project any sub-agent hub posts onto their cards. (`board` skill, machine law.)
 6. **Review what you finished.** Non-trivial change → offer `/personas`.
 7. **Suggest the better method.** You know the toolbelt; the user may not. When a
    request is better served by an available tool — the Agent tool over serial work,
@@ -279,7 +279,7 @@ otherwise guess at. Run these stages in order; do not skip a gate:
 
 **Running jobs in parallel — never build the same thing twice.** When more than
 one job is in flight, each runs in its own `gitfs/<sid>` branch and
-coordinates through `mesh` before touching anything:
+coordinates through the hub before touching anything:
 
 - **Handshake first.** Before stage 1, `mcp__hub__register` (announce id + branch)
   and `mcp__hub__post` your **goal** (one line: what you will build, done-condition),
@@ -287,14 +287,14 @@ coordinates through `mesh` before touching anything:
   `mcp__hub__claim` the feature, and `mcp__hub__post` an intent broadcast. If the
   claim is already held by a live peer, do NOT begin stage 1: `mcp__hub__post` a
   deferred-interest note (so the holder and the driver see a second agent wanted it)
-  and stand down, leaving no active ledger entry. No automatic takeover — the driver or
+  and stand down, leaving no active claim. No automatic takeover — the driver or
   operator re-dispatches if the holder releases or dies (D3).
-- **Stay visible.** Post progress to `mesh` as you cross each stage, and
+- **Stay visible.** Post progress to the hub as you cross each stage, and
   `mcp__hub__inbox` + `mcp__hub__read` to hear peers and the driver — so they (and
-  the driver, who projects it onto the ledger) see where the feature stands. On close,
+  the driver, who reflects it in the footer and board) see where the feature stands. On close,
   `mcp__hub__post` a final **report** (goal, outcome, follow-ups) and
   `mcp__hub__release` the claim. Full verb reference: @.claude/shared/hub.md.
-- **Two channels (D5).** `mesh` is the durable state-and-coordination channel: your
+- **Two channels (D5).** the hub is the durable state-and-coordination channel: your
   stage posts, intent/interest, and claims, surviving even your death. `SendMessage`
   is the live, context-preserving channel the operator or driver uses to steer you
   mid-run (the `redo` path) without restarting you from zero.
@@ -326,13 +326,24 @@ Enter **Brainstorm Mode** when the message:
 
 Do not dispatch without that confirmation.
 
-**Dispatch** — on confirmation, pick the right agent:
+**Dispatch** — on confirmation, decide *whether* to route, then *where*.
+
+**The complexity bar — inline is the default.** You are the generalist; doing the
+work yourself is the baseline, not the fallback. Route to a dedicated agent only when
+the job clears a real complexity bar: multi-file change, a methodology that genuinely
+pays off (full TDD/DDD cycle), or depth you would otherwise guess at. Below that bar —
+a one-liner, a localized edit, a single-file fix, a quick refactor — just do it inline.
+A keyword in the request is a *hint*, never a mandate: never route on word-match alone
+when the work is something you'd finish faster by hand. When inline and dispatch are
+both defensible, prefer inline.
+
+Above the bar, pick the agent:
 
 | Signal | Agent |
 |--------|-------|
-| New feature, greenfield | `manager-tdd` |
-| Bug fix or legacy code (characterization needed) | `manager-ddd` |
-| Anything else | `default` (the generalist drives it) |
+| New feature, greenfield, methodology earns its keep | `manager-tdd` |
+| Bug fix or legacy code needing characterization | `manager-ddd` |
+| Anything else | `default` (the generalist drives it inline) |
 
 Specialist agents (`expert-debug`, `manager-spec`, `manager-strategy`,
 `expert-backend`, `expert-frontend`, `expert-performance`, `expert-security`,

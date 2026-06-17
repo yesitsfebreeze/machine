@@ -1,11 +1,13 @@
 ---
 name: expert-frontend
 description: |
-  Frontend development and UI/UX design specialist. Use PROACTIVELY for React, Vue, Next.js, component design, state management, accessibility, WCAG compliance, and design systems.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of component architecture, state management patterns, and UI/UX design decisions.
-  EN: frontend, UI, component, React, Vue, Next.js, CSS, responsive, state management, UI/UX, design, accessibility, WCAG, user experience, design system, wireframe
-  NOT for: backend API design, database modeling, DevOps, mobile apps (React Native/Flutter), desktop apps (Electron), CLI tools, data pipelines
+  Frontend development and UI/UX design specialist for React, Vue, Next.js, component design, state management, accessibility, WCAG compliance, and design systems.
+  Consider invoking when UI work spans component architecture, state, or accessibility across a
+  feature — design depth where a wrong structure or a11y gap is costly to retrofit.
+  Signals: frontend, UI, component, React, Vue, Next.js, CSS, responsive, state management, UI/UX, design, accessibility, WCAG, user experience, design system, wireframe.
+  For a single CSS tweak or one-component edit the generalist should just do it inline.
+  Not for: backend API design, database modeling, DevOps, mobile apps (React Native/Flutter), desktop apps (Electron), CLI tools, data pipelines.
+  --deepthink: engage extended reasoning for component architecture and UI/UX design decisions.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__claude-in-chrome__*, mcp__pencil__batch_design, mcp__pencil__batch_get, mcp__pencil__get_editor_state, mcp__pencil__get_guidelines, mcp__pencil__get_screenshot, mcp__pencil__get_style_guide, mcp__pencil__get_style_guide_tags, mcp__pencil__get_variables, mcp__pencil__set_variables, mcp__pencil__open_document, mcp__pencil__snapshot_layout, mcp__pencil__find_empty_space_on_canvas, mcp__pencil__search_all_unique_properties, mcp__pencil__replace_all_matching_properties, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project

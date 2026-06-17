@@ -1,11 +1,13 @@
 ---
 name: manager-project
 description: |
-  Project setup specialist. Use PROACTIVELY for initialization, .machine configuration, scaffolding, and new project creation.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of project structure, configuration strategies, and scaffolding approaches.
-  EN: project setup, initialization, .machine, project configuration, scaffold, new project
-  NOT for: code implementation, testing, deployment, git operations, security audits
+  Project setup specialist for initialization, .machine configuration, scaffolding, and new project creation.
+  Consider invoking when standing up or restructuring a project involves coordinated scaffolding and
+  configuration — structural decisions that shape everything built afterward.
+  Signals: project setup, initialization, .machine, project configuration, scaffold, new project.
+  For adding a single config file or folder the generalist should just create it inline.
+  Not for: code implementation, testing, deployment, git operations, security audits.
+  --deepthink: engage extended reasoning for project structure and scaffolding strategy.
 tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project

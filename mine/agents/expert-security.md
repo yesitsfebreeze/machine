@@ -1,11 +1,13 @@
 ---
 name: expert-security
 description: |
-  Security analysis specialist. Use PROACTIVELY for OWASP, vulnerability assessment, XSS, CSRF, and secure code review.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of security threats, vulnerability patterns, and OWASP compliance.
-  EN: security, vulnerability, OWASP, injection, XSS, CSRF, penetration, audit, threat
-  NOT for: general backend development, frontend UI, performance optimization, database design, DevOps deployment
+  Security analysis specialist for OWASP, vulnerability assessment, XSS, CSRF, and secure code review.
+  Consider invoking when code handles untrusted input, auth, or sensitive data and warrants a
+  threat-model-driven audit — depth where a missed vector has real consequences.
+  Signals: security, vulnerability, OWASP, injection, XSS, CSRF, penetration, audit, threat.
+  For an isolated, low-risk check the generalist should just review it inline.
+  Not for: general backend development, frontend UI, performance optimization, database design, DevOps deployment.
+  --deepthink: engage extended reasoning for threat modeling and vulnerability patterns.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: sonnet
 effort: high

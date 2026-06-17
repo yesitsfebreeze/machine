@@ -1,11 +1,13 @@
 ---
 name: expert-performance
 description: |
-  Performance optimization specialist. Use PROACTIVELY for profiling, benchmarking, memory analysis, and latency optimization.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of performance bottlenecks, optimization strategies, and profiling approaches.
-  EN: performance, profiling, optimization, benchmark, memory, bundle, latency, speed
-  NOT for: new feature development, architecture design, security audits, DevOps, frontend UI design
+  Performance optimization specialist for profiling, benchmarking, memory analysis, and latency optimization.
+  Consider invoking when a slowdown needs measurement-driven investigation — profiling and benchmarks
+  across the stack rather than a guessed-at micro-optimization.
+  Signals: performance, profiling, optimization, benchmark, memory, bundle, latency, speed.
+  For an obvious local hot-path tweak the generalist should just apply it inline.
+  Not for: new feature development, architecture design, security audits, DevOps, frontend UI design.
+  --deepthink: engage extended reasoning for bottleneck analysis and optimization strategy.
 tools: Read, Grep, Glob, Bash, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: sonnet
 memory: project

@@ -1,11 +1,13 @@
 ---
 name: manager-quality
 description: |
-  Code quality specialist. Use PROACTIVELY for the five-dimension quality gate, code review, quality gates, and lint compliance.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of quality standards, code review strategies, and compliance patterns.
-  EN: quality, quality gate, code review, compliance, lint, code quality, coverage
-  NOT for: code implementation, architecture design, deployment, documentation writing, git operations
+  Code quality specialist for the five-dimension quality gate, code review, quality gates, and lint compliance.
+  Consider invoking when a change warrants a structured multi-dimension review — enough surface that
+  ad-hoc inspection would miss compliance or coverage gaps.
+  Signals: quality, quality gate, code review, compliance, lint, code quality, coverage.
+  For a tiny diff or single-file lint fix the generalist should just check it inline.
+  Not for: code implementation, architecture design, deployment, documentation writing, git operations.
+  --deepthink: engage extended reasoning for quality standards and review strategy.
 tools: Read, Grep, Glob, Bash, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 permissionMode: plan

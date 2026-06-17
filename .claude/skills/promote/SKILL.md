@@ -72,7 +72,7 @@ never write `.board/` state files directly.
 
 ## Boundaries
 
-- Promote ends at the board. Planning, dispatch, psaido, and implementation are the
+- Promote ends at the board. Planning, dispatch, and implementation are the
   drill's job, one ticket at a time.
 - Questions raised while promoting (scope still fuzzy on a finding) go back to the
   brainstorm/questioneer, not into a half-baked ticket.

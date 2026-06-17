@@ -1,11 +1,12 @@
 ---
 name: builder-agent
 description: |
-  Agent creation specialist. Use PROACTIVELY for creating subagents, agent blueprints, and custom agent definitions.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of agent design, capability boundaries, and integration patterns.
-  EN: create agent, new agent, agent blueprint, subagent, agent definition, custom agent
-  NOT for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation
+  Agent creation specialist — subagent definitions, blueprints, frontmatter, capability boundaries.
+  Consider invoking when authoring or substantially reworking an agent; for a trivial frontmatter
+  edit the generalist can do it inline. Signals: create agent, new agent, agent blueprint, subagent,
+  agent definition, custom agent.
+  Not for: skill creation (use builder-skill), plugin creation (use builder-plugin), code, testing, docs.
+  --deepthink: engage extended reasoning for agent design and integration patterns.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: user
@@ -26,7 +27,7 @@ skills:
 ## Frontmatter fields
 
 - `name` (required): lowercase-hyphen unique id
-- `description` (required): when to invoke; include "MUST INVOKE" + trigger keywords
+- `description` (required): judgment-based "consider invoking when…" + signal keywords as hints, never a mechanical "MUST INVOKE" mandate; state the inline-is-default boundary (what the generalist should just do by hand)
 - `tools`: CSV, least-privilege
 - `disallowedTools`: denylist (mutually exclusive with `tools`)
 - `model`: sonnet | opus | haiku | inherit
@@ -70,5 +71,5 @@ never collides or duplicates. Your `agent_id` is your spawn / branch id.
   SubagentStop hook expect.
 
 `SendMessage` is the driver's live back-channel. As a dispatched subagent, coordinate
-and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
+and report via the hub — do not author the roster or orchestrate
 peers. Full protocol: @.claude/shared/hub.md

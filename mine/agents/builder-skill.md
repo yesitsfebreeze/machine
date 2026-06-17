@@ -1,11 +1,13 @@
 ---
 name: builder-skill
 description: |
-  Skill creation specialist. Use PROACTIVELY for creating skills, YAML frontmatter design, and knowledge organization.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of skill design, knowledge organization, and YAML frontmatter structure.
-  EN: create skill, new skill, skill optimization, knowledge domain, YAML frontmatter
-  NOT for: agent creation (use builder-agent), plugin creation (use builder-plugin), code implementation, testing
+  Skill creation specialist for authoring skills, YAML frontmatter design, and knowledge organization.
+  Consider invoking when a skill needs real progressive-disclosure structure and trigger design —
+  a knowledge domain worth packaging rather than a one-paragraph note.
+  Signals: create skill, new skill, skill optimization, knowledge domain, YAML frontmatter.
+  For a tiny snippet or stub the generalist should just write it inline.
+  Not for: agent creation (use builder-agent), plugin creation (use builder-plugin), code implementation, testing.
+  --deepthink: engage extended reasoning for skill design and knowledge organization.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: user

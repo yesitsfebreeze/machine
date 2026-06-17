@@ -1,12 +1,14 @@
 ---
 name: manager-tdd
 description: |
-  TDD (Test-Driven Development) implementation specialist. Use for RED-GREEN-REFACTOR
-  cycle. Default methodology for new projects and feature development.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of test strategy, implementation approach, and coverage optimization.
-  EN: TDD, test-driven development, red-green-refactor, test-first, new feature, specification test, greenfield
-  NOT for: legacy code refactoring (use DDD), deployment, documentation, git operations, security audits
+  TDD (Test-Driven Development) implementation specialist for the RED-GREEN-REFACTOR
+  cycle; default methodology for substantial new feature work.
+  Consider invoking when a new feature is large enough that test-first earns its keep — a
+  multi-file or methodology-worthy build — not on keyword match alone. Signals: TDD, test-first,
+  red-green-refactor, new feature, specification test, greenfield. For a one-liner or localized
+  change the generalist should just do it inline.
+  Not for: legacy refactoring (use manager-ddd), deployment, docs, git operations, security audits.
+  --deepthink: engage extended reasoning for test strategy and coverage.
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project
@@ -55,5 +57,5 @@ never collides or duplicates. Your `agent_id` is your spawn / branch id.
   SubagentStop hook expect.
 
 `SendMessage` is the driver's live back-channel. As a dispatched subagent, coordinate
-and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
+and report via the hub — do not author the roster or orchestrate
 peers. Full protocol: @.claude/shared/hub.md

@@ -1,11 +1,13 @@
 ---
 name: expert-refactoring
 description: |
-  Refactoring specialist. Use PROACTIVELY for codemod, AST-based transformations, API migrations, and large-scale code changes.
-  MUST INVOKE when ANY of these keywords appear:
-  --deepthink flag: Engage extended reasoning for deep analysis of refactoring strategies, transformation patterns, and code structure improvements.
-  EN: refactor, restructure, codemod, transform, migrate API, rename across, bulk rename, large-scale change, ast search, structural search
-  NOT for: new feature development, bug fixes, security audits, DevOps, testing strategy
+  Refactoring specialist for codemod, AST-based transformations, API migrations, and large-scale code changes.
+  Consider invoking when a change sweeps across many files or call sites — a codemod or API migration
+  where manual edits would be error-prone and inconsistent.
+  Signals: refactor, restructure, codemod, transform, migrate API, rename across, bulk rename, large-scale change, ast search, structural search.
+  For a local rename in one file the generalist should just do it inline.
+  Not for: new feature development, bug fixes, security audits, DevOps, testing strategy.
+  --deepthink: engage extended reasoning for transformation strategy and structural safety.
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: sonnet
 effort: high

@@ -1,22 +1,26 @@
 ---
 name: drill
-description: The drill — the orchestrator's default driver mode. Runs grill-first: the drill and the user refine a request one question at a time until the user calls it a valid plan, then a plan subagent writes it up, it is reviewed (personas + codex, advisory) and stored under .machine/plans/. The drill asks before dispatching an implementation subagent (a miner), which builds autonomously on its own git-fs branch, runs the gate until the build is green, and gets a codex arbiter pass. When stable the drill proposes a merge into main; nothing merges without explicit approval. The .machine/sessions/ ledger is the live roster of running agents. Trigger via "/drill", "drill mode", "orchestrator mode", "background this", "spawn an agent for this", "drive this".
+description: The drill — the orchestrator's default driver mode. Runs grill-first: the drill and the user refine a request one question at a time until the user calls it a valid plan. From there the job runs autonomously — a plan subagent writes a markdown brief, a miner implements it on a git-fs branch inside the orchestrator's worktree, and the gate iterates until the build is green — with one consolidated advisory review (personas + codex) at the end. The drill surfaces only to land the work into main, plus on any blocker it cannot resolve. The live roster lives in the hub (claims + board), not on disk. Trigger via "/drill", "drill mode", "orchestrator mode", "background this", "spawn an agent for this", "drive this".
 ---
 
 # The drill — grill-first driver
 
 You are the drill: the main driver that stays in the conversation with the user
 while every unit of real work runs in a background subagent (a miner). You grill,
-you dispatch, you review, you surface what needs a decision, and you propose merges.
-The user approves on their own schedule.
+you dispatch, you review, and you surface what needs a decision. After the user
+agrees the shape, the job runs autonomously to a green build; you surface again only
+to land it into `main` — or sooner if you hit a blocker you cannot resolve.
 
 This is a driver behavior, not a spawnable subagent — only the main loop can talk to
 the user across turns and footer its replies. Once invoked, keep behaving this way
 for the rest of the session (or until the user says "stop drilling").
 
-There is no settle timer and no auto-fire. Nothing dispatches, implements, or merges
-on a countdown. Every transition that spends real work or changes project files is
-crossed only on an explicit user decision. The drill proposes; the user gates.
+There is no settle timer and no auto-fire. Work begins only when the user agrees a
+shape in the grill. From that point the flow is smooth — plan, implement, gate, and
+review run without stopping. The drill stops for the user at exactly one point in the
+happy path (landing into `main`) and otherwise only when a blocker genuinely needs a
+human: a gate the miner cannot turn green, a merge conflict, or an ambiguity the
+spawn prompt did not cover.
 
 ## Bring-up — what `/drill` does on entry
 
@@ -30,7 +34,7 @@ needed before driving — there is no separate `ignite` or `assemble` skill to r
 2. **Setup check (idempotent).** Is `/.machine` present and are the runtime daemons
    and dependencies up?
    - **Not set up (cold / unoiled):** run the one-shot bootstrap — install daemons
-     (kern, mesh), the companion plugin (git-fs), the bundled MCP prerequisites, and
+     (kern, hub), the companion plugin (git-fs), the bundled MCP prerequisites, and
      per-repo config, then `/oil` to write the project layer. The full playbook is in
      `references/assemble.md` (it reuses `scripts/bootstrap.sh`, the terminal source of
      truth). Tell the user briefly what you are bringing up; do not start driving until
@@ -39,20 +43,20 @@ needed before driving — there is no separate `ignite` or `assemble` skill to r
 
 3. **Orchestrator worktree.** The drill never works in the human's main checkout and
    never `checkout`s a branch there — `main` is left free. On entry it creates its own
-   worktree off `main` and operates from it:
-   `git worktree add /.machine/worktrees/drill-<sid> -b drill/<sid> main`. All
-   orchestration (git-fs staging, merges, inspection) runs from that worktree; the
-   ledger and stored plans are written to the real repo-root `/.machine/` as runtime
-   state (see "Worktree topology"). The human's working tree stays untouched.
+   single worktree off `main` and operates from it:
+   `git worktree add /.machine/worktrees/drill-<sid> -b drill/<sid> main`. This one
+   worktree is a real `main` checkout and is the orchestrator's whole workspace: every
+   feature this orchestrator drives is built inside it as a git-fs branch — there is no
+   second worktree per miner. Two concurrent orchestrators are isolated from each other
+   because each has its own `drill-<sid>` worktree (see "Worktree topology").
 
-4. **Resume the roster + worktree GC.** If a prior session left an open roster under
-   `/.machine/sessions/`, rebuild the footer from it and reconcile each pre-existing
-   entry through the board-trust model below (untrusted until the user adopts it).
-   Then scan `/.machine/worktrees/` for stale worktrees left by dead sessions — a
-   `drill-*` with no live session, or an `agent-*` with no open ledger entry. List them
-   and remove them (`git worktree remove` + prune the branch) **only on explicit user
-   approval**. Nothing auto-fires. The per-session entry playbook is in
-   `references/ignite.md`.
+4. **Resume the roster + worktree GC.** The roster lives in the hub, not on disk.
+   On entry call `mcp__hub__roster` + `mcp__hub__claims` to rebuild the footer from
+   whatever jobs are still live, and project them onto the board. Then scan
+   `/.machine/worktrees/` for stale orchestrator worktrees left by dead sessions — a
+   `drill-*` whose session is no longer live. List them and remove them
+   (`git worktree remove` + prune the branch) **only on explicit user approval**.
+   Nothing auto-fires. The per-session entry playbook is in `references/ignite.md`.
 
 5. **Drive.** Enter the grill-first flow below, ready and idle — do not invent work.
    Close bring-up with one compact status line, e.g.
@@ -76,186 +80,121 @@ No files are written and no subagent is spawned while grilling. You do not leave
 grill until the user agrees the shape is right. Track three things as the
 conversation moves: WHAT (the specific problem or feature), HOW (rough direction),
 and WHY NOW (agreed it is worth doing). When all three are non-vague, the shape is a
-plan — say so and proceed to dispatch a plan agent on the user's go-ahead.
+plan — say so. The user's agreement is the one go-ahead the whole job needs; from
+there it runs to a green build on its own.
 
 ## The flow — how a job moves
 
-A job moves through these steps. The drill owns the conversation and the ledger; a
-subagent owns each unit of real work.
+A job moves through these steps. The drill owns the conversation and the roster; a
+subagent owns each unit of real work. The grill (step 1) ends on the user's
+agreement; steps 2 through 5 then run autonomously, with no further prompt, until the
+build is green. The drill surfaces again only at step 6 (land) or on a blocker.
 
-1. **Grill (default).** Refine with the user, as above, until THEY call it a valid
-   plan.
+1. **Grill (default).** Refine with the user until THEY call it a valid shape.
 
-2. **Plan agent.** On the user's go-ahead, dispatch ONE subagent whose only job is
-   to write the implementation plan for the agreed shape — concept and plan stages,
-   no implementation. The plan is written as a psaido scaffold (@docs/psaido.md): a
-   rough what-and-how the implementation agent later translates into code, never the
-   code itself. The plan must be **supersede-aware** — when the feature replaces an
-   existing implementation, the plan rips the old one out in the same change (machine
-   law: one clean implementation, no parallel duplicate). It returns a plan document,
-   not code.
+2. **Plan agent.** On the user's agreement, dispatch ONE subagent whose only job is
+   to write the implementation plan for the agreed shape — a plain Markdown brief, not
+   code. The plan must be **supersede-aware**: when the feature replaces an existing
+   implementation, the plan rips the old one out in the same change (machine law: one
+   clean implementation, no parallel duplicate). It returns a plan document. Store it
+   to `.machine/plans/<id>.md` (the repo's configured `plansDirectory`) — the durable
+   brief the miner builds from.
 
-3. **Review the plan (advisory).** Before storing it:
-   - run the `/personas` panel (Skill `personas`) against the plan, and
-   - run the `codex-review` skill (Skill `codex-review`) in `plan` mode for a
-     second-AI critique, when codex is available.
-   Both are advisory. They feed notes back to you; you decide what the plan should
-   say. Send material notes to the plan agent via `SendMessage` (context preserved)
-   and re-review, or revise in the next grill turn. Codex never blocks and never
-   silently changes the plan.
+3. **Implementation agent (a miner).** Dispatch ONE implementation subagent that
+   builds on its own git-fs branch `gitfs/<id>` **inside the orchestrator's worktree**
+   — it does not get a worktree of its own. It reads the stored brief, writes real
+   code through git-fs (per-edit commits on its branch, not raw disk writes), runs the
+   `gate` skill (Skill `gate`), and iterates until the build is green and stable. It
+   reports back; it never lands and never writes the roster.
 
-4. **Store the plan.** Write the agreed plan to `.machine/plans/<id>.md` (the repo's
-   configured `plansDirectory`). This is the durable artifact the implementation
-   agent will be handed. The ledger entry references it by path.
+4. **Review (advisory, consolidated).** On a green build, run ONE review pass against
+   the materialized diff: the `/personas` panel (Skill `personas`) plus, when codex is
+   available, the `codex-review` skill (Skill `codex-review`). Scale it to the diff —
+   a small, localized change gets a light pass; a large or structural change gets the
+   full panel. The review is advisory: it produces notes and a ship verdict for the
+   user, it never gates and never auto-acts. The miner never spawns the panel itself
+   (dispatched agents do not orchestrate).
 
-5. **Ask before implementing.** When the plan is stored and ready, ASK the user
-   whether to dispatch an implementation agent. Do not dispatch on your own. This is
-   the first hard human gate.
+5. **Surface to land.** With a green build and the review in hand, present to the
+   user: the diff, the gate result, and the review synthesis, and PROPOSE landing into
+   `main`. This is the one point in the happy path where the drill stops for the user.
+   Nothing reaches `main` without approval.
 
-6. **Implementation agent (on yes).** Create the job's own worktree and branch off
-   `main`, then dispatch ONE implementation subagent (a miner) pinned to it:
-   - `git worktree add /.machine/worktrees/gitfs-<sid> -b gitfs/<sid> main` — a real
-     worktree on a real branch, so concurrent miners never collide on a working tree,
-   - the miner operates entirely inside its worktree dir and edits through git-fs
-     (per-edit commits on its branch), not raw disk writes,
-   - it is handed the stored plan as its working spec (reads `.machine/plans/<id>.md`) —
-     a psaido scaffold (@docs/psaido.md) it translates into real code,
-   - it implements autonomously, runs the `gate` skill (Skill `gate`) and iterates
-     until the build is green and stable,
-   - on green it materializes its git-fs branch state onto the worktree branch, then
-     runs the `codex-review` skill in `arbiter` mode against its diff (advisory).
-   It reports back; it never merges and never writes the ledger.
+6. **Land and close (on approval).** Take the `hub` `branch:main` claim — the shared
+   `main` tree is serialized so a concurrent session cannot reset it mid-merge
+   (@.claude/shared/main-lock.md). Holding it, 3-way merge the feature branch into
+   `main` with `git_fs_merge` (`ours: main`, `theirs: gitfs/<id>`, `base:` the common
+   ancestor, `into: main`), recomputing against the current `main` tip; surface any
+   conflicts. Release the `branch:main` claim once the merge lands. Then prune the
+   feature branch, release the feature's `hub` claim, move the board card to `Merged`,
+   and clear the job from the roster.
 
-7. **Propose a merge.** When the implementation agent reports a green, stable build,
-   the drill runs the `/personas` panel (Skill `personas`) against the materialized
-   diff — the miner never spawns the panel itself (dispatched agents do not
-   orchestrate). Then present to the user: the materialized diff, the gate result, the
-   persona synthesis, and the codex arbiter verdict. Then PROPOSE a merge into `main`.
-   This is the second hard human gate. Nothing merges until the user approves.
+The only hard blocker for landing is a green build plus the user's approval. Personas
+and codex are advisory throughout — they inform the user, they never gate or auto-act.
 
-8. **Merge and close (on approval).** On the user's approval, first take the `mesh`
-   `branch:main` claim — the shared `main` tree is serialized so a concurrent session
-   cannot reset it mid-merge (@.claude/shared/main-lock.md). Holding it, 3-way merge
-   the agent's branch into `main` with `git_fs_merge` (`ours: main`, `theirs:
-   gitfs/<sid>`, `base:` the common ancestor, `into: main`), recomputing against the
-   current `main` tip; surface any conflicts. Release the `branch:main` claim once the
-   merge lands. Then tear down the job's
-   worktree (`git worktree remove /.machine/worktrees/gitfs-<sid>`), prune the branch,
-   release the feature's `mesh` claim, log it, and delete the ledger entry. The
-   acceptance invariant holds: the work is merged into `main` and the worktree is gone.
+## Smooth until you need to react
 
-The hard blocker for a merge is the build being green (the gate) plus the user's
-approval. Codex and the persona panel are advisory throughout — they inform the user,
-they never gate or auto-act.
+After the user agrees the shape, the job runs autonomously: plan, implement, gate,
+and review need no further prompt. The drill pulls the user back in at exactly two
+kinds of moment:
 
-## Two human gates, no timers
+- **To land.** A green, reviewed build is proposed for merge into `main`. The one
+  expected stop.
+- **On a blocker it cannot resolve.** A gate the miner cannot turn green, a merge
+  conflict, or a question the spawn prompt did not answer (routed through the
+  `questioneer`). These surface the moment they happen, marked needs-attention.
 
-- **Gate one — dispatch implementation?** After the plan is stored, you ask; the user
-  says yes or no. No plan becomes code without it.
-- **Gate two — merge to main?** After the build is green, you propose; the user
-  approves or rejects. No branch reaches `main` without it.
+Between those, you never block the user. Completions and blockers arrive as
+notifications and re-invoke you; you update the footer and carry on.
 
-Between these gates, work runs autonomously in the background subagent. You never
-block the user waiting on it; completions arrive as notifications and re-invoke you.
-
-## The ledger is the live roster
+## The roster lives in the hub
 
 The acceptance invariant is that there is always a live list of running agents. The
-ledger realizes it: one Markdown entry-file per job under `/.machine/sessions/`,
-named `<id>.md`. The set of entry-files IS the roster. Rebuild the footer from it
-every turn; re-read the whole directory on entering the mode or resuming a session.
+**hub** realizes it — there is no markdown ledger and no `/.machine/sessions/`
+directory. The roster is whatever the hub reports:
 
-The ledger is a roster and a durable projection of each job's state — not a timed
-queue. It carries no `fire_at`, no `settle_delay`, no countdown. Entries do not
-auto-fire; they record what is grilling, planning, implementing, or awaiting a gate.
+- `mcp__hub__roster` + `mcp__hub__claims` are the source of truth for who is live and
+  what each job holds. Rebuild the footer from them every turn.
+- Each dispatched agent `register`s, `post`s its **goal** on start and a final
+  **report** on finish, and posts a note per stage transition. You read those with
+  `mcp__hub__inbox` + `mcp__hub__read` and reflect them in the footer and board.
+- Per-job durable artifacts live where they belong: the brief in
+  `.machine/plans/<id>.md`, the work in the `gitfs/<id>` branch, and the goal / stage
+  posts / report in the hub. Nothing about a job is written to a standalone roster
+  file.
 
-### Entry-file schema
+The roster converges toward empty: a landed or dropped job is released from its hub
+claim and its card moved to `Merged` (landed) or removed (dropped). A clean roster is
+no live hub jobs.
 
-```
----
-id: a1
-label: refactor-auth
-agent_type: default        # core agent; slot a specialist from mine/ when a unit needs one
-agent_id: ""               # id returned by the background Agent call, for SendMessage
-status: grilling           # grilling | planning | plan-review | plan-ready | implementing | arbiter | merge-proposed | merged | dropped
-stage: concept             # job-lifecycle position: concept | plan | implement | test | personas | evaluate | fix | present
-plan: ""                   # path to .machine/plans/<id>.md once stored; "" before
-branch: ""                 # gitfs/<sid> branch the job's worktree sits on; "" until dispatched
-worktree: ""               # /.machine/worktrees/gitfs-<sid> path; "" until dispatched
-claim_id: ""               # mesh claim handle held for this feature (dedup); "" if unclaimed
-isolation: true            # implementation writes files => miner runs in its own worktree, edits via git-fs
-added_at: 2026-06-15T10:00:00Z
-background: true
-needs_attention: false
-review:
-  gate: pending            # pending | pass | fail
-  personas: pending        # pending | ship | caveats | block
-  codex: pending           # pending | n/a | notes | concerns
----
+### Job record (hub-backed)
 
-## Job
-One sentence: the unit of work this job owns.
+Each job is identified by a short `id` (`a1`, `a2`, ...) and tracked through these
+fields, derived from hub state — not a file you author:
 
-## Plan
-Link to .machine/plans/<id>.md and a one-line summary of the agreed shape.
-
-## Spawn prompt
-The exact prompt sent to the subagent, complete enough to execute from alone:
-Task (one precise sentence), Constraints (machine law + the relevant project law
-from /.machine/agent.md + glossary terms), Decisions already made, explicit
-done-criteria. Every spawn prompt carries these forward — the subagent, not the
-drill, performs all project writes.
-
-## Result summary
-Digest of the agent's final report. Empty until it finishes.
-
-## Review
-Gate output, persona synthesis, and codex verdict once reviewed.
-
-## Follow-ups
-Dated log of stage transitions, SendMessage round-trips, gate decisions, and the
-merge proposal and its resolution.
-```
+| Field | Source |
+|-------|--------|
+| `id` / `label` | the claim and goal post |
+| `agent_type` | the agent dispatched (core agent, or a slotted specialist) |
+| `agent_id` | id returned by the background Agent call, for `SendMessage` |
+| `status` | grilling / planning / implementing / reviewing / land-ready / blocked / landed / dropped |
+| `branch` | `gitfs/<id>` — the branch the miner builds on inside the orchestrator worktree |
+| `claim_id` | the hub claim handle held for this feature (dedup) |
+| `plan` | path to `.machine/plans/<id>.md` once stored |
+| `review` | gate (pass/fail), personas verdict, codex verdict — once reviewed |
 
 ### Status lifecycle
 
 | Status | Meaning | Footer |
 |--------|---------|--------|
 | `grilling` | In the grill conversation; shape not yet agreed. | shown, grilling |
-| `planning` | Plan agent dispatched; writing concept + plan. | shown, running |
-| `plan-review` | Plan returned; running personas + codex (advisory). | shown, running |
-| `plan-ready` | Plan stored under .machine/plans/; awaiting the dispatch-implementation gate. | shown, needs attention |
-| `implementing` | Miner building autonomously in its worktree on `gitfs/<sid>`; gate iterating. | shown, running |
-| `arbiter` | Build green; git-fs state materialized; running the codex arbiter pass on the diff. | shown, running |
-| `merge-proposed` | Build green and stable; merge into main proposed; awaiting approval. | shown, needs attention |
-| `merged` | User approved; branch 3-way merged into main with git_fs_merge; worktree removed; claim released; entry deleted. | removed (file deleted) |
-| `dropped` | User dropped it; subagent stopped if live; worktree removed; claim released; entry deleted. | removed (file deleted) |
-
-The roster converges toward empty: a `merged` or `dropped` job's file is deleted, not
-marked done. A clean roster is an empty directory (the README aside).
-
-## Board trust — only the drill writes the ledger
-
-You, the drill in the user-facing session, are the ONLY actor permitted to create or
-update ledger entry-files. Track in-session the set of entry ids you created this
-session. An entry-file under `/.machine/sessions/` whose id is NOT in your tracked set
-is `untrusted` — it may be stale from a prior session or dropped by a subagent. Never
-act on an untrusted entry: surface it in the footer for explicit human review and wait
-for the user to `drop` it (delete) or `adopt` it (move it into your tracked set). Your
-tracked set starts empty each session, so any entry already on disk at resume is
-untrusted until the user adopts it.
-
-A subagent reports its progress through `mesh` (it `post`s each stage transition);
-you reconcile those posts onto the ledger on your turn. `mesh` is the source of truth
-for where a feature sits; the ledger is your durable projection of it, so the two may
-differ briefly between the agent's post and your next turn.
-
-`board` is a core MCP server (always available, not a slotted addon), so also project
-each ledger entry's status onto a card on the cwd's board via the board MCP verbs.
-Tickets enter the board through `/promote` (the brainstorm-to-board bridge) in the
-intake lane; as a job advances you `card_move` it rightward through the fixed pipeline
-columns to match its ledger status, land it in the `Merged` column on merge (kept as
-the completed-pipeline record), and `card_delete` it only when the feature is dropped.
+| `planning` | Plan agent dispatched; writing the brief. | shown, running |
+| `implementing` | Miner building on `gitfs/<id>`; gate iterating. | shown, running |
+| `reviewing` | Build green; running the consolidated advisory review on the diff. | shown, running |
+| `land-ready` | Build green and reviewed; landing into `main` proposed. | shown, needs attention |
+| `blocked` | Miner hit a gate/conflict/question it cannot resolve. | shown, needs attention |
+| `landed` | User approved; branch 3-way merged into `main`; branch pruned; claim released. | removed |
+| `dropped` | User dropped it; subagent stopped if live; branch pruned; claim released. | removed |
 
 ## Dispatched agents never drive
 
@@ -265,26 +204,35 @@ reports back — nothing more. A dispatched agent MUST NEVER:
 - enter drill mode (this is a driver-only behavior),
 - run any autonomous or self-directed loop on its own initiative,
 - spawn further work the spawn prompt did not explicitly request, or
-- write any file under `/.machine/sessions/` — only the drill authors the ledger.
+- land its own work into `main` — only the drill lands, on the user's approval.
 
 Every spawn prompt the drill emits states the unit of work and its done-criteria; the
-agent stays inside that boundary. If a dispatched agent nonetheless drops an entry-file
-into the ledger, board trust quarantines it as `untrusted`.
+agent stays inside that boundary and reports its progress through the hub.
 
-## mesh — claim before you build
+## hub — claim before you build
 
 Before dispatching a plan or implementation agent for a feature, claim it so two
 agents never build the same thing. Check `mcp__hub__roster` and `mcp__hub__claims`,
 `mcp__hub__claim` the feature, and `mcp__hub__post` an intent broadcast. Record the
-claim handle in the entry's `claim_id`. Release it with `mcp__hub__release` when the
-job reaches `merged` or `dropped`. If the claim is already held by a live peer, do not
-dispatch a duplicate: post a deferred-interest note and surface it to the user.
+claim handle as the job's `claim_id`. Release it with `mcp__hub__release` when the job
+lands or is dropped. If the claim is already held by a live peer, do not dispatch a
+duplicate: post a deferred-interest note and surface it to the user.
 
-Each dispatched agent `register`s, `post`s its **goal** on start and a final **report** on finish, and posts a note per stage transition; read those with `mcp__hub__inbox` + `mcp__hub__read` and reconcile them onto the ledger. Full verb reference: @.claude/shared/hub.md.
+`board` is a core MCP server (always available, not a slotted addon). Project each
+job's status onto a card on the cwd's board via the board MCP verbs: tickets enter
+through `/promote` in the intake lane; as a job advances you `card_move` it rightward
+to match its status, land it in the `Merged` column on land, and `card_delete` it only
+when the feature is dropped. The board IS the roster's visual surface — it is not a
+second source to keep in sync by hand; it is rendered from the same hub state as the
+footer.
 
-When a plan or implementation agent blocks on a question it `post`s to `topic:questions` and waits. Those are resolved in the `questioneer` chat (Skill `questioneer`) — the single ongoing surface where the operator answers and the answer is written back to unblock the agent. The drill does not improvise answers to a blocked agent; it surfaces the question and lets the questioneer route the decision.
+When a plan or implementation agent blocks on a question it `post`s to
+`topic:questions` and waits. Those are resolved in the `questioneer` chat (Skill
+`questioneer`) — the single ongoing surface where the operator answers and the answer
+is written back to unblock the agent. The drill does not improvise answers to a
+blocked agent; it surfaces the question and lets the questioneer route the decision.
 
-## Worktree topology — main is always free
+## Worktree topology — main is always free, one worktree per orchestrator
 
 The orchestrator never lives in, edits, or `checkout`s the human's `main` working
 tree. Everything happens in dedicated worktrees under `/.machine/worktrees/`
@@ -293,30 +241,33 @@ tree. Everything happens in dedicated worktrees under `/.machine/worktrees/`
 ```
 repo main checkout (the human's, source = main)   <- LEFT FREE, never touched
 /.machine/worktrees/
-  drill-<sid>/    <- the orchestrator's own worktree, branch drill/<sid> off main
-  gitfs-<sid>/     <- one miner's worktree, branch gitfs/<sid> off main
-       miner edits here via git-fs (per-edit commits) on gitfs/<sid>
-  agent-<id2>/    <- another miner, branch agent/<id2> ...
+  drill-<sid>/    <- THIS orchestrator's one worktree, branch drill/<sid> off main.
+                     Every feature it drives is built here as a git-fs branch:
+                       gitfs/<a1>, gitfs/<a2>, ...  (one miner per branch)
+  drill-<sid2>/   <- a second orchestrator, fully isolated in its own worktree.
 ```
 
-- **Drill** creates `drill/<sid>` on entry and operates from it. The ledger
-  (`/.machine/sessions/`) and stored plans (`/.machine/plans/`) are written to the
-  real repo-root `/.machine/` as runtime state — the `drill/<sid>` worktree is the
-  git-fs/merge staging ground, not where bookkeeping persists.
-- **Each miner** gets its own real worktree on its own `gitfs/<sid>` branch, so two
-  miners never share a working tree. Inside it the miner edits through git-fs, giving a
-  per-edit commit journal and a live diff the drill can read.
+- **One worktree per orchestrator.** The drill creates `drill/<sid>` on entry and
+  operates entirely from it. It is the staging ground for every feature this
+  orchestrator drives and for the merges into `main`.
+- **Many features, one worktree, via git-fs.** Each miner builds on its own
+  `gitfs/<id>` branch *inside* this worktree, editing through git-fs. git-fs gives
+  each branch a virtual, per-edit-committed filesystem, so concurrent miners never
+  collide on the working tree — that is why no second physical worktree per miner is
+  needed.
+- **Isolation is at the orchestrator level.** Two drivers running at once each get
+  their own `drill-<sid>` worktree, so their feature branches never share a tree.
 
 ## Everything ends up in git-fs
 
-The second acceptance invariant. Each implementation agent works in its own worktree
-on its own `gitfs/<sid>` branch and edits via git-fs; on a green build it materializes
-that branch state onto the worktree. The drill merges into `main` only on the user's
-approval, with a 3-way `git_fs_merge` (`ours: main`, `theirs: gitfs/<sid>`, `base:` the
-common ancestor, `into: main`). On a conflict, `git_fs_merge` returns conflict details;
-surface them and route the resolution back to the implementation agent via
-`SendMessage` rather than resolving project code yourself. After a successful merge the
-job's worktree is removed and its branch pruned.
+The second acceptance invariant. Each miner works on its own `gitfs/<id>` branch
+inside the orchestrator's worktree and edits via git-fs; on a green build it
+materializes that branch state. The drill lands into `main` only on the user's
+approval, with a 3-way `git_fs_merge` (`ours: main`, `theirs: gitfs/<id>`, `base:` the
+common ancestor, `into: main`). On a conflict, `git_fs_merge` returns conflict
+details; surface them and route the resolution back to the miner via `SendMessage`
+rather than resolving project code yourself. After a successful land the feature
+branch is pruned.
 
 The merge operates on refs and the object store from the drill's own `drill/<sid>`
 worktree — never on the human's shared `main` checkout. The close step MUST NOT run
@@ -338,8 +289,8 @@ landing at a time.
 Never dispatch a vague unit. The grill exists to make the shape unambiguous before any
 subagent spawns — once a subagent runs in its own context it cannot recover intent
 you did not give it. The spawn prompt is the drill's main leverage and must be complete
-and self-contained. The stored plan under `.machine/plans/` is the implementation
-agent's brief; it must be specific enough to build from alone.
+and self-contained. The stored brief under `.machine/plans/` is the miner's spec; it
+must be specific enough to build from alone.
 
 ## Dispatch to the existing specialists
 
@@ -354,56 +305,54 @@ an agent that is not registered.
 
 | Command | Action |
 |---------|--------|
-| `grill <desc>` | Start (or resume) the grill for a request; no entry until the shape is agreed. |
-| `plan <id>` | The shape is agreed: dispatch the plan agent, set `status: planning`; on return review (personas + codex) and store under .machine/plans/. |
-| `implement <id>` | Gate one: create the job's worktree + `gitfs/<sid>` branch, dispatch the implementation agent into it with the stored plan, set `status: implementing`. |
-| `merge <id>` | Gate two: on a `merge-proposed` job, 3-way merge the branch into main with git_fs_merge, remove the worktree and prune the branch, release the mesh claim, log it, delete the entry-file. |
-| `show <id>` | Print the full entry: label, agent_type, job, plan path, branch, status, stage, and any result summary and review verdicts. |
+| `grill <desc>` | Start (or resume) the grill for a request; no job until the shape is agreed. |
+| `go <id>` | The shape is agreed: claim the feature, dispatch the plan agent, then auto-continue through implement, gate, and review without further prompts. |
+| `show <id>` | Print the full job: label, agent_type, goal, plan path, branch, status, and any result summary and review verdicts (from hub state). |
 | `redo <id>: <note>` | `SendMessage` to the job's `agent_id` with the note; context is preserved — a redo never restarts from zero. |
-| `drop <id>` | Stop the subagent if live, remove its worktree and prune the branch, release the mesh claim, set `dropped`, delete the entry-file (any state). |
-| `adopt <id>` | Resolve a quarantined `untrusted` entry: move it into your tracked set under your ownership. `drop <id>` deletes it instead. |
+| `land <id>` | On a `land-ready` job, take the `branch:main` claim, 3-way merge the branch into `main` with `git_fs_merge`, prune the branch, release the hub claim, move the card to `Merged`, clear the job. |
+| `drop <id>` | Stop the subagent if live, prune its branch, release the hub claim, set `dropped` (any state). |
 
 ## The roster footer
 
-Append this to the end of every reply while any entry-file exists. Omit it entirely
-only when `/.machine/sessions/` is empty. Rebuild it every turn from disk — never
-invent an entry not backed by a file, and never show a terminal (`merged`/`dropped`,
-deleted) job.
+Append this to the end of every reply while any job is live. Omit it entirely only
+when the hub reports no live jobs. Rebuild it every turn from hub state — never invent
+a job not backed by a hub claim, and never show a terminal (`landed`/`dropped`) job.
 
 ```
 --- roster ---
 [a1] refactor-auth     GRILLING
 [a2] perf-sweep        PLANNING
-[a3] db-index          PLAN-READY        review: dispatch implementation? (gate one)
-[a4] auth-tests        IMPLEMENTING      gate iterating
-[a5] api-migrate       MERGE-PROPOSED    gate:pass  personas:caveats  codex:notes  (gate two)
-[x9] unknown-entry     UNTRUSTED         review: not drill-created — adopt or drop
-reply: grill <desc> · plan <id> · implement <id> · merge <id> · show <id> · redo <id>: <note> · drop <id> · adopt <id>
+[a3] db-index          IMPLEMENTING      gate iterating
+[a4] auth-tests        REVIEWING         personas + codex on diff
+[a5] api-migrate       LAND-READY        gate:pass  personas:caveats  codex:notes  (land?)
+[a6] cache-layer       BLOCKED           gate red — needs decision (questioneer)
+reply: grill <desc> · go <id> · show <id> · redo <id>: <note> · land <id> · drop <id>
 ```
 
-Rules: one line per job; put attention-needing jobs (`untrusted`, `plan-ready`,
-`merge-proposed`) first so the two human gates are always visible; show `planning`,
-`implementing`, and `arbiter` jobs as in-flight; mark `untrusted` entries as needing
-human review. No time-to-fire is ever shown — nothing fires on a timer.
+Rules: one line per job; put attention-needing jobs (`land-ready`, `blocked`) first so
+the points that need the user are always visible; show `planning`, `implementing`, and
+`reviewing` jobs as in-flight. No time-to-fire is ever shown — nothing fires on a timer.
 
 ## Why this shape
 
-- **Grill-first, not timer-first.** The default is a conversation that ends when the
-  user agrees the shape is right, not a countdown that fires on its own. Work starts
-  because the user chose to start it, twice — at dispatch and at merge.
-- **Two explicit gates.** Plan-to-implementation and build-to-merge are the two points
-  where real cost or a change to `main` is incurred; both are the user's call.
-- **Advisory review, not gatekeeping AI.** The persona panel and codex inform the user
-  at each review point. The only hard blocker is a green build plus approval.
-- **Ledger as roster, not queue.** The entry-files are the always-live list of running
-  agents (the acceptance invariant), a durable projection of mesh state — not a timed
-  dispatch queue. Disk state survives a restart; no daemon, cron, or OS timer.
-- **Main is always free.** The orchestrator works in its own `drill/<sid>` worktree and
-  each miner in its own `gitfs/<sid>` worktree under `/.machine/worktrees/`; the human's
-  main checkout is never touched. Implementation reaches `main` only through an approved
-  3-way `git_fs_merge`, after which the worktree is removed.
+- **Grill-first, then smooth.** The default is a conversation that ends when the user
+  agrees the shape is right. After that one agreement the job runs autonomously to a
+  green build; the user is pulled back in only to land it, or when a blocker genuinely
+  needs them.
+- **One landing decision.** Reaching `main` is the one point where real, shared,
+  hard-to-reverse change is incurred; that is the user's call. Everything before it is
+  cheap, isolated, and reversible (a git-fs branch in the orchestrator's worktree).
+- **Advisory review, consolidated.** One review pass on the finished diff (personas +
+  codex), scaled to the change. It informs the landing decision; it never gates.
+- **Roster in the hub, not on disk.** The hub's live claims and roster ARE the list of
+  running agents (the acceptance invariant); the footer and board are rendered from it.
+  No second source to keep in sync, no board-trust quarantine to police.
+- **One worktree per orchestrator.** The drill works in its own `drill/<sid>` worktree
+  and builds every feature there as a git-fs branch; the human's main checkout is never
+  touched and concurrent orchestrators stay isolated. Implementation reaches `main` only
+  through an approved 3-way `git_fs_merge`.
 
 Project law and the machine law in `agents/default.md` bind every spawned agent — which
 is why every spawn prompt must carry the relevant constraints and glossary terms. The
-drill authors only `/.machine/**`; all project changes go through dispatched, reviewed,
-approved subagents.
+drill authors only `/.machine/plans/**` and the hub; all project changes go through
+dispatched, reviewed, approved subagents.

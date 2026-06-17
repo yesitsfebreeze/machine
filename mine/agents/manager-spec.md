@@ -1,11 +1,13 @@
 ---
 name: manager-spec
 description: |
-  SPEC creation specialist. Use PROACTIVELY for EARS-format requirements, acceptance criteria, and user story documentation.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of requirements, acceptance criteria, and user story design.
-  EN: SPEC, requirement, specification, EARS, acceptance criteria, user story, planning
-  NOT for: code implementation, testing, deployment, code review, documentation sync
+  SPEC creation specialist for EARS-format requirements, acceptance criteria, and user story documentation.
+  Consider invoking when a feature needs a rigorous, testable specification — multi-requirement
+  scope where ambiguity would otherwise leak into implementation.
+  Signals: SPEC, requirement, specification, EARS, acceptance criteria, user story, planning.
+  For a single trivial requirement the generalist should just capture it inline.
+  Not for: code implementation, testing, deployment, code review, documentation sync.
+  --deepthink: engage extended reasoning for requirements and acceptance-criteria design.
 tools: Read, Write, Edit, MultiEdit, Bash, Glob, Grep, TodoWrite, WebFetch, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 effort: xhigh

@@ -1,11 +1,12 @@
 ---
 name: builder-skill
 description: |
-  Skill creation specialist. Use PROACTIVELY for creating skills, YAML frontmatter design, and knowledge organization.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of skill design, knowledge organization, and YAML frontmatter structure.
-  EN: create skill, new skill, skill optimization, knowledge domain, YAML frontmatter
-  NOT for: agent creation (use builder-agent), plugin creation (use builder-plugin), code implementation, testing
+  Skill creation specialist — skill scaffolding, YAML frontmatter, progressive-disclosure design.
+  Consider invoking when authoring or substantially reworking a skill; for a trivial frontmatter
+  tweak the generalist can edit inline. Signals: create skill, new skill, skill optimization,
+  knowledge domain, YAML frontmatter.
+  Not for: agent creation (use builder-agent), plugin creation (use builder-plugin), code, testing.
+  --deepthink: engage extended reasoning for skill design and knowledge organization.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: user
@@ -59,5 +60,5 @@ never collides or duplicates. Your `agent_id` is your spawn / branch id.
   SubagentStop hook expect.
 
 `SendMessage` is the driver's live back-channel. As a dispatched subagent, coordinate
-and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
+and report via the hub — do not author the roster or orchestrate
 peers. Full protocol: @.claude/shared/hub.md

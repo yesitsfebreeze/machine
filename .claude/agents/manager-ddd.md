@@ -1,12 +1,14 @@
 ---
 name: manager-ddd
 description: |
-  DDD (Domain-Driven Development) implementation specialist. Use for ANALYZE-PRESERVE-IMPROVE
-  cycle when working with existing codebases that have minimal test coverage.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of refactoring strategy, behavior preservation, and legacy code transformation.
-  EN: DDD, refactoring, legacy code, behavior preservation, characterization test, domain-driven refactoring
-  NOT for: greenfield development (use TDD), deployment, documentation, git operations, security audits
+  DDD (Domain-Driven Development) implementation specialist for the ANALYZE-PRESERVE-IMPROVE
+  cycle on existing code with minimal test coverage.
+  Consider invoking when a change genuinely needs this depth — a multi-file, behavior-preserving
+  refactor of legacy code — not on keyword match alone. Signals: refactoring, legacy code,
+  behavior preservation, characterization tests, domain-driven refactoring. For a localized or
+  single-file edit the generalist should just do it inline.
+  Not for: greenfield (use manager-tdd), deployment, docs, git operations, security audits.
+  --deepthink: engage extended reasoning for refactoring strategy and behavior preservation.
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project
@@ -61,5 +63,5 @@ never collides or duplicates. Your `agent_id` is your spawn / branch id.
   SubagentStop hook expect.
 
 `SendMessage` is the driver's live back-channel. As a dispatched subagent, coordinate
-and report via mesh — do not write the `/.machine/sessions/` ledger or orchestrate
+and report via the hub — do not author the roster or orchestrate
 peers. Full protocol: @.claude/shared/hub.md

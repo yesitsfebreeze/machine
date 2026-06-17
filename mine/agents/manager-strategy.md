@@ -1,11 +1,13 @@
 ---
 name: manager-strategy
 description: |
-  Implementation strategy specialist. Use PROACTIVELY for architecture decisions, technology evaluation, and implementation planning.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of architecture decisions, technology selection, and implementation strategies.
-  EN: strategy, implementation plan, architecture decision, technology evaluation, planning
-  NOT for: code implementation, testing, deployment, documentation, git operations
+  Implementation strategy specialist for architecture decisions, technology evaluation, and implementation planning.
+  Consider invoking when a choice spans multiple components or has lasting architectural weight —
+  trade-offs you would otherwise guess at rather than reason through.
+  Signals: strategy, implementation plan, architecture decision, technology evaluation, planning.
+  For a small, obvious technical choice the generalist should just decide it inline.
+  Not for: code implementation, testing, deployment, documentation, git operations.
+  --deepthink: engage extended reasoning for architecture decisions and technology selection.
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: opus
 effort: xhigh

@@ -7,7 +7,7 @@
 //
 // Disable: remove this hook from hooks.json, or tell the agent "stop caveman".
 
-import { readdirSync, readFileSync, existsSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -39,51 +39,8 @@ function writeEnv(projectDir) {
   }
 }
 
-// Non-terminal drill statuses: a job under one of these is still open and belongs
-// on the resumed roster. `merged` and `dropped` are terminal (entry-file deleted).
-const ACTIVE = new Set([
-  "grilling",
-  "planning",
-  "plan-review",
-  "plan-ready",
-  "implementing",
-  "arbiter",
-  "merge-proposed",
-]);
-
-function field(frontmatter, key) {
-  const match = frontmatter.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, "m"));
-  return match ? match[1].trim() : "";
-}
-
-function parseSession(text) {
-  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return null;
-  const block = match[1];
-  const status = field(block, "status");
-  if (!ACTIVE.has(status)) return null;
-  const id = field(block, "id");
-  if (!id) return null;
-  return { id, label: field(block, "label") || id, status };
-}
-
-function collectSessions(dir) {
-  const out = [];
-  try {
-    for (const name of readdirSync(dir)) {
-      if (name === "README.md" || !name.endsWith(".md")) continue;
-      try {
-        const entry = parseSession(readFileSync(join(dir, name), "utf8"));
-        if (entry) out.push(entry);
-      } catch {
-        // Malformed or unreadable session file: skip silently.
-      }
-    }
-  } catch {
-    // Sessions dir absent or unreadable: no open work.
-  }
-  return out;
-}
+// The live roster lives in the hub (claims + board), not on disk. This hook does not
+// scan a ledger directory; the drill rebuilds the footer from the hub on entry.
 
 try {
   const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -100,15 +57,11 @@ try {
   ];
 
   if (machineReady) {
-    const open = collectSessions(join(root, ".machine", "sessions"));
-    if (open.length > 0) {
-      lines.push("Open roster from a prior session (rebuild the drill footer from it):");
-      for (const a of open) lines.push(`[${a.id}] ${a.label} ${a.status.toUpperCase()}`);
-      lines.push(
-        "Reconcile each pre-existing entry through the drill skill's board-trust model " +
-          "(untrusted until adopted). Nothing auto-fires; await user commands.",
-      );
-    }
+    lines.push(
+      "On entry, rebuild the live roster from the hub (mcp__hub__roster + " +
+        "mcp__hub__claims) and project it onto the board. Nothing auto-fires; await " +
+        "user commands.",
+    );
   }
 
   process.stdout.write(

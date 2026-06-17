@@ -5,9 +5,11 @@ description: |
   (skills, agents, rules, CLAUDE.md) through iterative experimentation
   with binary eval criteria. Uses worktree isolation for safe mutation.
   Implements the autoresearch pattern adapted for multi-tier component types.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  EN: research, self-research, optimize component, experiment, binary eval, autoresearch
-  NOT for: production code implementation, feature development, documentation writing, git operations, security audits
+  Consider invoking when optimizing machine components warrants isolated, iterative experiments
+  with binary eval criteria — work too involved to tune by hand in the live tree.
+  Signals: research, self-research, optimize component, experiment, binary eval, autoresearch.
+  For a quick one-off tweak to a single component the generalist should just edit it inline.
+  Not for: production code implementation, feature development, documentation writing, git operations, security audits.
 tools: Read, Write, Edit, Grep, Glob, Bash, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 permissionMode: acceptEdits

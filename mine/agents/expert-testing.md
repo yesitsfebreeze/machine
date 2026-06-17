@@ -1,11 +1,13 @@
 ---
 name: expert-testing
 description: |
-  Testing strategy specialist. Use PROACTIVELY for E2E, integration testing, load testing, coverage, and QA automation.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of testing strategies, coverage patterns, and QA automation approaches.
-  EN: test strategy, E2E, integration test, load test, test automation, coverage, QA
-  NOT for: production code implementation, architecture design, DevOps, security audits, performance optimization
+  Testing strategy specialist for E2E, integration testing, load testing, coverage, and QA automation.
+  Consider invoking when a feature needs a real test strategy across layers — E2E, integration, or
+  load coverage where ad-hoc tests would leave gaps.
+  Signals: test strategy, E2E, integration test, load test, test automation, coverage, QA.
+  For one obvious unit test the generalist should just write it inline.
+  Not for: production code implementation, architecture design, DevOps, security audits, performance optimization.
+  --deepthink: engage extended reasoning for testing strategy and coverage patterns.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__claude-in-chrome__*, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project

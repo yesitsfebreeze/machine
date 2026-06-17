@@ -15,6 +15,16 @@ default:
 bootstrap:
     @bash scripts/bootstrap.sh
 
+# Remove regenerable build artifacts from the tree. Safe — touches nothing
+# tracked and leaves daemon state (.kern/.mesh/.board/.git-fs) intact.
+# Re-create with `just bootstrap` / `just graphify`.
+clean:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    rm -rf node_modules hub/target .machine/worktrees
+    rm -f .machine/graph.json .machine/board.json .machine/ENV.md version.log
+    echo "cleaned: build artifacts removed (daemon state preserved)"
+
 # Rebuild the repo capability graph (.machine/graph.json) that the default agent
 # reads. Runs automatically on every push via the .git/hooks/pre-push hook
 # (installed by `just bootstrap`); run manually here anytime.

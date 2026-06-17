@@ -1,11 +1,13 @@
 ---
 name: expert-devops
 description: |
-  DevOps specialist. Use PROACTIVELY for CI/CD, Docker, Kubernetes, deployment, and infrastructure automation.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of deployment strategies, CI/CD pipelines, and infrastructure architecture.
-  EN: DevOps, CI/CD, Docker, Kubernetes, deployment, pipeline, infrastructure, container
-  NOT for: application code, frontend UI, database schema design, security audits, performance profiling, testing strategy
+  DevOps specialist for CI/CD, Docker, Kubernetes, deployment, and infrastructure automation.
+  Consider invoking when infra work spans pipelines, containers, or orchestration — deployment design
+  where a misconfiguration breaks builds or production.
+  Signals: DevOps, CI/CD, Docker, Kubernetes, deployment, pipeline, infrastructure, container.
+  For a one-line Dockerfile or CI tweak the generalist should just edit it inline.
+  Not for: application code, frontend UI, database schema design, security audits, performance profiling, testing strategy.
+  --deepthink: engage extended reasoning for deployment strategy and infrastructure architecture.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: project

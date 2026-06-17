@@ -1,11 +1,13 @@
 ---
 name: builder-agent
 description: |
-  Agent creation specialist. Use PROACTIVELY for creating sub-agents, agent blueprints, and custom agent definitions.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of agent design, capability boundaries, and integration patterns.
-  EN: create agent, new agent, agent blueprint, sub-agent, agent definition, custom agent
-  NOT for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation
+  Agent creation specialist for authoring sub-agents, agent blueprints, and custom agent definitions.
+  Consider invoking when defining a new agent needs deliberate capability boundaries and integration
+  design — a reusable definition worth getting right, not a quick throwaway.
+  Signals: create agent, new agent, agent blueprint, sub-agent, agent definition, custom agent.
+  For a trivial frontmatter tweak the generalist should just edit it inline.
+  Not for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation.
+  --deepthink: engage extended reasoning for agent design and capability boundaries.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: haiku
 memory: user
@@ -26,7 +28,7 @@ skills:
 ## Frontmatter fields
 
 - `name` (required): lowercase-hyphen unique id
-- `description` (required): when to invoke; include "MUST INVOKE" + trigger keywords
+- `description` (required): judgment-based "consider invoking when…" phrasing describing the depth/complexity threshold; list signal keywords as hints, never a mechanical keyword mandate
 - `tools`: CSV, least-privilege
 - `disallowedTools`: denylist (mutually exclusive with `tools`)
 - `model`: sonnet | opus | haiku | inherit

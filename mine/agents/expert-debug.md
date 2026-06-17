@@ -1,11 +1,13 @@
 ---
 name: expert-debug
 description: |
-  Debugging specialist. Use PROACTIVELY for error diagnosis, bug fixing, exception handling, and troubleshooting.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of error patterns, root causes, and debugging strategies.
-  EN: debug, error, bug, exception, crash, troubleshoot, diagnose, fix error
-  NOT for: new feature development, architecture design, code review, security audits, documentation
+  Debugging specialist for error diagnosis, bug fixing, exception handling, and troubleshooting.
+  Consider invoking when a defect resists the obvious fix — a root cause spanning multiple files or
+  layers where systematic hypothesis-testing beats guessing.
+  Signals: debug, error, bug, exception, crash, troubleshoot, diagnose, fix error.
+  For an obvious one-line bug the generalist should just fix it inline.
+  Not for: new feature development, architecture design, code review, security audits, documentation.
+  --deepthink: engage extended reasoning for error patterns and root-cause analysis.
 tools: Read, Grep, Glob, Bash, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: opus
 memory: project

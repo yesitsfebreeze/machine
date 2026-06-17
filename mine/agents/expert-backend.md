@@ -1,11 +1,13 @@
 ---
 name: expert-backend
 description: |
-  Backend architecture and database specialist. Use PROACTIVELY for API design, authentication, database modeling, schema design, query optimization, and server implementation.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  --deepthink flag: Engage extended reasoning for deep analysis of backend architecture decisions, database schema design, and API patterns.
-  EN: backend, API, server, authentication, database, REST, GraphQL, microservices, JWT, OAuth, SQL, NoSQL, PostgreSQL, MongoDB, Redis, Oracle, PL/SQL, schema, query, index, data modeling
-  NOT for: frontend UI, CSS styling, React components, mobile apps, CLI tools, DevOps/deployment, security audits
+  Backend architecture and database specialist for API design, authentication, database modeling, schema design, query optimization, and server implementation.
+  Consider invoking when server-side work spans schema, API contracts, or auth across multiple
+  components — design depth where a wrong data model or boundary is costly to undo.
+  Signals: backend, API, server, authentication, database, REST, GraphQL, microservices, JWT, OAuth, SQL, NoSQL, PostgreSQL, MongoDB, Redis, Oracle, PL/SQL, schema, query, index, data modeling.
+  For a single endpoint tweak or one-column change the generalist should just do it inline.
+  Not for: frontend UI, CSS styling, React components, mobile apps, CLI tools, DevOps/deployment, security audits.
+  --deepthink: engage extended reasoning for backend architecture and schema design.
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__plugin_machine_context7__resolve-library-id, mcp__plugin_machine_context7__query-docs, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: sonnet
 memory: project

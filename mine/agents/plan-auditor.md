@@ -2,9 +2,11 @@
 name: plan-auditor
 description: |
   Independent plan-phase document auditor. Adversarial stance: finds defects in SPECs, BRIEFs, and project documents.
-  MUST INVOKE for SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance check, document validation.
-  EN: SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance, document validation
-  NOT for: code implementation, code review, documentation writing, git operations, running tests
+  Consider invoking when a plan document is consequential enough that biased self-review would let
+  defects through — a SPEC or BRIEF that downstream work will commit to.
+  Signals: SPEC audit, BRIEF audit, project document review, plan audit, independent review, bias prevention, EARS compliance, document validation.
+  For a short or low-stakes note the generalist should just sanity-check it inline.
+  Not for: code implementation, code review, documentation writing, git operations, running tests.
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: sonnet
 effort: high

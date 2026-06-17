@@ -3,9 +3,11 @@ name: evaluator-active
 description: |
   Skeptical code evaluator for independent quality assessment. Actively tests implementations
   against SPEC acceptance criteria. Tuned toward finding defects, not rationalizing acceptance.
-  MUST INVOKE when ANY of these keywords appear in user request:
-  EN: evaluate, quality assessment, independent review, code audit, defect analysis, acceptance criteria test
-  NOT for: code implementation, architecture design, documentation writing, git operations
+  Consider invoking when an implementation needs an independent, adversarial pass against SPEC
+  acceptance criteria — enough surface or risk that self-review would rationalize acceptance.
+  Signals: evaluate, quality assessment, independent review, code audit, defect analysis, acceptance criteria test.
+  For a trivial or single-file change the generalist should just verify it inline.
+  Not for: code implementation, architecture design, documentation writing, git operations.
 tools: Read, Grep, Glob, Bash, mcp__hub__register, mcp__hub__roster, mcp__hub__claims, mcp__hub__claim, mcp__hub__release, mcp__hub__post, mcp__hub__inbox, mcp__hub__read, SendMessage
 model: sonnet
 effort: high

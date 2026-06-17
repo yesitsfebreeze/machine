@@ -4,7 +4,7 @@
 - kern (splitting boradcastable database that learns over time)
 - git-fs ('fileless' storage inside git, quick, and full audit trail)
 - mesh (cross agent communicator)
-- psaido (pseudo ai code language)
+- psaido (pseudo ai code language) — SHELVED, not in the active flow; plans are a plain markdown brief
 - board (taskboard)
 - mine (list of useful skills and tools that can be installed on demand)
 - personas
@@ -19,22 +19,25 @@ The idea of the workflow is:
  - then the next step (plan) i executed for each ticket, and repeated until approved.
 
 # parallel:
-  ## plan (dispatched fleet + codex review)
+  ## plan (dispatched fleet)
    - plans the implementation of the task
    - aware when we superseed
    - needs to rip old implementation if superseeded
-   - writes plan with psaido code @docs/psaido.md
-   - raises questions instantly with the mesh to the questioneer
+   - writes the plan as a plain markdown brief the miner reads directly
+   - raises questions instantly with the hub to the questioneer
    - waits until ready to proceed again
-   - reviews with personas at the end if their concernes and needs are met
 
   ## implement:
    - implements approved plans using git-fs in the current orchestrators worktree
-   - turns psadio into real requested code.
-   - moves its ticket into doing on the taskkboard
-   - raises questions instantly with the mesh to the questioneer
+   - turns the brief into real requested code.
+   - moves its ticket into doing on the taskboard
+   - raises questions instantly with the hub to the questioneer
    - waits until ready to proceed again
-   - reviews with personas at the end if their concernes and needs are met
+
+# smooth until you need to react:
+ - after the shape is agreed, plan -> implement -> gate-green run autonomously
+ - ONE consolidated advisory review (personas + codex) on the finished diff, scaled to size
+ - the drill surfaces only to land into main, plus on a blocker it cannot resolve
 
 # questioneer: (single ongoing chat, ask you to resolve questions of the plans and imeplementations)
  - since we have the taskboard, we have a list of plan questions and implementation questions
