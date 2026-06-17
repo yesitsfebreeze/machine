@@ -11,6 +11,7 @@
 mod board;
 mod board_http;
 mod error;
+mod machine;
 mod mesh;
 mod mine;
 mod registry;
@@ -32,6 +33,8 @@ const USAGE: &str = "hub — fleet inter-agent coordination daemon
 Usage:
   hub serve [--port N]  Run the HTTP+SSE+WS singleton daemon (primary)
   hub mcp               Run the MCP server over stdio (fallback)
+  hub machine [args..]  Ensure hub, launch an orchestrator Claude in an owned
+                        PTY, and open the fzf switcher (args pass through to claude)
   hub gc                Reclaim TTL-expired messages and sweep dead claims
   hub --version         Show version
 
@@ -110,6 +113,10 @@ async fn run(cmd: &str, rest: &[String]) -> Result<()> {
             let plugin_root = mine::resolve_plugin_root(None);
             let project_cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
             server::serve(mesh, board, registry, plugin_root, project_cwd).await
+        }
+        "machine" => {
+            machine::run(rest)?;
+            Ok(())
         }
         "gc" | "compact" => {
             let mesh = Mesh::open(data_dir())?;

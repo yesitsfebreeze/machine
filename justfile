@@ -15,6 +15,12 @@ default:
 bootstrap:
     @bash scripts/bootstrap.sh
 
+# Orchestrator: ensure hub, launch a Claude in an owned PTY, open the fzf switcher.
+# Builds the hub binary if needed. Args pass through to claude.
+machine *args:
+    @cargo build --release --manifest-path hub/Cargo.toml --quiet
+    @./hub/target/release/hub machine {{args}}
+
 # Remove regenerable build artifacts from the tree. Safe — touches nothing
 # tracked and leaves daemon state (.kern/.mesh/.board/.git-fs) intact.
 # Re-create with `just bootstrap` / `just graphify`.
